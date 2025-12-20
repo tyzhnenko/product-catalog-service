@@ -1,0 +1,12 @@
+[project]
+name = "product-catalog-service"
+version = "0.1.0"
+description = "Product Catalog Service for managing product information."
+readme = "README.md"
+requires-python = ">=3.14"
+authors = [{ name = "Dmytro Tyzhnenko", email = "t.dmitry@gmail.com" }]
+maintainers = [{ name = "Dmytro Tyzhnenko", email = "t.dmitry@gmail.com" }]
+dependencies = ["fastapi>=0.126.0", "odmantic>=1.0.2"]
+
+[dependency-groups]
+dev = ["pytest>=9.0.2", "ruff>=0.14.10"]
