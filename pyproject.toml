@@ -6,7 +6,55 @@ readme = "README.md"
 requires-python = ">=3.14"
 authors = [{ name = "Dmytro Tyzhnenko", email = "t.dmitry@gmail.com" }]
 maintainers = [{ name = "Dmytro Tyzhnenko", email = "t.dmitry@gmail.com" }]
-dependencies = ["fastapi>=0.126.0", "odmantic>=1.0.2"]
+license = "MIT"
+dependencies = [
+    "beanie>=2.0.1",
+    "fastapi>=0.127.0",
+    "pydantic>=2.12.5",
+    "pydantic-settings[yaml]>=2.12.0",
+    "uvicorn>=0.40.0",
+]
 
 [dependency-groups]
-dev = ["pytest>=9.0.2", "ruff>=0.14.10"]
+dev = ["ipython>=9.8.0", "mypy>=1.19.1", "pytest>=9.0.2", "ruff>=0.14.10"]
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+target-version = "py313"
+exclude = [
+    ".git",
+    ".venv",
+    ".direnv",
+    ".eggs",
+    ".git-rewrite",
+    ".mypy_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".tox",
+    "__pycache__",
+    "__pypackages__",
+    "_build",
+    "build",
+    "buck-out",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+[tool.ruff.format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "I", "C", "D", "Q", "S", "T"]
+ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "D106", "D107"]
