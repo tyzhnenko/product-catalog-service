@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 
+from src.api_v1 import api_router
 from src.core.cors import configure_cors
 from src.core.docs import configure_docs
+from src.core.gzip import configure_gzip
 from src.core.services import configure_services
 from src.core.types import FastAPIServices
 from src.settings import Settings, load_settings
@@ -17,6 +19,9 @@ def configure_application(
 
     configure_docs(app, settings)
     configure_cors(app, settings)
+    configure_gzip(app, settings)
+
+    app.include_router(api_router, prefix="/api/v1")
 
     return app
 

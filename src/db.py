@@ -5,9 +5,12 @@ from fastapi import FastAPI
 from pymongo import AsyncMongoClient
 
 from src.core.types import FastAPIServices
+from src.models.stores import StoreModel
 from src.settings import Settings
 
-DOCUMENT_MODELS: list[type[Document]] = []
+DOCUMENT_MODELS: list[type[Document]] = [
+    StoreModel,
+]
 
 
 async def init_db(settings: Settings) -> AsyncMongoClient:
