@@ -6,7 +6,7 @@ from src.models.base import BaseAppDocument
 
 
 class StoreModel(BaseAppDocument):
-    id: StoreUUID  # pyright: ignore[reportIncompatibleVariableOverride,reportGeneralTypeIssues]
+    id: StoreUUID  # type: ignore
     name: StoreName
     url: HTTPURLField
 
