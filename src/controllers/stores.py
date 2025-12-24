@@ -10,18 +10,26 @@ router = APIRouter()
 
 
 @router.get("/")
-async def list_stores(service: Annotated[StoresService, Depends(StoresService)]) -> list[Store]:
+async def list_stores(
+    service: Annotated[StoresService, Depends(StoresService)],
+) -> list[Store]:
     return await service.list_stores()
 
 
 @router.post("/")
-async def create_store(new_store: NewStore, service: Annotated[StoresService, Depends(StoresService)]) -> Store:
+async def create_store(
+    new_store: NewStore,
+    service: Annotated[StoresService, Depends(StoresService)],
+) -> Store:
     store = await service.create_store(new_store)
     return store
 
 
 @router.get("/{store_id}")
-async def get_store(store_id: StoreUUID, service: Annotated[StoresService, Depends(StoresService)]) -> Store:
+async def get_store(
+    store_id: StoreUUID,
+    service: Annotated[StoresService, Depends(StoresService)],
+) -> Store:
     store = await service.get_store(store_id)
     if not store:
         raise HTTPException(
@@ -48,7 +56,10 @@ async def update_store(
 
 
 @router.delete("/{store_id}")
-async def delete_store(store_id: StoreUUID, service: Annotated[StoresService, Depends(StoresService)]):
+async def delete_store(
+    store_id: StoreUUID,
+    service: Annotated[StoresService, Depends(StoresService)],
+):
     success = await service.delete_store(store_id)
     if not success:
         raise HTTPException(

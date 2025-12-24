@@ -1,0 +1,22 @@
+info:
+  title: Product Catalog Service
+  version: 0.1.0
+  description: Service to manage product catalog and inventory
+
+app:
+  debug: true
+  cors_origins:
+    - "http://localhost:8000"
+    - "http://127.0.0.1:8000"
+
+auth:
+  rw_x_api_key: "your_rw_api_key_here"
+  ro_x_api_key: "your_ro_api_key_here"
+
+db:
+  driver: mongodb
+  host: localhost
+  user:
+  password:
+  port: 27018
+  database: product_catalog_test

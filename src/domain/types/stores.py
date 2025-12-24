@@ -2,7 +2,7 @@ from typing import Annotated
 
 from pydantic import UUID7, BaseModel, ConfigDict, Field
 
-from src.domain.types.base import URLField
+from src.domain.types.base import HTTPURLField
 
 StoreUUID = Annotated[
     UUID7,
@@ -32,7 +32,7 @@ class NewStore(BaseModel):
     )
 
     name: StoreName
-    url: URLField
+    url: HTTPURLField
 
 
 class Store(BaseModel):
@@ -42,7 +42,7 @@ class Store(BaseModel):
 
     id: StoreUUID
     name: StoreName
-    url: URLField
+    url: HTTPURLField
 
 
 class UpdateStore(BaseModel):
@@ -51,4 +51,4 @@ class UpdateStore(BaseModel):
     )
 
     name: StoreName | None = None
-    url: URLField | None = None
+    url: HTTPURLField | None = None

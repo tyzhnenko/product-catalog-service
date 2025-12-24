@@ -1,3 +1,5 @@
+import os
+
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict, YamlConfigSettingsSource
 
 
@@ -32,6 +34,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         env_prefix="APP_",
+        env_nested_delimiter="__",
         yaml_file="settings.yaml",
     )
 
@@ -49,12 +52,17 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
+        settings_file = os.environ.get("APP_SETTINGS_FILE", "settings.yaml")
+
         return (
             init_settings,
             env_settings,
             dotenv_settings,
             file_secret_settings,
-            YamlConfigSettingsSource(settings_cls),
+            YamlConfigSettingsSource(
+                settings_cls,
+                settings_file,
+            ),
         )
 
 
