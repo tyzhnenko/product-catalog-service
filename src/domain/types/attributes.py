@@ -1,0 +1,262 @@
+from decimal import Decimal
+from typing import Annotated, Literal, Text
+from uuid import UUID
+
+from pydantic import BaseModel, Field
+from pydantic_extra_types.pendulum_dt import Date, DateTime
+
+StringAttributeValue = Annotated[
+    str,
+    Field(
+        ...,
+        description="String value",
+    ),
+]
+
+
+TextAttributeValue = Annotated[
+    Text,
+    Field(
+        ...,
+        description="Text value",
+    ),
+]
+
+
+IntegerAttributeValue = Annotated[
+    int,
+    Field(
+        ...,
+        description="Integer value",
+    ),
+]
+
+
+FloatAttributeValue = Annotated[
+    float,
+    Field(
+        ...,
+        description="Floating point number value",
+    ),
+]
+
+
+DecimalAttributeValue = Annotated[
+    Decimal,
+    Field(
+        ...,
+        description="Decimal value represented as a float in string format",
+    ),
+]
+
+
+AttributeName = Annotated[
+    str,
+    Field(
+        ...,
+        description="Name of the attribute",
+    ),
+]
+
+DateAttributeValue = Annotated[
+    Date,
+    Field(
+        ...,
+        description="Date value in ISO 8601 format",
+        json_schema_extra={"format": "date"},
+    ),
+]
+
+
+DateTimeAttributeValue = Annotated[
+    DateTime,
+    Field(
+        ...,
+        description="Datetime value in ISO 8601 format",
+        json_schema_extra={"format": "date-time"},
+    ),
+]
+
+
+UUIDAttributeValue = Annotated[
+    UUID,
+    Field(
+        ...,
+        description="UUID value",
+        json_schema_extra={"format": "uuid"},
+    ),
+]
+
+
+class StringAttribute(BaseModel):
+    type: Literal["string"] = "string"
+    name: AttributeName
+    value: StringAttributeValue
+
+
+class TextAttribute(BaseModel):
+    type: Literal["text"] = "text"
+    name: AttributeName
+    value: TextAttributeValue
+
+
+class IntegerAttribute(BaseModel):
+    type: Literal["integer"] = "integer"
+    name: AttributeName
+    value: IntegerAttributeValue
+
+
+class FloatAttribute(BaseModel):
+    type: Literal["float"] = "float"
+    name: AttributeName
+    value: FloatAttributeValue
+
+
+class DecimalAttribute(BaseModel):
+    type: Literal["decimal"] = "decimal"
+    name: AttributeName
+    value: DecimalAttributeValue
+
+
+class BoolAttribute(BaseModel):
+    type: Literal["bool"] = "bool"
+    name: AttributeName
+    value: Annotated[
+        bool,
+        Field(
+            ...,
+            description="Boolean value",
+        ),
+    ]
+
+
+class DateAttribute(BaseModel):
+    type: Literal["date"] = "date"
+    name: AttributeName
+    value: DateAttributeValue
+
+
+class DateTimeAttribute(BaseModel):
+    type: Literal["datetime"] = "datetime"
+    name: AttributeName
+    value: DateTimeAttributeValue
+
+
+class UUIDAttribute(BaseModel):
+    type: Literal["uuid"] = "uuid"
+    name: AttributeName
+    value: UUIDAttributeValue
+
+
+class FloatRangeAttribute(BaseModel):
+    type: Literal["float_range"] = "float_range"
+    name: AttributeName
+    min_value: FloatAttributeValue
+    max_value: FloatAttributeValue
+
+
+class IntegerRangeAttribute(BaseModel):
+    type: Literal["integer_range"] = "integer_range"
+    name: AttributeName
+    min_value: IntegerAttributeValue
+    max_value: IntegerAttributeValue
+
+
+class DecimalRangeAttribute(BaseModel):
+    type: Literal["decimal_range"] = "decimal_range"
+    name: AttributeName
+    min_value: DecimalAttributeValue
+    max_value: DecimalAttributeValue
+
+
+class ListOfStringsAttribute(BaseModel):
+    type: Literal["list_of_strings"] = "list_of_strings"
+    name: AttributeName
+    values: Annotated[
+        list[StringAttributeValue],
+        Field(
+            ...,
+            description="List of string values",
+        ),
+    ]
+
+
+class ListOfIntegersAttribute(BaseModel):
+    type: Literal["list_of_integers"] = "list_of_integers"
+    name: AttributeName
+    values: Annotated[
+        list[IntegerAttributeValue],
+        Field(
+            ...,
+            description="List of integer values",
+        ),
+    ]
+
+
+class ListOfFloatsAttribute(BaseModel):
+    type: Literal["list_of_floats"] = "list_of_floats"
+    name: AttributeName
+    values: Annotated[
+        list[FloatAttributeValue],
+        Field(
+            ...,
+            description="List of float values",
+        ),
+    ]
+
+
+class ListOfDecimalsAttribute(BaseModel):
+    type: Literal["list_of_decimals"] = "list_of_decimals"
+    name: AttributeName
+    values: Annotated[
+        list[DecimalAttributeValue],
+        Field(
+            ...,
+            description="List of decimal values",
+        ),
+    ]
+
+
+class ListOfUUIDsAttribute(BaseModel):
+    type: Literal["list_of_uuids"] = "list_of_uuids"
+    name: AttributeName
+    values: Annotated[
+        list[UUIDAttributeValue],
+        Field(
+            ...,
+            description="List of UUID values",
+        ),
+    ]
+
+
+Attribute = Annotated[
+    StringAttribute
+    | TextAttribute
+    | IntegerAttribute
+    | BoolAttribute
+    | FloatAttribute
+    | DateAttribute
+    | DateTimeAttribute
+    | UUIDAttribute
+    | DecimalAttribute
+    | FloatRangeAttribute
+    | IntegerRangeAttribute
+    | DecimalRangeAttribute
+    | ListOfStringsAttribute
+    | ListOfIntegersAttribute
+    | ListOfFloatsAttribute
+    | ListOfDecimalsAttribute
+    | ListOfUUIDsAttribute,
+    Field(
+        ...,
+        description="Attribute which can be of various types",
+    ),
+]
+
+Attributes = Annotated[
+    list[Attribute],
+    Field(
+        default_factory=list,
+        description="List of attributes",
+    ),
+]
