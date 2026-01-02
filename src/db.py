@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from pymongo import AsyncMongoClient
 
 from src.core.types import FastAPIServices
+from src.models.categories import CategoryModel
 from src.models.locations import LocationModel
 from src.models.products import ProductModel
 from src.models.stores import StoreModel
@@ -13,6 +14,7 @@ from src.settings import Settings
 
 DOCUMENT_MODELS: list[type[Document]] = [
     StoreModel,
+    CategoryModel,
     LocationModel,
     ProductModel,
     VariantModel,

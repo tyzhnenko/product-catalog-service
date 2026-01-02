@@ -253,10 +253,21 @@ Attribute = Annotated[
     ),
 ]
 
-Attributes = Annotated[
+AttributesList = Annotated[
     list[Attribute],
     Field(
         default_factory=list,
         description="List of attributes",
     ),
 ]
+
+AttributesMap = Annotated[
+    dict[str, Attribute],
+    Field(
+        default_factory=dict,
+        description="Map of attribute name to attribute",
+    ),
+]
+
+# Alias for backwards compatibility with products
+Attributes = AttributesList
