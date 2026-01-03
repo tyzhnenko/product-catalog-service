@@ -3,6 +3,7 @@ from uuid import uuid7
 import pendulum
 
 from src.core.logging import logger
+from src.domain.types.categories import CategoryUUID
 from src.domain.types.products import (
     NewProduct,
     Product,
@@ -11,17 +12,46 @@ from src.domain.types.products import (
     UpdateProduct,
 )
 from src.domain.types.stores import StoreUUID
+from src.models.categories import CategoryModel
 from src.models.products import ProductModel
 from src.models.stores import StoreModel
 
 
 class ProductsService:
+    async def _sanitize_categories(self, store_id: StoreUUID, category_ids: list[CategoryUUID]) -> list[CategoryUUID]:
+        """Filter category IDs to only include valid ones that exist and belong to the specified store."""
+        if not category_ids:
+            return []
+
+        # Get all categories in one query
+        categories = await CategoryModel.find(
+            {"_id": {"$in": category_ids}, "store_id": store_id, "deleted_at": None}
+        ).to_list()
+
+        # Return only valid category IDs
+        valid_ids: list[CategoryUUID] = [cat.id for cat in categories]  # type: ignore[misc]
+
+        # Log if any categories were filtered out
+        if len(valid_ids) != len(category_ids):
+            found_ids = {str(cat.id) for cat in categories}
+            requested_ids = {str(cat_id) for cat_id in category_ids}
+            filtered_ids = requested_ids - found_ids
+            logger.info(
+                f"Filtered out invalid categories for store {store_id}: {filtered_ids}. "
+                f"Kept {len(valid_ids)} valid categories."
+            )
+
+        return valid_ids
+
     async def create_product(self, store_id: StoreUUID, new_product: NewProduct) -> Product | None:
         # Check if store exists
         store = await StoreModel.get(store_id)
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
+
+        # Sanitize categories - keep only valid ones
+        valid_categories = await self._sanitize_categories(store_id, new_product.categories)
 
         product = ProductModel(
             id=uuid7(),
@@ -32,6 +62,7 @@ class ProductsService:
             seo=new_product.seo,
             status=ProductStatusEnum.ACTIVE,
             attributes={},
+            categories=valid_categories,
         )
         product = await product.create()
         logger.info(f"Created product {product.id} for store {store_id}")
@@ -81,6 +112,11 @@ class ProductsService:
 
         # Update only fields that were explicitly set
         update_dict = update_data.model_dump(exclude_unset=True)
+
+        # Sanitize categories if they are being updated
+        if "categories" in update_dict and update_dict["categories"] is not None:
+            update_dict["categories"] = await self._sanitize_categories(store_id, update_dict["categories"])
+
         for field, value in update_dict.items():
             setattr(product, field, value)
 

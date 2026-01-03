@@ -27,13 +27,40 @@ def another_store(api_client):
 
 
 @pytest.fixture
-def sample_product_data():
+def sample_category(api_client, sample_store):
+    """Create a sample category for testing products."""
+    category_data = {
+        "name": "Coffee Beans",
+        "description": "All types of coffee beans",
+        "status": "active",
+        "path": "/coffee-beans",
+    }
+    response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data)
+    return response.json()
+
+
+@pytest.fixture
+def another_category(api_client, sample_store):
+    """Create another category for testing products."""
+    category_data = {
+        "name": "Light Roast",
+        "description": "Light roasted coffee",
+        "status": "active",
+        "path": "/light-roast",
+    }
+    response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data)
+    return response.json()
+
+
+@pytest.fixture
+def sample_product_data(sample_category):
     """Sample data for creating a product."""
     return {
         "name": "Ethiopian Yirgacheffe",
         "description": "A bright and fruity coffee from Ethiopia",
         "brand": "Origin Coffee",
         "tags": ["single-origin", "light-roast", "fruity"],
+        "categories": [sample_category["id"]],
         "seo": {
             "slug": "ethiopian-yirgacheffe",
             "title": "Ethiopian Yirgacheffe Coffee - Light Roast",
@@ -47,13 +74,14 @@ def sample_product_data():
 
 
 @pytest.fixture
-def another_product_data():
+def another_product_data(another_category):
     """Another sample product data for testing multiple products."""
     return {
         "name": "Colombian Supremo",
         "description": "Smooth and balanced coffee from Colombia",
         "brand": "Mountain Coffee",
         "tags": ["single-origin", "medium-roast"],
+        "categories": [another_category["id"]],
         "seo": {
             "slug": "colombian-supremo",
             "title": "Colombian Supremo Coffee - Medium Roast",
@@ -71,6 +99,7 @@ def minimal_product_data():
     return {
         "name": "Simple Coffee",
         "tags": [],
+        "categories": [],
     }
 
 
@@ -87,6 +116,7 @@ class TestCreateProduct:
         assert data["name"] == sample_product_data["name"]
         assert data["description"] == sample_product_data["description"]
         assert data["tags"] == sample_product_data["tags"]
+        assert data["categories"] == sample_product_data["categories"]
         assert data["seo"]["slug"] == sample_product_data["seo"]["slug"]
         assert data["status"] == "active"
         assert "id" in data
@@ -102,6 +132,7 @@ class TestCreateProduct:
 
         assert data["name"] == minimal_product_data["name"]
         assert data["tags"] == []
+        assert data["categories"] == []
         assert data["status"] == "active"
         assert "id" in data
 
@@ -146,11 +177,90 @@ class TestCreateProduct:
         invalid_data = {
             "name": "A" * 513,  # Max is 512
             "tags": [],
+            "categories": [],
         }
 
         response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=invalid_data)
 
         assert response.status_code == 422
+
+    def test_create_product_with_invalid_category(self, api_client, sample_store):
+        """Test product creation with non-existent category - should filter it out."""
+        invalid_data = {
+            "name": "Test Product",
+            "tags": [],
+            "categories": ["01939d8e-1234-7890-abcd-ef0123456789"],  # Non-existent category
+        }
+
+        response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=invalid_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        # Invalid category should be filtered out
+        assert data["categories"] == []
+
+    def test_create_product_with_category_from_different_store(self, api_client, sample_store, another_store):
+        """Test product creation with category from a different store - should filter it out."""
+        # Create category in another store
+        category_data = {
+            "name": "Other Store Category",
+            "description": "Category in different store",
+            "status": "active",
+            "path": "/other",
+            "paths": ["/other"],
+        }
+        category_response = api_client.post(f"/api/v1/categories/{another_store['id']}", json=category_data)
+        category = category_response.json()
+
+        # Try to create product in sample_store with category from another_store
+        invalid_data = {
+            "name": "Test Product",
+            "tags": [],
+            "categories": [category["id"]],
+        }
+
+        response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=invalid_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        # Category from different store should be filtered out
+        assert data["categories"] == []
+
+    def test_create_product_with_multiple_categories(self, api_client, sample_store, sample_category, another_category):
+        """Test product creation with multiple categories."""
+        product_data = {
+            "name": "Multi-Category Product",
+            "tags": [],
+            "categories": [sample_category["id"], another_category["id"]],
+        }
+
+        response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=product_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["categories"]) == 2
+        assert sample_category["id"] in data["categories"]
+        assert another_category["id"] in data["categories"]
+
+    def test_create_product_with_mixed_valid_invalid_categories(self, api_client, sample_store, sample_category):
+        """Test product creation with mix of valid and invalid categories - keeps only valid ones."""
+        product_data = {
+            "name": "Mixed Categories Product",
+            "tags": [],
+            "categories": [
+                sample_category["id"],
+                "01939d8e-1234-7890-abcd-ef0123456789",  # Invalid
+                "01939d8e-5678-7890-abcd-ef0123456789",  # Invalid
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=product_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        # Only the valid category should be kept
+        assert len(data["categories"]) == 1
+        assert data["categories"][0] == sample_category["id"]
 
 
 class TestListProducts:
@@ -328,6 +438,67 @@ class TestUpdateProduct:
         assert response.status_code == 200
         data = response.json()
         assert data["tags"] == ["new-tag", "updated"]
+
+    def test_update_product_categories(self, api_client, sample_product_data, sample_store, another_category):
+        """Test updating product categories."""
+        # Create a product first
+        create_response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        product_id = create_response.json()["id"]
+
+        # Update categories
+        update_data = {"categories": [another_category["id"]]}
+        response = api_client.patch(f"/api/v1/products/{sample_store['id']}/{product_id}", json=update_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["categories"] == [another_category["id"]]
+
+    def test_update_product_add_category(
+        self, api_client, sample_product_data, sample_store, sample_category, another_category
+    ):
+        """Test adding a category to product."""
+        # Create a product first
+        create_response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        product_id = create_response.json()["id"]
+
+        # Add another category
+        update_data = {"categories": [sample_category["id"], another_category["id"]]}
+        response = api_client.patch(f"/api/v1/products/{sample_store['id']}/{product_id}", json=update_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["categories"]) == 2
+        assert sample_category["id"] in data["categories"]
+        assert another_category["id"] in data["categories"]
+
+    def test_update_product_remove_all_categories(self, api_client, sample_product_data, sample_store):
+        """Test removing all categories from product."""
+        # Create a product first
+        create_response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        product_id = create_response.json()["id"]
+
+        # Remove all categories
+        update_data = {"categories": []}
+        response = api_client.patch(f"/api/v1/products/{sample_store['id']}/{product_id}", json=update_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["categories"] == []
+
+    def test_update_product_with_invalid_category(self, api_client, sample_product_data, sample_store):
+        """Test updating product with non-existent category - should filter it out."""
+        # Create a product first
+        create_response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        product_id = create_response.json()["id"]
+
+        # Try to update with invalid category
+        update_data = {"categories": ["01939d8e-1234-7890-abcd-ef0123456789"]}
+        response = api_client.patch(f"/api/v1/products/{sample_store['id']}/{product_id}", json=update_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        # Invalid category should be filtered out
+        assert data["categories"] == []
 
     def test_update_product_not_found(self, api_client, sample_store):
         """Test updating a non-existent product."""

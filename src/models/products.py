@@ -1,5 +1,6 @@
 from pymongo import IndexModel
 
+from src.domain.categories import CategoryUUID
 from src.domain.types.attributes import AttributesMap
 from src.domain.types.products import (
     ProductDescription,
@@ -22,6 +23,7 @@ class ProductModel(BaseAppDocument):
     status: ProductStatus
     seo: ProductSEO | None = None
     attributes: AttributesMap
+    categories: list[CategoryUUID] = []
 
     class Settings:
         name = "products"

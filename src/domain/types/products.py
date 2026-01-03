@@ -2,6 +2,9 @@ from enum import Enum
 from typing import Annotated
 
 from pydantic import UUID7, BaseModel, ConfigDict, Field
+from pydantic_extra_types.pendulum_dt import DateTime
+
+from src.domain.categories import CategoryUUID
 
 ProductUUID = Annotated[
     UUID7,
@@ -60,6 +63,22 @@ ProductSEOSlug = Annotated[
         min_length=1,
         max_length=64,
         description="Slug of the product",
+    ),
+]
+
+ProductCategory = Annotated[
+    CategoryUUID,
+    Field(
+        ...,
+        description="Category identifier for the product",
+    ),
+]
+
+ProductCategories = Annotated[
+    list[ProductCategory],
+    Field(
+        default_factory=list,
+        description="List of category identifiers for the product",
     ),
 ]
 
@@ -138,6 +157,7 @@ class NewProduct(BaseModel):
     brand: ProductBrand | None = None
     tags: ProductTags
     seo: ProductSEO | None = None
+    categories: ProductCategories
 
 
 class Product(BaseModel):
@@ -156,6 +176,9 @@ class Product(BaseModel):
     tags: ProductTags
     seo: ProductSEO | None = None
     status: ProductStatus
+    categories: ProductCategories
+    updated_at: DateTime
+    created_at: DateTime
 
 
 class UpdateProduct(BaseModel):
@@ -173,3 +196,4 @@ class UpdateProduct(BaseModel):
     tags: ProductTags | None = None
     seo: ProductSEO | None = None
     status: ProductStatus | None = None
+    categories: ProductCategories | None = None
