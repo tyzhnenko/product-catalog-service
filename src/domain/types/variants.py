@@ -3,7 +3,7 @@ from typing import Annotated
 from pydantic import UUID7, BaseModel, ConfigDict, Field
 
 from src.domain.types.attributes import AttributesMap
-from src.domain.types.prices import PriceMap
+from src.domain.types.prices import LocationPriceMap, PriceMap, RegionPriceMap
 
 VariantUUID = Annotated[
     UUID7,
@@ -129,6 +129,8 @@ class NewProductVariant(BaseModel):
     options: VariantOptions
     attributes: AttributesMap | None = None
     price: PriceMap | None = None
+    location_price: LocationPriceMap | None = None
+    region_price: RegionPriceMap | None = None
 
 
 class ProductVariant(BaseModel):
@@ -151,6 +153,8 @@ class ProductVariant(BaseModel):
     options: VariantOptions
     attributes: AttributesMap | None = None
     price: PriceMap | None = None
+    location_price: LocationPriceMap | None = None
+    region_price: RegionPriceMap | None = None
 
 
 class UpdateProductVariant(BaseModel):
@@ -170,3 +174,5 @@ class UpdateProductVariant(BaseModel):
     options: VariantOptions | None = None
     attributes: AttributesMap | None = None
     price: PriceMap | None = None
+    location_price: LocationPriceMap | None = None
+    region_price: RegionPriceMap | None = None

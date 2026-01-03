@@ -1,7 +1,7 @@
 from pymongo import IndexModel
 
 from src.domain.types.attributes import AttributesMap
-from src.domain.types.prices import PriceMap
+from src.domain.types.prices import LocationPriceMap, PriceMap, RegionPriceMap
 from src.domain.types.products import ProductUUID
 from src.domain.types.stores import StoreUUID
 from src.domain.types.variants import (
@@ -30,6 +30,8 @@ class VariantModel(BaseAppDocument):
     attributes: AttributesMap
     options: VariantOptions
     price: PriceMap | None
+    location_price: LocationPriceMap | None
+    region_price: RegionPriceMap | None
 
     class Settings:
         name = "variants"
@@ -42,5 +44,13 @@ class VariantModel(BaseAppDocument):
             IndexModel(
                 ["store_id", "price.$**"],
                 name="store_price_wildcard_idx",
+            ),
+            IndexModel(
+                ["store_id", "location_price.$**"],
+                name="store_location_price_wildcard_idx",
+            ),
+            IndexModel(
+                ["store_id", "region_price.$**"],
+                name="store_region_price_wildcard_idx",
             ),
         ]

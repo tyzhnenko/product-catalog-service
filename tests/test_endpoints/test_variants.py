@@ -91,6 +91,34 @@ def minimal_variant_data():
     }
 
 
+@pytest.fixture
+def sample_location(api_client, sample_store):
+    """Create a sample location for testing location-based pricing."""
+    location_data = {
+        "name": "Downtown Store",
+        "attributes": {
+            "address": {"type": "string", "name": "address", "value": "123 Main St"},
+            "city": {"type": "string", "name": "city", "value": "Seattle"},
+        },
+    }
+    response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=location_data)
+    return response.json()
+
+
+@pytest.fixture
+def another_location(api_client, sample_store):
+    """Create another location for testing."""
+    location_data = {
+        "name": "Airport Store",
+        "attributes": {
+            "address": {"type": "string", "name": "address", "value": "456 Airport Rd"},
+            "city": {"type": "string", "name": "city", "value": "Seattle"},
+        },
+    }
+    response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=location_data)
+    return response.json()
+
+
 class TestCreateVariant:
     """Tests for POST /api/v1/variants/{store_id}/{product_id}."""
 
@@ -1018,3 +1046,589 @@ class TestVariantPriceMap:
         data = response.json()
         # Check that decimal precision is preserved
         assert "19.99" in data["price"]["retail"]["value"] or data["price"]["retail"]["value"] == "19.9950"
+
+
+class TestVariantLocationPrice:
+    """Tests for location_price functionality in variants."""
+
+    def test_create_variant_with_location_price(self, api_client, sample_store, sample_product, sample_location):
+        """Test creating a variant with location-specific pricing."""
+        variant_data = {
+            "title": "Coffee with Location Price",
+            "options": [],
+            "location_price": {
+                sample_location["id"]: {
+                    "retail": {
+                        "type": "decimal",
+                        "name": "Downtown Retail Price",
+                        "value": "22.99",
+                    }
+                }
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "location_price" in data
+        assert sample_location["id"] in data["location_price"]
+        assert data["location_price"][sample_location["id"]]["retail"]["value"] == "22.99"
+
+    def test_create_variant_with_multiple_location_prices(
+        self, api_client, sample_store, sample_product, sample_location, another_location
+    ):
+        """Test creating a variant with prices for multiple locations."""
+        variant_data = {
+            "title": "Coffee Multi-Location",
+            "options": [],
+            "location_price": {
+                sample_location["id"]: {
+                    "retail": {"type": "decimal", "name": "Downtown Price", "value": "20.00"},
+                    "member": {"type": "decimal", "name": "Downtown Member Price", "value": "18.00"},
+                },
+                another_location["id"]: {
+                    "retail": {"type": "decimal", "name": "Airport Price", "value": "25.00"},
+                    "member": {"type": "decimal", "name": "Airport Member Price", "value": "23.00"},
+                },
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["location_price"]) == 2
+        assert sample_location["id"] in data["location_price"]
+        assert another_location["id"] in data["location_price"]
+        assert data["location_price"][sample_location["id"]]["retail"]["value"] == "20.00"
+        assert data["location_price"][another_location["id"]]["retail"]["value"] == "25.00"
+
+    def test_create_variant_with_location_range_prices(self, api_client, sample_store, sample_product, sample_location):
+        """Test creating a variant with location-specific range prices."""
+        variant_data = {
+            "title": "Coffee Location Range",
+            "options": [],
+            "location_price": {
+                sample_location["id"]: {
+                    "subscription": {
+                        "type": "decimal_range",
+                        "name": "Subscription Range",
+                        "min_value": "18.00",
+                        "max_value": "22.00",
+                    }
+                }
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["location_price"][sample_location["id"]]["subscription"]["type"] == "decimal_range"
+        assert data["location_price"][sample_location["id"]]["subscription"]["min_value"] == "18.00"
+
+    def test_create_variant_with_location_quantity_prices(
+        self, api_client, sample_store, sample_product, sample_location
+    ):
+        """Test creating a variant with location-specific quantity-based pricing."""
+        variant_data = {
+            "title": "Coffee Location Bulk",
+            "options": [],
+            "location_price": {
+                sample_location["id"]: {
+                    "bulk_10": {
+                        "type": "decimal_quantity",
+                        "name": "Bulk 10+",
+                        "min_quantity": 10,
+                        "value": "15.00",
+                    },
+                    "bulk_50": {
+                        "type": "decimal_quantity",
+                        "name": "Bulk 50+",
+                        "min_quantity": 50,
+                        "value": "12.00",
+                    },
+                }
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        location_prices = data["location_price"][sample_location["id"]]
+        assert location_prices["bulk_10"]["min_quantity"] == 10
+        assert location_prices["bulk_50"]["value"] == "12.00"
+
+    def test_update_variant_add_location_price(self, api_client, sample_store, sample_product, sample_location):
+        """Test adding location price to a variant."""
+        # Create variant without location price
+        variant_data = {"title": "Coffee", "options": []}
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        # Add location price
+        update_data = {
+            "location_price": {
+                sample_location["id"]: {"retail": {"type": "decimal", "name": "Downtown Price", "value": "21.00"}}
+            }
+        }
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}", json=update_data
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert sample_location["id"] in data["location_price"]
+        assert data["location_price"][sample_location["id"]]["retail"]["value"] == "21.00"
+
+    def test_update_variant_modify_location_price(self, api_client, sample_store, sample_product, sample_location):
+        """Test modifying existing location price."""
+        # Create variant with location price
+        variant_data = {
+            "title": "Coffee",
+            "options": [],
+            "location_price": {
+                sample_location["id"]: {"retail": {"type": "decimal", "name": "Original Price", "value": "20.00"}}
+            },
+        }
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        # Update location price
+        update_data = {
+            "location_price": {
+                sample_location["id"]: {"retail": {"type": "decimal", "name": "Updated Price", "value": "23.50"}}
+            }
+        }
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}", json=update_data
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["location_price"][sample_location["id"]]["retail"]["value"] == "23.50"
+
+    def test_create_variant_with_both_price_and_location_price(
+        self, api_client, sample_store, sample_product, sample_location
+    ):
+        """Test creating a variant with both base price and location-specific pricing."""
+        variant_data = {
+            "title": "Coffee Hybrid Pricing",
+            "options": [],
+            "price": {"retail": {"type": "decimal", "name": "Base Retail", "value": "19.99"}},
+            "location_price": {
+                sample_location["id"]: {"retail": {"type": "decimal", "name": "Downtown Price", "value": "22.99"}}
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["price"]["retail"]["value"] == "19.99"
+        assert data["location_price"][sample_location["id"]]["retail"]["value"] == "22.99"
+
+
+class TestVariantRegionPrice:
+    """Tests for region_price functionality in variants."""
+
+    def test_create_variant_with_region_price(self, api_client, sample_store, sample_product):
+        """Test creating a variant with region-specific pricing."""
+        variant_data = {
+            "title": "Coffee with Region Price",
+            "options": [],
+            "region_price": {
+                "US": {"retail": {"type": "decimal", "name": "US Retail Price", "value": "24.99"}},
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "region_price" in data
+        assert "US" in data["region_price"]
+        assert data["region_price"]["US"]["retail"]["value"] == "24.99"
+
+    def test_create_variant_with_multiple_region_prices(self, api_client, sample_store, sample_product):
+        """Test creating a variant with prices for multiple regions."""
+        variant_data = {
+            "title": "Coffee Multi-Region",
+            "options": [],
+            "region_price": {
+                "US": {
+                    "retail": {"type": "decimal", "name": "US Price", "value": "20.00"},
+                    "wholesale": {"type": "decimal", "name": "US Wholesale", "value": "16.00"},
+                },
+                "CA": {
+                    "retail": {"type": "decimal", "name": "Canada Price", "value": "26.00"},
+                    "wholesale": {"type": "decimal", "name": "Canada Wholesale", "value": "21.00"},
+                },
+                "GB": {
+                    "retail": {"type": "decimal", "name": "UK Price", "value": "18.50"},
+                },
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["region_price"]) == 3
+        assert "US" in data["region_price"]
+        assert "CA" in data["region_price"]
+        assert "GB" in data["region_price"]
+        assert data["region_price"]["US"]["retail"]["value"] == "20.00"
+        assert data["region_price"]["CA"]["retail"]["value"] == "26.00"
+        assert data["region_price"]["GB"]["retail"]["value"] == "18.50"
+
+    def test_create_variant_with_region_range_prices(self, api_client, sample_store, sample_product):
+        """Test creating a variant with region-specific range prices."""
+        variant_data = {
+            "title": "Coffee Region Range",
+            "options": [],
+            "region_price": {
+                "DE": {
+                    "subscription": {
+                        "type": "decimal_range",
+                        "name": "Germany Subscription Range",
+                        "min_value": "15.00",
+                        "max_value": "20.00",
+                    }
+                }
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["region_price"]["DE"]["subscription"]["type"] == "decimal_range"
+        assert data["region_price"]["DE"]["subscription"]["min_value"] == "15.00"
+        assert data["region_price"]["DE"]["subscription"]["max_value"] == "20.00"
+
+    def test_create_variant_with_region_quantity_prices(self, api_client, sample_store, sample_product):
+        """Test creating a variant with region-specific quantity-based pricing."""
+        variant_data = {
+            "title": "Coffee Region Bulk",
+            "options": [],
+            "region_price": {
+                "JP": {
+                    "bulk_tier1": {
+                        "type": "decimal_quantity",
+                        "name": "Japan Bulk Tier 1",
+                        "min_quantity": 10,
+                        "value": "16.00",
+                    },
+                    "bulk_tier2": {
+                        "type": "decimal_quantity",
+                        "name": "Japan Bulk Tier 2",
+                        "min_quantity": 25,
+                        "value": "14.00",
+                    },
+                }
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        japan_prices = data["region_price"]["JP"]
+        assert japan_prices["bulk_tier1"]["min_quantity"] == 10
+        assert japan_prices["bulk_tier2"]["value"] == "14.00"
+
+    def test_update_variant_add_region_price(self, api_client, sample_store, sample_product):
+        """Test adding region price to a variant."""
+        # Create variant without region price
+        variant_data = {"title": "Coffee", "options": []}
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        # Add region price
+        update_data = {
+            "region_price": {"AU": {"retail": {"type": "decimal", "name": "Australia Price", "value": "28.00"}}}
+        }
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}", json=update_data
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "AU" in data["region_price"]
+        assert data["region_price"]["AU"]["retail"]["value"] == "28.00"
+
+    def test_update_variant_modify_region_price(self, api_client, sample_store, sample_product):
+        """Test modifying existing region price."""
+        # Create variant with region price
+        variant_data = {
+            "title": "Coffee",
+            "options": [],
+            "region_price": {"FR": {"retail": {"type": "decimal", "name": "France Price", "value": "22.00"}}},
+        }
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        # Update region price
+        update_data = {
+            "region_price": {"FR": {"retail": {"type": "decimal", "name": "France Updated", "value": "24.50"}}}
+        }
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}", json=update_data
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["region_price"]["FR"]["retail"]["value"] == "24.50"
+
+    def test_create_variant_with_invalid_region_code(self, api_client, sample_store, sample_product):
+        """Test creating a variant with invalid region/country code."""
+        variant_data = {
+            "title": "Coffee",
+            "options": [],
+            "region_price": {"INVALID": {"retail": {"type": "decimal", "name": "Invalid Region", "value": "20.00"}}},
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 422
+
+    def test_create_variant_with_all_price_types(self, api_client, sample_store, sample_product, sample_location):
+        """Test creating a variant with base price, location price, and region price."""
+        variant_data = {
+            "title": "Coffee All Prices",
+            "options": [],
+            "price": {"retail": {"type": "decimal", "name": "Base Price", "value": "19.99"}},
+            "location_price": {
+                sample_location["id"]: {"retail": {"type": "decimal", "name": "Downtown Price", "value": "22.99"}}
+            },
+            "region_price": {"US": {"retail": {"type": "decimal", "name": "US Price", "value": "24.99"}}},
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["price"]["retail"]["value"] == "19.99"
+        assert data["location_price"][sample_location["id"]]["retail"]["value"] == "22.99"
+        assert data["region_price"]["US"]["retail"]["value"] == "24.99"
+
+    def test_list_variants_with_location_and_region_prices(
+        self, api_client, sample_store, sample_product, sample_location
+    ):
+        """Test listing variants correctly returns location and region price information."""
+        variant_data = {
+            "title": "Coffee Complex",
+            "options": [],
+            "price": {"retail": {"type": "decimal", "name": "Base", "value": "20.00"}},
+            "location_price": {
+                sample_location["id"]: {"retail": {"type": "decimal", "name": "Location", "value": "23.00"}}
+            },
+            "region_price": {"CA": {"retail": {"type": "decimal", "name": "Canada", "value": "26.00"}}},
+        }
+
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        # List variants
+        response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}")
+
+        assert response.status_code == 200
+        variants = response.json()
+        assert len(variants) >= 1
+
+        # Find our variant
+        variant = next((v for v in variants if v["title"] == "Coffee Complex"), None)
+        assert variant is not None
+        assert variant["price"]["retail"]["value"] == "20.00"
+        assert variant["location_price"][sample_location["id"]]["retail"]["value"] == "23.00"
+        assert variant["region_price"]["CA"]["retail"]["value"] == "26.00"
+
+
+class TestVariantLocationPriceValidation:
+    """Tests for location_price validation - filtering invalid location IDs."""
+
+    def test_create_variant_filters_invalid_location_ids(
+        self, api_client, sample_store, sample_product, sample_location
+    ):
+        """Test that invalid location IDs are filtered out when creating a variant."""
+        invalid_location_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        variant_data = {
+            "title": "Coffee with Mixed Locations",
+            "options": [],
+            "location_price": {
+                sample_location["id"]: {"retail": {"type": "decimal", "name": "Valid Location", "value": "20.00"}},
+                invalid_location_id: {"retail": {"type": "decimal", "name": "Invalid Location", "value": "25.00"}},
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        # Only valid location should be present
+        assert sample_location["id"] in data["location_price"]
+        assert invalid_location_id not in data["location_price"]
+        assert len(data["location_price"]) == 1
+        assert data["location_price"][sample_location["id"]]["retail"]["value"] == "20.00"
+
+    def test_create_variant_all_invalid_locations_becomes_none(self, api_client, sample_store, sample_product):
+        """Test that location_price becomes None when all location IDs are invalid."""
+        variant_data = {
+            "title": "Coffee with Invalid Locations",
+            "options": [],
+            "location_price": {
+                "01939d8e-1111-7890-abcd-ef0123456789": {
+                    "retail": {"type": "decimal", "name": "Invalid 1", "value": "20.00"}
+                },
+                "01939d8e-2222-7890-abcd-ef0123456789": {
+                    "retail": {"type": "decimal", "name": "Invalid 2", "value": "25.00"}
+                },
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        # All locations were invalid, so location_price should be None
+        assert data["location_price"] is None
+
+    def test_create_variant_deleted_location_filtered_out(
+        self, api_client, sample_store, sample_product, sample_location
+    ):
+        """Test that deleted locations are filtered out."""
+        # Create another location
+        location_data = {"name": "To Be Deleted Location", "attributes": {}}
+        create_response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=location_data)
+        location_to_delete = create_response.json()
+
+        # Delete the location
+        api_client.delete(f"/api/v1/locations/{sample_store['id']}/{location_to_delete['id']}")
+
+        # Try to create variant with both locations
+        variant_data = {
+            "title": "Coffee with Deleted Location",
+            "options": [],
+            "location_price": {
+                sample_location["id"]: {"retail": {"type": "decimal", "name": "Valid", "value": "20.00"}},
+                location_to_delete["id"]: {"retail": {"type": "decimal", "name": "Deleted", "value": "25.00"}},
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        # Only the non-deleted location should be present
+        assert sample_location["id"] in data["location_price"]
+        assert location_to_delete["id"] not in data["location_price"]
+        assert len(data["location_price"]) == 1
+
+    def test_update_variant_filters_invalid_location_ids(
+        self, api_client, sample_store, sample_product, sample_location
+    ):
+        """Test that invalid location IDs are filtered out when updating a variant."""
+        # Create variant
+        variant_data = {"title": "Coffee", "options": []}
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        # Update with mixed valid/invalid locations
+        invalid_location_id = "01939d8e-9999-7890-abcd-ef0123456789"
+        update_data = {
+            "location_price": {
+                sample_location["id"]: {"retail": {"type": "decimal", "name": "Valid", "value": "22.00"}},
+                invalid_location_id: {"retail": {"type": "decimal", "name": "Invalid", "value": "30.00"}},
+            }
+        }
+
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}", json=update_data
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        # Only valid location should be present
+        assert sample_location["id"] in data["location_price"]
+        assert invalid_location_id not in data["location_price"]
+        assert len(data["location_price"]) == 1
+
+    def test_update_variant_all_invalid_locations_becomes_none(
+        self, api_client, sample_store, sample_product, sample_location
+    ):
+        """Test that location_price becomes None when updating with all invalid location IDs."""
+        # Create variant with valid location
+        variant_data = {
+            "title": "Coffee",
+            "options": [],
+            "location_price": {
+                sample_location["id"]: {"retail": {"type": "decimal", "name": "Valid", "value": "20.00"}}
+            },
+        }
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        # Update with all invalid locations
+        update_data = {
+            "location_price": {
+                "01939d8e-aaaa-7890-abcd-ef0123456789": {
+                    "retail": {"type": "decimal", "name": "Invalid", "value": "25.00"}
+                }
+            }
+        }
+
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}", json=update_data
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        # All locations were invalid, should become None
+        assert data["location_price"] is None
+
+    def test_create_variant_location_from_different_store_filtered(
+        self, api_client, sample_store, another_store, sample_product
+    ):
+        """Test that locations from a different store are filtered out."""
+        # Create location in another store
+        location_data = {"name": "Other Store Location", "attributes": {}}
+        create_response = api_client.post(f"/api/v1/locations/{another_store['id']}", json=location_data)
+        other_store_location = create_response.json()
+
+        # Create location in the correct store
+        location_data = {"name": "Correct Store Location", "attributes": {}}
+        create_response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=location_data)
+        correct_location = create_response.json()
+
+        # Try to create variant with both locations
+        variant_data = {
+            "title": "Coffee Cross-Store",
+            "options": [],
+            "location_price": {
+                correct_location["id"]: {"retail": {"type": "decimal", "name": "Correct", "value": "20.00"}},
+                other_store_location["id"]: {"retail": {"type": "decimal", "name": "Wrong Store", "value": "25.00"}},
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        # Only location from the correct store should be present
+        assert correct_location["id"] in data["location_price"]
+        assert other_store_location["id"] not in data["location_price"]
+        assert len(data["location_price"]) == 1

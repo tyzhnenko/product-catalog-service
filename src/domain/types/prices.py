@@ -5,6 +5,9 @@ import bson
 import pydantic
 from pydantic import BaseModel, Field
 
+from src.domain.types.common import CountryCode
+from src.domain.types.locations import LocationUUID
+
 PriceName = Annotated[
     str,
     Field(
@@ -56,5 +59,21 @@ PriceMap = Annotated[
     Field(
         default_factory=dict,
         description="Mapping of price identifiers to their corresponding Price objects",
+    ),
+]
+
+LocationPriceMap = Annotated[
+    dict[LocationUUID, PriceMap],
+    Field(
+        default_factory=dict,
+        description="Mapping of location identifiers to their corresponding PriceMap",
+    ),
+]
+
+RegionPriceMap = Annotated[
+    dict[CountryCode, PriceMap],
+    Field(
+        default_factory=dict,
+        description="Mapping of region identifiers to their corresponding PriceMap",
     ),
 ]
