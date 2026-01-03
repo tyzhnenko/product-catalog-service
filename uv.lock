@@ -442,9 +442,6 @@ dependencies = [
     { name = "pydantic" },
     { name = "pydantic-extra-types" },
     { name = "pydantic-settings", extra = ["yaml"] },
-    { name = "pytest-cov" },
-    { name = "pytest-env" },
-    { name = "pytest-mongo" },
     { name = "uvicorn" },
 ]
 
@@ -455,6 +452,9 @@ dev = [
     { name = "mypy" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
+    { name = "pytest-cov" },
+    { name = "pytest-env" },
+    { name = "pytest-mongo" },
     { name = "ruff" },
 ]
 
@@ -467,9 +467,6 @@ requires-dist = [
     { name = "pydantic", specifier = ">=2.12.5" },
     { name = "pydantic-extra-types", specifier = ">=2.10.6" },
     { name = "pydantic-settings", extras = ["yaml"], specifier = ">=2.12.0" },
-    { name = "pytest-cov", specifier = ">=7.0.0" },
-    { name = "pytest-env", specifier = ">=1.2.0" },
-    { name = "pytest-mongo", specifier = ">=3.2.1" },
     { name = "uvicorn", specifier = ">=0.40.0" },
 ]
 
@@ -480,6 +477,9 @@ dev = [
     { name = "mypy", specifier = ">=1.19.1" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-asyncio", specifier = ">=0.25.2" },
+    { name = "pytest-cov", specifier = ">=7.0.0" },
+    { name = "pytest-env", specifier = ">=1.2.0" },
+    { name = "pytest-mongo", specifier = ">=3.2.1" },
     { name = "ruff", specifier = ">=0.14.10" },
 ]
 
