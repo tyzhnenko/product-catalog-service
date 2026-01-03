@@ -1,9 +1,9 @@
-from decimal import Decimal
 from typing import Annotated
 
 from pydantic import UUID7, BaseModel, ConfigDict, Field
 
 from src.domain.types.attributes import AttributesMap
+from src.domain.types.prices import PriceMap
 
 VariantUUID = Annotated[
     UUID7,
@@ -128,6 +128,7 @@ class NewProductVariant(BaseModel):
     isbn: VariantISBN | None = None
     options: VariantOptions
     attributes: AttributesMap | None = None
+    price: PriceMap | None = None
 
 
 class ProductVariant(BaseModel):
@@ -149,6 +150,7 @@ class ProductVariant(BaseModel):
     isbn: VariantISBN | None = None
     options: VariantOptions
     attributes: AttributesMap | None = None
+    price: PriceMap | None = None
 
 
 class UpdateProductVariant(BaseModel):
@@ -167,3 +169,4 @@ class UpdateProductVariant(BaseModel):
     isbn: VariantISBN | None = None
     options: VariantOptions | None = None
     attributes: AttributesMap | None = None
+    price: PriceMap | None = None

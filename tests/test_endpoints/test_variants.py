@@ -569,3 +569,452 @@ class TestVariantCRUDIntegration:
             f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant2_id}"
         )
         assert delete_response.status_code == 204
+
+
+class TestVariantPriceMap:
+    """Tests for priceMap functionality in variants."""
+
+    def test_create_variant_with_decimal_price(self, api_client, sample_store, sample_product):
+        """Test creating a variant with a decimal price."""
+        variant_data = {
+            "title": "Coffee 250g",
+            "sku": "COFFEE-250",
+            "options": [{"name": "Size", "value": "250g"}],
+            "price": {
+                "retail": {
+                    "type": "decimal",
+                    "name": "Retail Price",
+                    "value": "19.99",
+                }
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "price" in data
+        assert "retail" in data["price"]
+        assert data["price"]["retail"]["type"] == "decimal"
+        assert data["price"]["retail"]["name"] == "Retail Price"
+        assert data["price"]["retail"]["value"] == "19.99"
+
+    def test_create_variant_with_multiple_prices(self, api_client, sample_store, sample_product):
+        """Test creating a variant with multiple price types."""
+        variant_data = {
+            "title": "Coffee 500g",
+            "options": [],
+            "price": {
+                "retail": {
+                    "type": "decimal",
+                    "name": "Retail Price",
+                    "value": "35.50",
+                },
+                "wholesale": {
+                    "type": "decimal",
+                    "name": "Wholesale Price",
+                    "value": "28.00",
+                },
+                "member": {
+                    "type": "decimal",
+                    "name": "Member Price",
+                    "value": "31.99",
+                },
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["price"]) == 3
+        assert "retail" in data["price"]
+        assert "wholesale" in data["price"]
+        assert "member" in data["price"]
+
+    def test_create_variant_with_decimal_range_price(self, api_client, sample_store, sample_product):
+        """Test creating a variant with a decimal range price."""
+        variant_data = {
+            "title": "Coffee Subscription",
+            "options": [],
+            "price": {
+                "subscription": {
+                    "type": "decimal_range",
+                    "name": "Subscription Price Range",
+                    "min_value": "25.00",
+                    "max_value": "45.00",
+                }
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["price"]["subscription"]["type"] == "decimal_range"
+        assert data["price"]["subscription"]["min_value"] == "25.00"
+        assert data["price"]["subscription"]["max_value"] == "45.00"
+
+    def test_create_variant_with_decimal_quantity_price(self, api_client, sample_store, sample_product):
+        """Test creating a variant with a decimal quantity price."""
+        variant_data = {
+            "title": "Coffee Bulk",
+            "options": [],
+            "price": {
+                "bulk_tier_1": {
+                    "type": "decimal_quantity",
+                    "name": "Bulk Price 10+",
+                    "min_quantity": 10,
+                    "value": "15.99",
+                },
+                "bulk_tier_2": {
+                    "type": "decimal_quantity",
+                    "name": "Bulk Price 50+",
+                    "min_quantity": 50,
+                    "value": "12.99",
+                },
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["price"]["bulk_tier_1"]["type"] == "decimal_quantity"
+        assert data["price"]["bulk_tier_1"]["min_quantity"] == 10
+        assert data["price"]["bulk_tier_1"]["value"] == "15.99"
+        assert data["price"]["bulk_tier_2"]["min_quantity"] == 50
+
+    def test_create_variant_with_mixed_price_types(self, api_client, sample_store, sample_product):
+        """Test creating a variant with mixed price types."""
+        variant_data = {
+            "title": "Coffee Premium",
+            "options": [],
+            "price": {
+                "retail": {
+                    "type": "decimal",
+                    "name": "Retail Price",
+                    "value": "29.99",
+                },
+                "subscription": {
+                    "type": "decimal_range",
+                    "name": "Subscription Range",
+                    "min_value": "24.99",
+                    "max_value": "27.99",
+                },
+                "bulk": {
+                    "type": "decimal_quantity",
+                    "name": "Bulk Discount",
+                    "min_quantity": 20,
+                    "value": "22.99",
+                },
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["price"]) == 3
+        assert data["price"]["retail"]["type"] == "decimal"
+        assert data["price"]["subscription"]["type"] == "decimal_range"
+        assert data["price"]["bulk"]["type"] == "decimal_quantity"
+
+    def test_create_variant_with_empty_price_map(self, api_client, sample_store, sample_product):
+        """Test creating a variant with an empty price map."""
+        variant_data = {
+            "title": "Coffee No Price",
+            "options": [],
+            "price": {},
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["price"] == {}
+
+    def test_create_variant_without_price_map(self, api_client, sample_store, sample_product):
+        """Test creating a variant without a price map (null)."""
+        variant_data = {
+            "title": "Coffee Default",
+            "options": [],
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["price"] is None
+
+    def test_update_variant_add_price(self, api_client, sample_store, sample_product):
+        """Test adding a price to a variant that had no price."""
+        # Create variant without price
+        variant_data = {"title": "Coffee", "options": []}
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        # Add price
+        update_data = {
+            "price": {
+                "retail": {
+                    "type": "decimal",
+                    "name": "Retail Price",
+                    "value": "24.99",
+                }
+            }
+        }
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}", json=update_data
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["price"]["retail"]["value"] == "24.99"
+
+    def test_update_variant_modify_price(self, api_client, sample_store, sample_product):
+        """Test modifying an existing price in a variant."""
+        # Create variant with price
+        variant_data = {
+            "title": "Coffee",
+            "options": [],
+            "price": {
+                "retail": {
+                    "type": "decimal",
+                    "name": "Retail Price",
+                    "value": "20.00",
+                }
+            },
+        }
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        # Update price value
+        update_data = {
+            "price": {
+                "retail": {
+                    "type": "decimal",
+                    "name": "Retail Price",
+                    "value": "22.50",
+                }
+            }
+        }
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}", json=update_data
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["price"]["retail"]["value"] == "22.50"
+
+    def test_update_variant_add_multiple_prices(self, api_client, sample_store, sample_product):
+        """Test adding multiple prices to a variant."""
+        # Create variant with one price
+        variant_data = {
+            "title": "Coffee",
+            "options": [],
+            "price": {
+                "retail": {
+                    "type": "decimal",
+                    "name": "Retail Price",
+                    "value": "30.00",
+                }
+            },
+        }
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        # Add more prices
+        update_data = {
+            "price": {
+                "retail": {
+                    "type": "decimal",
+                    "name": "Retail Price",
+                    "value": "30.00",
+                },
+                "wholesale": {
+                    "type": "decimal",
+                    "name": "Wholesale Price",
+                    "value": "24.00",
+                },
+                "member": {
+                    "type": "decimal",
+                    "name": "Member Price",
+                    "value": "27.00",
+                },
+            }
+        }
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}", json=update_data
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["price"]) == 3
+        assert "wholesale" in data["price"]
+        assert "member" in data["price"]
+
+    def test_update_variant_remove_price(self, api_client, sample_store, sample_product):
+        """Test removing price from a variant."""
+        # Create variant with price
+        variant_data = {
+            "title": "Coffee",
+            "options": [],
+            "price": {
+                "retail": {
+                    "type": "decimal",
+                    "name": "Retail Price",
+                    "value": "25.00",
+                }
+            },
+        }
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        # Remove price by setting to empty dict
+        update_data = {"price": {}}
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}", json=update_data
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["price"] == {}
+
+    def test_list_variants_with_prices(self, api_client, sample_store, sample_product):
+        """Test listing variants correctly returns price information."""
+        # Create multiple variants with different prices
+        variant1_data = {
+            "title": "Small Size",
+            "options": [],
+            "price": {"retail": {"type": "decimal", "name": "Retail Price", "value": "15.99"}},
+        }
+        variant2_data = {
+            "title": "Large Size",
+            "options": [],
+            "price": {"retail": {"type": "decimal", "name": "Retail Price", "value": "29.99"}},
+        }
+
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant1_data)
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant2_data)
+
+        # List variants
+        response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}")
+
+        assert response.status_code == 200
+        variants = response.json()
+        assert len(variants) == 2
+
+        # Both should have price data
+        for variant in variants:
+            assert "price" in variant
+            assert variant["price"] is not None
+            assert "retail" in variant["price"]
+
+    def test_get_variant_with_price(self, api_client, sample_store, sample_product):
+        """Test getting a specific variant returns complete price information."""
+        variant_data = {
+            "title": "Premium Coffee",
+            "options": [],
+            "price": {
+                "retail": {"type": "decimal", "name": "Retail Price", "value": "39.99"},
+                "wholesale": {"type": "decimal", "name": "Wholesale Price", "value": "32.00"},
+            },
+        }
+
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        # Get the variant
+        response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["price"]) == 2
+        assert data["price"]["retail"]["value"] == "39.99"
+        assert data["price"]["wholesale"]["value"] == "32.00"
+
+    def test_create_variant_invalid_price_type(self, api_client, sample_store, sample_product):
+        """Test creating a variant with invalid price type."""
+        variant_data = {
+            "title": "Coffee",
+            "options": [],
+            "price": {
+                "retail": {
+                    "type": "invalid_type",
+                    "name": "Retail Price",
+                    "value": "20.00",
+                }
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 422
+
+    def test_create_variant_missing_price_fields(self, api_client, sample_store, sample_product):
+        """Test creating a variant with missing required price fields."""
+        variant_data = {
+            "title": "Coffee",
+            "options": [],
+            "price": {
+                "retail": {
+                    "type": "decimal",
+                    "name": "Retail Price",
+                    # Missing 'value' field
+                }
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 422
+
+    def test_create_variant_invalid_decimal_value(self, api_client, sample_store, sample_product):
+        """Test creating a variant with invalid decimal value."""
+        variant_data = {
+            "title": "Coffee",
+            "options": [],
+            "price": {
+                "retail": {
+                    "type": "decimal",
+                    "name": "Retail Price",
+                    "value": "not-a-number",
+                }
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 422
+
+    def test_price_decimal_precision(self, api_client, sample_store, sample_product):
+        """Test that decimal prices maintain precision."""
+        variant_data = {
+            "title": "Coffee",
+            "options": [],
+            "price": {
+                "retail": {
+                    "type": "decimal",
+                    "name": "Retail Price",
+                    "value": "19.9950",  # Extra precision
+                }
+            },
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        # Check that decimal precision is preserved
+        assert "19.99" in data["price"]["retail"]["value"] or data["price"]["retail"]["value"] == "19.9950"

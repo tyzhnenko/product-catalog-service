@@ -37,6 +37,7 @@ class VariantsService:
             isbn=new_variant.isbn,
             options=new_variant.options,
             attributes=new_variant.attributes or {},
+            price=new_variant.price,
         )
         variant = await variant.create()
         logger.info(f"Created variant {variant.id} for product {product_id}")
