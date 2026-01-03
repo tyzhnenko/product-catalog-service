@@ -19,6 +19,7 @@ class LocationsService:
             id=uuid7(),
             name=new_location.name,
             store_id=store_id,
+            attributes=new_location.attributes,
         )
         location = await location.create()
 
@@ -61,6 +62,9 @@ class LocationsService:
 
         if update_data.name is not None:
             location.name = update_data.name
+
+        if update_data.attributes is not None:
+            location.attributes = update_data.attributes
 
         await location.save()
         return Location.model_validate(location)

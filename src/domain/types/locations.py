@@ -2,6 +2,7 @@ from typing import Annotated
 
 from pydantic import UUID7, BaseModel, ConfigDict, Field
 
+from src.domain.types.attributes import AttributesMap
 from src.domain.types.stores import StoreUUID
 
 LocationUUID = Annotated[
@@ -32,6 +33,7 @@ class NewLocation(BaseModel):
     )
 
     name: LocationName
+    attributes: AttributesMap = Field(default_factory=dict)
 
 
 class Location(BaseModel):
@@ -42,6 +44,7 @@ class Location(BaseModel):
     id: LocationUUID
     name: LocationName
     store_id: StoreUUID
+    attributes: AttributesMap
 
 
 class UpdateLocation(BaseModel):
@@ -50,3 +53,4 @@ class UpdateLocation(BaseModel):
     )
 
     name: LocationName | None = None
+    attributes: AttributesMap | None = None

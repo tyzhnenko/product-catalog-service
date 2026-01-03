@@ -32,6 +32,38 @@ def sample_location_data(sample_store):
     return {
         "name": "Downtown Location",
         "store_id": sample_store["id"],
+        "attributes": {},
+    }
+
+
+@pytest.fixture
+def location_with_attributes_data(sample_store):
+    """Sample data for creating a location with attributes."""
+    return {
+        "name": "Location with Attributes",
+        "store_id": sample_store["id"],
+        "attributes": {
+            "floor": {
+                "type": "integer",
+                "name": "floor",
+                "value": 2,
+            },
+            "capacity": {
+                "type": "integer",
+                "name": "capacity",
+                "value": 100,
+            },
+            "has_wifi": {
+                "type": "bool",
+                "name": "has_wifi",
+                "value": True,
+            },
+            "description": {
+                "type": "text",
+                "name": "description",
+                "value": "A spacious location on the 2nd floor with WiFi access",
+            },
+        },
     }
 
 
@@ -56,6 +88,21 @@ class TestCreateLocation:
 
         assert data["name"] == sample_location_data["name"]
         assert data["store_id"] == sample_location_data["store_id"]
+        assert data["attributes"] == {}
+        assert "id" in data
+        # Validate UUID7 format
+        assert uuid.UUID(data["id"]).version == 7
+
+    def test_create_location_with_attributes(self, api_client, location_with_attributes_data, sample_store):
+        """Test successful location creation with attributes."""
+        response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=location_with_attributes_data)
+
+        assert response.status_code == 200
+        data = response.json()
+
+        assert data["name"] == location_with_attributes_data["name"]
+        assert data["store_id"] == location_with_attributes_data["store_id"]
+        assert data["attributes"] == location_with_attributes_data["attributes"]
         assert "id" in data
         # Validate UUID7 format
         assert uuid.UUID(data["id"]).version == 7
@@ -211,6 +258,65 @@ class TestUpdateLocation:
         assert data["id"] == location_id
         assert data["name"] == "Updated Location Name"
         assert data["store_id"] == sample_location_data["store_id"]  # store_id should remain unchanged
+        assert data["attributes"] == {}  # attributes should remain unchanged
+
+    def test_update_location_attributes(self, api_client, sample_location_data, sample_store):
+        """Test updating location attributes."""
+        # Create a location first
+        create_response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=sample_location_data)
+        created_location = create_response.json()
+        location_id = created_location["id"]
+
+        # Update the location attributes
+        new_attributes = {
+            "floor": {
+                "type": "integer",
+                "name": "floor",
+                "value": 3,
+            },
+            "has_parking": {
+                "type": "bool",
+                "name": "has_parking",
+                "value": True,
+            },
+        }
+        update_data = {
+            "attributes": new_attributes,
+        }
+        response = api_client.put(f"/api/v1/locations/{sample_store['id']}/{location_id}", json=update_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == location_id
+        assert data["attributes"] == new_attributes
+        assert data["name"] == sample_location_data["name"]  # name should remain unchanged
+
+    def test_update_location_name_and_attributes(self, api_client, location_with_attributes_data, sample_store):
+        """Test updating both location name and attributes."""
+        # Create a location with attributes first
+        create_response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=location_with_attributes_data)
+        created_location = create_response.json()
+        location_id = created_location["id"]
+
+        # Update both name and attributes
+        new_attributes = {
+            "floor": {
+                "type": "integer",
+                "name": "floor",
+                "value": 5,
+            },
+        }
+        update_data = {
+            "name": "Updated Location",
+            "attributes": new_attributes,
+        }
+        response = api_client.put(f"/api/v1/locations/{sample_store['id']}/{location_id}", json=update_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["id"] == location_id
+        assert data["name"] == "Updated Location"
+        assert data["attributes"] == new_attributes
 
     def test_update_location_name_to_null(self, api_client, sample_location_data, sample_store):
         """Test updating location with null name (should keep original)."""
@@ -399,3 +505,135 @@ class TestLocationCRUDIntegration:
         assert loc1["store_id"] == sample_store["id"]
         assert loc2["store_id"] == another_store["id"]
         assert loc1["store_id"] != loc2["store_id"]
+
+
+class TestLocationAttributes:
+    """Tests specifically for location attributes functionality."""
+
+    def test_create_location_with_multiple_attribute_types(self, api_client, sample_store):
+        """Test creating a location with various attribute types."""
+        location_data = {
+            "name": "Multi-Attribute Location",
+            "store_id": sample_store["id"],
+            "attributes": {
+                "floor": {
+                    "type": "integer",
+                    "name": "floor",
+                    "value": 3,
+                },
+                "area_sqm": {
+                    "type": "float",
+                    "name": "area_sqm",
+                    "value": 150.5,
+                },
+                "has_elevator": {
+                    "type": "bool",
+                    "name": "has_elevator",
+                    "value": True,
+                },
+                "description": {
+                    "type": "text",
+                    "name": "description",
+                    "value": "Premium office space",
+                },
+                "amenities": {
+                    "type": "list_of_strings",
+                    "name": "amenities",
+                    "values": ["wifi", "parking", "security"],
+                },
+            },
+        }
+
+        response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=location_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["attributes"]["floor"]["value"] == 3
+        assert data["attributes"]["area_sqm"]["value"] == 150.5
+        assert data["attributes"]["has_elevator"]["value"] is True
+        assert data["attributes"]["description"]["value"] == "Premium office space"
+        assert data["attributes"]["amenities"]["values"] == ["wifi", "parking", "security"]
+
+    def test_update_partial_attributes(self, api_client, location_with_attributes_data, sample_store):
+        """Test updating only some attributes while keeping others."""
+        # Create a location with attributes
+        create_response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=location_with_attributes_data)
+        created_location = create_response.json()
+        location_id = created_location["id"]
+
+        # Update only specific attributes
+        update_data = {
+            "attributes": {
+                "floor": {
+                    "type": "integer",
+                    "name": "floor",
+                    "value": 5,
+                },
+                "new_attribute": {
+                    "type": "string",
+                    "name": "new_attribute",
+                    "value": "new value",
+                },
+            },
+        }
+        response = api_client.put(f"/api/v1/locations/{sample_store['id']}/{location_id}", json=update_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        # Only the specified attributes should be in the response (full replacement)
+        assert data["attributes"]["floor"]["value"] == 5
+        assert data["attributes"]["new_attribute"]["value"] == "new value"
+        assert "capacity" not in data["attributes"]  # Old attributes should be replaced
+
+    def test_clear_attributes(self, api_client, location_with_attributes_data, sample_store):
+        """Test clearing all attributes from a location."""
+        # Create a location with attributes
+        create_response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=location_with_attributes_data)
+        created_location = create_response.json()
+        location_id = created_location["id"]
+
+        # Clear attributes
+        update_data = {
+            "attributes": {},
+        }
+        response = api_client.put(f"/api/v1/locations/{sample_store['id']}/{location_id}", json=update_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["attributes"] == {}
+
+    def test_get_location_with_attributes(self, api_client, location_with_attributes_data, sample_store):
+        """Test retrieving a location with attributes."""
+        # Create a location with attributes
+        create_response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=location_with_attributes_data)
+        created_location = create_response.json()
+        location_id = created_location["id"]
+
+        # Get the location
+        response = api_client.get(f"/api/v1/locations/{sample_store['id']}/{location_id}")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["attributes"] == location_with_attributes_data["attributes"]
+
+    def test_list_locations_includes_attributes(
+        self, api_client, location_with_attributes_data, sample_location_data, sample_store
+    ):
+        """Test that listing locations includes attributes."""
+        # Create locations with and without attributes
+        api_client.post(f"/api/v1/locations/{sample_store['id']}", json=location_with_attributes_data)
+        api_client.post(f"/api/v1/locations/{sample_store['id']}", json=sample_location_data)
+
+        # List locations
+        response = api_client.get(f"/api/v1/locations/{sample_store['id']}")
+
+        assert response.status_code == 200
+        locations = response.json()
+        assert len(locations) == 2
+
+        # Find each location and verify attributes
+        location_with_attrs = next(loc for loc in locations if loc["name"] == location_with_attributes_data["name"])
+        location_without_attrs = next(loc for loc in locations if loc["name"] == sample_location_data["name"])
+
+        assert location_with_attrs["attributes"] == location_with_attributes_data["attributes"]
+        assert location_without_attrs["attributes"] == {}
