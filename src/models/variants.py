@@ -1,6 +1,6 @@
 from pymongo import IndexModel
 
-from src.domain.types.attributes import Attributes
+from src.domain.types.attributes import AttributesMap
 from src.domain.types.products import ProductUUID
 from src.domain.types.stores import StoreUUID
 from src.domain.types.variants import (
@@ -26,7 +26,7 @@ class VariantModel(BaseAppDocument):
     ean: VariantEAN | None
     jan: VariantJAN | None
     isbn: VariantISBN | None
-    attributes: Attributes
+    attributes: AttributesMap
     options: VariantOptions
 
     class Settings:

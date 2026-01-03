@@ -31,7 +31,7 @@ class ProductsService:
             tags=new_product.tags,
             seo=new_product.seo,
             status=ProductStatusEnum.ACTIVE,
-            attributes=[],
+            attributes={},
         )
         product = await product.create()
         logger.info(f"Created product {product.id} for store {store_id}")

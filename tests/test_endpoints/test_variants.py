@@ -62,10 +62,10 @@ def sample_variant_data():
             {"name": "Size", "value": "250g"},
             {"name": "Grind", "value": "Whole Beans"},
         ],
-        "attributes": [
-            {"type": "string", "name": "origin", "value": "Yirgacheffe"},
-            {"type": "integer", "name": "altitude", "value": 1800},
-        ],
+        "attributes": {
+            "origin": {"type": "string", "name": "origin", "value": "Yirgacheffe"},
+            "altitude": {"type": "integer", "name": "altitude", "value": 1800},
+        },
     }
 
 
@@ -382,7 +382,7 @@ class TestUpdateVariant:
         variant_id = create_response.json()["id"]
 
         # Update attributes
-        update_data = {"attributes": [{"type": "string", "name": "color", "value": "brown"}]}
+        update_data = {"attributes": {"color": {"type": "string", "name": "color", "value": "brown"}}}
         response = api_client.patch(
             f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}", json=update_data
         )
@@ -390,7 +390,8 @@ class TestUpdateVariant:
         assert response.status_code == 200
         data = response.json()
         assert len(data["attributes"]) == 1
-        assert data["attributes"][0]["name"] == "color"
+        assert "color" in data["attributes"]
+        assert data["attributes"]["color"]["name"] == "color"
 
     def test_update_variant_not_found(self, api_client, sample_store, sample_product):
         """Test updating a non-existent variant."""

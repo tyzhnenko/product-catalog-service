@@ -1,6 +1,6 @@
 from pymongo import IndexModel
 
-from src.domain.types.attributes import Attributes
+from src.domain.types.attributes import AttributesMap
 from src.domain.types.products import (
     ProductDescription,
     ProductName,
@@ -21,7 +21,7 @@ class ProductModel(BaseAppDocument):
     tags: ProductTags
     status: ProductStatus
     seo: ProductSEO | None = None
-    attributes: Attributes
+    attributes: AttributesMap
 
     class Settings:
         name = "products"
