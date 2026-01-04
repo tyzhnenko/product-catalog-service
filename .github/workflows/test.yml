@@ -18,8 +18,6 @@ jobs:
           - 27017:27017
         env:
           MONGO_INITDB_DATABASE: test
-          MONGO_INITDB_ROOT_USERNAME: admin
-          MONGO_INITDB_ROOT_PASSWORD: admin_password
         options: >-
           --health-cmd "mongosh --eval 'db.adminCommand({ping: 1})'"
           --health-interval 10s
@@ -51,8 +49,6 @@ jobs:
           APP_DB__PORT: 27017
           APP_DB__HOST: localhost
           APP_DB__DATABASE: test
-          APP_DB__USER: admin
-          APP_DB__PASSWORD: admin_password
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
