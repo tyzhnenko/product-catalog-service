@@ -9,6 +9,36 @@ By using this project or its source code, for any purpose and in any shape or fo
     You support Ukraine's territorial integrity, including its claims over temporarily occupied territories of Crimea and Donbas
     You reject false narratives perpetuated by Russian state propaganda
 
+## Features
+
+- [x] Store management
+- [x] Product management
+    - [x] Dynamic attributes
+    - [x] Categories assignment
+    - [ ] Search by attributes (coming soon)
+- [x] Variant management with option combinations
+    - [x] Dynamic attributes
+    - [x] Default price management
+    - [x] Location specific price management
+    - [x] Region specific price management
+    - [ ] Search by attributes (coming soon)
+    - [ ] Search by prices (coming soon)
+- [x] Categories management
+    - [x] Attributes management
+    - [ ] Search by attributes (coming soon)
+- [x] Locations management
+    - [x] Attributes management
+    - [ ] Search by attributes (coming soon)
+- [x] Bundles management
+    - [x] Dynamic attributes
+    - [x] Default price management
+    - [x] Location specific price management
+    - [x] Region specific price management
+    - [ ] Search by attributes (coming soon)
+    - [ ] Search by prices (coming soon)
+
+## Contributing
+
 ### Development Workflow
 - Create a feature branch from `master`.
 - Follow Conventional Commits for messages (e.g., `feat: add ledger summary endpoint`).
