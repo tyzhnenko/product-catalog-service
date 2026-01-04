@@ -1,0 +1,58 @@
+---
+services:
+  product-catalog-service:
+    image: product-catalog-service:latest
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_SETTINGS_FILE=/app/docker/settings.yaml
+      - APP_INFO__TITLE=Product Catalog Service
+      - APP_DB__HOST=mongodb
+      - APP_DB__USER=admin
+      - APP_DB__PASSWORD=admin_password
+      - APP_DB__PORT=27017
+      - APP_DB__DATABASE=product_catalog
+      - APP_AUTH__RW_X_API_KEY=set_your_rw_api_key_here
+      - APP_AUTH__RO_X_API_KEY=set_your_ro_api_key_here
+    volumes:
+      - ./settings.yaml:/app/docker/settings.yaml
+    depends_on:
+      - mongodb
+    networks:
+      - catalog_network
+
+  mongodb:
+    image: mongo:latest
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=admin_password
+      - MONGO_INITDB_DATABASE=product_catalog
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo-entrypoint/:/docker-entrypoint-initdb.d/:ro
+    networks:
+      - catalog_network
+
+  mongo-express:
+    image: mongo-express:latest
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://admin:admin_password@mongodb:27017
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin_password
+      - ME_CONFIG_CONNECT_RETRIES=20
+    depends_on:
+      - mongodb
+    networks:
+      - catalog_network
+
+volumes:
+  mongo_data:
+
+networks:
+  catalog_network:
+    driver: bridge

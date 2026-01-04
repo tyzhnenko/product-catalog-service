@@ -37,6 +37,22 @@ By using this project or its source code, for any purpose and in any shape or fo
     - [ ] Search by attributes (coming soon)
     - [ ] Search by prices (coming soon)
 
+## Start with Docker
+
+1. Ensure Docker and Docker Compose are installed on your machine.
+2. Clone the repository:
+   ```bash
+   # git clone
+   cd product-catalog-service
+   ```
+3. Edit `docker/docker-compose.yaml` to set your desired API keys and other configurations.
+4. Start the services:
+   ```bash
+   docker compose -p catalog -f docker/docker-compose.yaml up --build
+   ```
+5. Access the API at `http://localhost:8000` and Mongo Express at `http://localhost:8081`.
+
+
 ## Contributing
 
 ### Development Workflow
