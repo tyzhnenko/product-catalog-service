@@ -1,8 +1,9 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Response, status
+from fastapi import Depends, HTTPException, Response, Security, status
 from fastapi.routing import APIRouter
 
+from src.core.auth import ro_access, rw_access
 from src.domain.products import ProductsService
 from src.domain.types.products import NewProduct, Product, ProductUUID, UpdateProduct
 from src.domain.types.stores import StoreUUID
@@ -10,7 +11,7 @@ from src.domain.types.stores import StoreUUID
 router = APIRouter()
 
 
-@router.get("/{store_id}")
+@router.get("/{store_id}", dependencies=[Security(ro_access)])
 async def list_products(
     store_id: StoreUUID,
     service: Annotated[ProductsService, Depends(ProductsService)],
@@ -25,7 +26,7 @@ async def list_products(
     return products
 
 
-@router.post("/{store_id}")
+@router.post("/{store_id}", dependencies=[Security(rw_access)])
 async def create_product(
     store_id: StoreUUID,
     new_product: NewProduct,
@@ -41,7 +42,7 @@ async def create_product(
     return product
 
 
-@router.get("/{store_id}/{product_id}")
+@router.get("/{store_id}/{product_id}", dependencies=[Security(ro_access)])
 async def get_product(
     store_id: StoreUUID,
     product_id: ProductUUID,
@@ -57,7 +58,7 @@ async def get_product(
     return product
 
 
-@router.patch("/{store_id}/{product_id}")
+@router.patch("/{store_id}/{product_id}", dependencies=[Security(rw_access)])
 async def update_product(
     store_id: StoreUUID,
     product_id: ProductUUID,
@@ -74,7 +75,7 @@ async def update_product(
     return updated_product
 
 
-@router.delete("/{store_id}/{product_id}")
+@router.delete("/{store_id}/{product_id}", dependencies=[Security(rw_access)])
 async def delete_product(
     store_id: StoreUUID,
     product_id: ProductUUID,

@@ -1,22 +1,23 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Security, status
 from fastapi.routing import APIRouter
 
+from src.core.auth import ro_access, rw_access
 from src.domain.stores import StoresService
 from src.domain.types.stores import NewStore, Store, StoreUUID, UpdateStore
 
 router = APIRouter()
 
 
-@router.get("/")
+@router.get("/", dependencies=[Security(ro_access)])
 async def list_stores(
     service: Annotated[StoresService, Depends(StoresService)],
 ) -> list[Store]:
     return await service.list_stores()
 
 
-@router.post("/")
+@router.post("/", dependencies=[Security(rw_access)])
 async def create_store(
     new_store: NewStore,
     service: Annotated[StoresService, Depends(StoresService)],
@@ -25,7 +26,7 @@ async def create_store(
     return store
 
 
-@router.get("/{store_id}")
+@router.get("/{store_id}", dependencies=[Security(ro_access)])
 async def get_store(
     store_id: StoreUUID,
     service: Annotated[StoresService, Depends(StoresService)],
@@ -39,7 +40,7 @@ async def get_store(
     return store
 
 
-@router.put("/{store_id}")
+@router.put("/{store_id}", dependencies=[Security(rw_access)])
 async def update_store(
     store_id: StoreUUID,
     update_data: UpdateStore,
@@ -55,7 +56,7 @@ async def update_store(
     return updated_store
 
 
-@router.delete("/{store_id}")
+@router.delete("/{store_id}", dependencies=[Security(rw_access)])
 async def delete_store(
     store_id: StoreUUID,
     service: Annotated[StoresService, Depends(StoresService)],

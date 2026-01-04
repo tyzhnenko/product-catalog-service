@@ -1,8 +1,9 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Response, status
+from fastapi import Depends, HTTPException, Response, Security, status
 from fastapi.routing import APIRouter
 
+from src.core.auth import ro_access, rw_access
 from src.domain.types.products import ProductUUID
 from src.domain.types.stores import StoreUUID
 from src.domain.types.variants import (
@@ -16,7 +17,7 @@ from src.domain.variants import VariantsService
 router = APIRouter()
 
 
-@router.get("/{store_id}/{product_id}")
+@router.get("/{store_id}/{product_id}", dependencies=[Security(ro_access)])
 async def list_variants(
     store_id: StoreUUID,
     product_id: ProductUUID,
@@ -32,7 +33,7 @@ async def list_variants(
     return variants
 
 
-@router.post("/{store_id}/{product_id}")
+@router.post("/{store_id}/{product_id}", dependencies=[Security(rw_access)])
 async def create_variant(
     store_id: StoreUUID,
     product_id: ProductUUID,
@@ -49,7 +50,7 @@ async def create_variant(
     return variant
 
 
-@router.get("/{store_id}/{product_id}/{variant_id}")
+@router.get("/{store_id}/{product_id}/{variant_id}", dependencies=[Security(ro_access)])
 async def get_variant(
     store_id: StoreUUID,
     product_id: ProductUUID,
@@ -66,7 +67,7 @@ async def get_variant(
     return variant
 
 
-@router.patch("/{store_id}/{product_id}/{variant_id}")
+@router.patch("/{store_id}/{product_id}/{variant_id}", dependencies=[Security(rw_access)])
 async def update_variant(
     store_id: StoreUUID,
     product_id: ProductUUID,
@@ -84,7 +85,7 @@ async def update_variant(
     return updated_variant
 
 
-@router.delete("/{store_id}/{product_id}/{variant_id}")
+@router.delete("/{store_id}/{product_id}/{variant_id}", dependencies=[Security(rw_access)])
 async def delete_variant(
     store_id: StoreUUID,
     product_id: ProductUUID,

@@ -34,8 +34,8 @@ class CategoryModel(BaseAppDocument):
             IndexModel(["store_id", "path", "deleted_at"]),
             IndexModel(["store_id", "paths", "deleted_at"]),
             IndexModel(
-                ["store_id", "attributes.$**", "deleted_at"],
-                name="store_attributes_index",
+                ["attributes.$**"],
+                name="attributes_wildcard_idx",
             ),
         ]
 

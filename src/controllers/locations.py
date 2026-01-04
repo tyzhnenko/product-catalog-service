@@ -1,8 +1,9 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Security, status
 from fastapi.routing import APIRouter
 
+from src.core.auth import ro_access, rw_access
 from src.domain.locations import LocationsService
 from src.domain.types.locations import Location, LocationUUID, NewLocation, UpdateLocation
 from src.domain.types.stores import StoreUUID
@@ -10,7 +11,7 @@ from src.domain.types.stores import StoreUUID
 router = APIRouter()
 
 
-@router.get("/{store_id}")
+@router.get("/{store_id}", dependencies=[Security(ro_access)])
 async def list_locations(
     store_id: StoreUUID,
     service: Annotated[LocationsService, Depends(LocationsService)],
@@ -24,7 +25,7 @@ async def list_locations(
     return locations
 
 
-@router.post("/{store_id}")
+@router.post("/{store_id}", dependencies=[Security(rw_access)])
 async def create_location(
     store_id: StoreUUID,
     new_location: NewLocation,
@@ -39,7 +40,7 @@ async def create_location(
     return location
 
 
-@router.get("/{store_id}/{location_id}")
+@router.get("/{store_id}/{location_id}", dependencies=[Security(ro_access)])
 async def get_location(
     store_id: StoreUUID,
     location_id: LocationUUID,
@@ -54,7 +55,7 @@ async def get_location(
     return location
 
 
-@router.put("/{store_id}/{location_id}")
+@router.put("/{store_id}/{location_id}", dependencies=[Security(rw_access)])
 async def update_location(
     store_id: StoreUUID,
     location_id: LocationUUID,
@@ -71,7 +72,7 @@ async def update_location(
     return updated_location
 
 
-@router.delete("/{store_id}/{location_id}")
+@router.delete("/{store_id}/{location_id}", dependencies=[Security(rw_access)])
 async def delete_location(
     store_id: StoreUUID,
     location_id: LocationUUID,

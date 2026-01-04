@@ -29,4 +29,8 @@ class ProductModel(BaseAppDocument):
         name = "products"
         indexes: list[IndexModel] = [
             IndexModel(["store_id", "deleted_at"]),  # Optimize list queries with soft delete filtering
+            IndexModel(
+                ["attributes.$**"],
+                name="attributes_wildcard_idx",
+            ),
         ]

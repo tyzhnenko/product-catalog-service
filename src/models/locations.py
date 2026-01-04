@@ -18,7 +18,7 @@ class LocationModel(BaseAppDocument):
             IndexModel(["name"], unique=True),
             IndexModel(["store_id", "deleted_at"]),  # Optimize list queries with soft delete filtering
             IndexModel(
-                ["store_id", "attributes.$**", "deleted_at"],
-                name="store_attributes_index",
+                ["attributes.$**"],
+                name="attributes_wildcard_idx",
             ),
         ]

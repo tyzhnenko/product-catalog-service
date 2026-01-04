@@ -1,8 +1,9 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Security, status
 from fastapi.routing import APIRouter
 
+from src.core.auth import ro_access, rw_access
 from src.domain.categories import CategoriesService
 from src.domain.types.categories import Category, CategoryUUID, NewCategory, UpdateCategory
 from src.domain.types.stores import StoreUUID
@@ -10,7 +11,7 @@ from src.domain.types.stores import StoreUUID
 router = APIRouter()
 
 
-@router.get("/{store_id}")
+@router.get("/{store_id}", dependencies=[Security(ro_access)])
 async def list_categories(
     store_id: StoreUUID,
     service: Annotated[CategoriesService, Depends(CategoriesService)],
@@ -24,7 +25,7 @@ async def list_categories(
     return categories
 
 
-@router.post("/{store_id}")
+@router.post("/{store_id}", dependencies=[Security(rw_access)])
 async def create_category(
     store_id: StoreUUID,
     new_category: NewCategory,
@@ -39,7 +40,7 @@ async def create_category(
     return category
 
 
-@router.get("/{store_id}/{category_id}")
+@router.get("/{store_id}/{category_id}", dependencies=[Security(ro_access)])
 async def get_category(
     store_id: StoreUUID,
     category_id: CategoryUUID,
@@ -54,7 +55,7 @@ async def get_category(
     return category
 
 
-@router.put("/{store_id}/{category_id}")
+@router.put("/{store_id}/{category_id}", dependencies=[Security(rw_access)])
 async def update_category(
     store_id: StoreUUID,
     category_id: CategoryUUID,
@@ -71,7 +72,7 @@ async def update_category(
     return updated_category
 
 
-@router.delete("/{store_id}/{category_id}")
+@router.delete("/{store_id}/{category_id}", dependencies=[Security(rw_access)])
 async def delete_category(
     store_id: StoreUUID,
     category_id: CategoryUUID,

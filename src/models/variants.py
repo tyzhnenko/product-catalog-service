@@ -40,19 +40,19 @@ class VariantModel(BaseAppDocument):
         indexes: list[IndexModel] = [
             IndexModel(["store_id", "product_id", "deleted_at"]),
             IndexModel(
-                ["store_id", "attributes.$**", "deleted_at"],
-                name="store_attributes_index",
+                ["attributes.$**"],
+                name="attributes_wildcard_idx",
             ),
             IndexModel(
-                ["store_id", "price.$**"],
-                name="store_price_wildcard_idx",
+                ["price.$**"],
+                name="price_wildcard_idx",
             ),
             IndexModel(
-                ["store_id", "location_price.$**"],
-                name="store_location_price_wildcard_idx",
+                ["location_price.$**"],
+                name="location_price_wildcard_idx",
             ),
             IndexModel(
-                ["store_id", "region_price.$**"],
-                name="store_region_price_wildcard_idx",
+                ["region_price.$**"],
+                name="region_price_wildcard_idx",
             ),
         ]
