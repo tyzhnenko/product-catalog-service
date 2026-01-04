@@ -45,7 +45,7 @@ jobs:
         run: |
           uv run pytest -c pytest-ci.ini --cov=opum_ledger --cov-report=xml --cov-report=term
         env:
-          APP_SETTINGS_FILE: settings_test.yaml
+          APP_SETTINGS_FILE: settings.test.yaml
           APP_DB__PORT: 27017
           APP_DB__HOST: localhost
           APP_DB__DATABASE: test
