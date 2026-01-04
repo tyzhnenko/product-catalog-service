@@ -215,6 +215,83 @@ class TestCreateVariant:
 
         assert response.status_code == 422
 
+    def test_create_variant_with_duplicate_options(self, api_client, sample_store, sample_product, sample_variant_data):
+        """Test that creating a variant with duplicate options fails."""
+        # Create first variant
+        response1 = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data
+        )
+        assert response1.status_code == 200
+
+        # Try to create second variant with same options
+        duplicate_variant_data = {
+            "title": "Different Title",
+            "sku": "DIFFERENT-SKU",
+            "options": sample_variant_data["options"],  # Same options
+        }
+        response2 = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=duplicate_variant_data
+        )
+
+        assert response2.status_code == 409
+        assert "already exists" in response2.json()["detail"].lower()
+
+    def test_create_variant_with_different_options(
+        self, api_client, sample_store, sample_product, sample_variant_data, another_variant_data
+    ):
+        """Test that creating variants with different options succeeds."""
+        # Create first variant
+        response1 = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data
+        )
+        assert response1.status_code == 200
+
+        # Create second variant with different options - should succeed
+        response2 = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=another_variant_data
+        )
+        assert response2.status_code == 200
+
+    def test_create_variant_same_options_different_product(
+        self, api_client, sample_store, sample_product, another_product, sample_variant_data
+    ):
+        """Test that same options can be used for variants of different products."""
+        # Create variant for first product
+        response1 = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data
+        )
+        assert response1.status_code == 200
+
+        # Create variant with same options for different product - should succeed
+        response2 = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{another_product['id']}", json=sample_variant_data
+        )
+        assert response2.status_code == 200
+
+    def test_create_variant_empty_options_duplicate(self, api_client, sample_store, sample_product):
+        """Test that creating multiple variants with empty options fails."""
+        variant_data_1 = {
+            "title": "Variant 1",
+            "options": [],
+        }
+        variant_data_2 = {
+            "title": "Variant 2",
+            "options": [],
+        }
+
+        # Create first variant with empty options
+        response1 = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data_1
+        )
+        assert response1.status_code == 200
+
+        # Try to create second variant with empty options - should fail
+        response2 = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data_2
+        )
+        assert response2.status_code == 409
+        assert "already exists" in response2.json()["detail"].lower()
+
 
 class TestListVariants:
     """Tests for GET /api/v1/variants/{store_id}/{product_id}."""
@@ -451,6 +528,86 @@ class TestUpdateVariant:
 
         assert response.status_code == 404
         assert response.json()["detail"] == "Variant not found"
+
+    def test_update_variant_with_duplicate_options(
+        self, api_client, sample_store, sample_product, sample_variant_data, another_variant_data
+    ):
+        """Test that updating a variant to have duplicate options fails."""
+        # Create first variant
+        response1 = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data
+        )
+        variant1_id = response1.json()["id"]
+        assert response1.status_code == 200
+
+        # Create second variant with different options
+        response2 = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=another_variant_data
+        )
+        variant2_id = response2.json()["id"]
+        assert response2.status_code == 200
+        assert variant1_id != variant2_id
+
+        # Try to update second variant to have same options as first - should fail
+        update_data = {"options": sample_variant_data["options"]}
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant2_id}", json=update_data
+        )
+
+        assert response.status_code == 409
+        assert "already exists" in response.json()["detail"].lower()
+
+    def test_update_variant_with_same_options(self, api_client, sample_store, sample_product, sample_variant_data):
+        """Test that updating a variant with its own options succeeds."""
+        # Create a variant
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        # Update the variant with the same options (and different title) - should succeed
+        update_data = {
+            "title": "Updated Title",
+            "options": sample_variant_data["options"],
+        }
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}", json=update_data
+        )
+
+        assert response.status_code == 200
+        assert response.json()["title"] == "Updated Title"
+        assert response.json()["options"] == sample_variant_data["options"]
+
+    def test_update_variant_options_to_unique(
+        self, api_client, sample_store, sample_product, sample_variant_data, another_variant_data
+    ):
+        """Test that updating a variant to have unique options succeeds."""
+        # Create first variant
+        response1 = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data
+        )
+        variant1_id = response1.json()["id"]
+
+        # Create second variant
+        response2 = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=another_variant_data
+        )
+        variant2_id = response2.json()["id"]
+        assert response2.status_code == 200
+        assert variant1_id != variant2_id
+
+        # Update first variant to have completely different options - should succeed
+        new_options = [
+            {"name": "Size", "value": "1kg"},
+            {"name": "Type", "value": "Organic"},
+        ]
+        update_data = {"options": new_options}
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant1_id}", json=update_data
+        )
+
+        assert response.status_code == 200
+        assert response.json()["options"] == new_options
 
 
 class TestDeleteVariant:
@@ -922,12 +1079,12 @@ class TestVariantPriceMap:
         # Create multiple variants with different prices
         variant1_data = {
             "title": "Small Size",
-            "options": [],
+            "options": [{"name": "Size", "value": "Small"}],
             "price": {"retail": {"type": "decimal", "name": "Retail Price", "value": "15.99"}},
         }
         variant2_data = {
             "title": "Large Size",
-            "options": [],
+            "options": [{"name": "Size", "value": "Large"}],
             "price": {"retail": {"type": "decimal", "name": "Retail Price", "value": "29.99"}},
         }
 
@@ -1893,7 +2050,7 @@ class TestVariantImages:
         # Create variant with images
         variant_data = {
             "title": "Variant 1",
-            "options": [],
+            "options": [{"name": "Type", "value": "With Images"}],
             "images": [{"url": "https://example.com/image1.jpg"}],
         }
         api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
@@ -1901,7 +2058,7 @@ class TestVariantImages:
         # Create variant without images
         variant_data2 = {
             "title": "Variant 2",
-            "options": [],
+            "options": [{"name": "Type", "value": "Without Images"}],
         }
         api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data2)
 

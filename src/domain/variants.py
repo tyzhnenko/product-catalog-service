@@ -19,7 +19,69 @@ from src.models.products import ProductModel
 from src.models.variants import VariantModel
 
 
+class DuplicateVariantOptionsError(Exception):
+    """Raised when attempting to create/update a variant with duplicate options."""
+
+    pass
+
+
 class VariantsService:
+    async def _check_duplicate_options(
+        self,
+        product_id: ProductUUID,
+        store_id: StoreUUID,
+        options: list,
+        exclude_variant_id: VariantUUID | None = None,
+    ) -> bool:
+        """Check if a variant with the same options already exists for the product.
+
+        Args:
+            product_id: The product ID to check within
+            store_id: The store ID
+            options: The options list to check for duplicates
+            exclude_variant_id: Optional variant ID to exclude from check (for updates)
+
+        Returns:
+            True if duplicate options found, False otherwise
+
+        """
+        # Build the query filter
+        query_filter: dict = {
+            "product_id": product_id,
+            "store_id": store_id,
+            "deleted_at": None,
+        }
+
+        if exclude_variant_id:
+            query_filter["_id"] = {"$ne": exclude_variant_id}
+
+        # Get all variants for this product
+        variants = await VariantModel.find(query_filter).to_list()
+
+        # Convert the input options to a comparable format (sorted list of tuples)
+        # Handle both VariantOption objects and dicts (from API updates)
+        if not options:
+            # Empty options list
+            input_options_normalized = []
+        elif isinstance(options[0], dict):
+            # Dict format (from API updates)
+            input_options_normalized = sorted([(opt["name"], opt["value"]) for opt in options])
+        else:
+            # VariantOption objects
+            input_options_normalized = sorted([(opt.name, opt.value) for opt in options])
+
+        # Check each existing variant's options
+        for variant in variants:
+            variant_options_normalized = sorted([(opt.name, opt.value) for opt in variant.options])
+            if variant_options_normalized == input_options_normalized:
+                logger.info(
+                    f"Duplicate options found for product {product_id}: "
+                    f"variant {variant.id} already has options {variant_options_normalized}"
+                )
+                return True
+
+        return False
+
     async def _sanitize_location_prices(
         self, store_id: StoreUUID, location_price: LocationPriceMap | None
     ) -> LocationPriceMap | None:
@@ -61,6 +123,10 @@ class VariantsService:
         if not product or product.store_id != store_id or product.deleted_at is not None:
             logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
             return None
+
+        # Check for duplicate options within the product
+        if await self._check_duplicate_options(product_id, store_id, new_variant.options):
+            raise DuplicateVariantOptionsError(f"A variant with these options already exists for product {product_id}")
 
         # Sanitize location_price - keep only valid locations
         valid_location_price = await self._sanitize_location_prices(store_id, new_variant.location_price)
@@ -140,6 +206,15 @@ class VariantsService:
 
         # Update only fields that were explicitly set
         update_dict = update_data.model_dump(exclude_unset=True)
+
+        # Check for duplicate options if options are being updated
+        if "options" in update_dict:
+            if await self._check_duplicate_options(
+                product_id, store_id, update_dict["options"], exclude_variant_id=variant_id
+            ):
+                raise DuplicateVariantOptionsError(
+                    f"A variant with these options already exists for product {product_id}"
+                )
 
         # Sanitize location_price if it's being updated
         if "location_price" in update_dict:

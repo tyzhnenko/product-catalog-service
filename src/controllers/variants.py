@@ -4,6 +4,7 @@ from fastapi import Depends, HTTPException, Response, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
+from src.domain.variants import DuplicateVariantOptionsError
 from src.domain.types.products import ProductUUID
 from src.domain.types.stores import StoreUUID
 from src.domain.types.variants import (
@@ -41,7 +42,13 @@ async def create_variant(
     service: Annotated[VariantsService, Depends(VariantsService)],
 ) -> ProductVariant:
     """Create a new variant for a specific product."""
-    variant = await service.create_variant(store_id, product_id, new_variant)
+    try:
+        variant = await service.create_variant(store_id, product_id, new_variant)
+    except DuplicateVariantOptionsError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e),
+        ) from e
     if not variant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -76,7 +83,13 @@ async def update_variant(
     service: Annotated[VariantsService, Depends(VariantsService)],
 ) -> ProductVariant:
     """Update a variant's information."""
-    updated_variant = await service.update_variant(store_id, product_id, variant_id, update_data)
+    try:
+        updated_variant = await service.update_variant(store_id, product_id, variant_id, update_data)
+    except DuplicateVariantOptionsError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e),
+        ) from e
     if not updated_variant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
