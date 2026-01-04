@@ -142,6 +142,7 @@ class BundlesService:
             price=new_bundle.price,
             location_price=valid_location_price,
             region_price=new_bundle.region_price,
+            images=new_bundle.images,
         )
         bundle = await bundle.create()
         logger.info(f"Created bundle {bundle.id} for store {store_id}")

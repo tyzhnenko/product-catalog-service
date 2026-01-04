@@ -644,3 +644,331 @@ class TestCategoryCRUDIntegration:
         assert parent["path"] == "/electronics"
         assert child["path"] == "/electronics/laptops"
         assert grandchild["path"] == "/electronics/laptops/gaming"
+
+
+class TestCategoryImages:
+    """Tests for category images field."""
+
+    def test_create_category_with_single_image(self, api_client, sample_store):
+        """Test creating a category with a single image."""
+        category_data = {
+            "name": "Electronics",
+            "path": "/electronics",
+            "images": [
+                {
+                    "url": "https://example.com/electronics.jpg",
+                    "alt_text": "Electronics category banner",
+                    "height": 1200,
+                    "width": 1600,
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "images" in data
+        assert data["images"] is not None
+        assert len(data["images"]) == 1
+        assert data["images"][0]["url"] == "https://example.com/electronics.jpg"
+        assert data["images"][0]["alt_text"] == "Electronics category banner"
+        assert data["images"][0]["height"] == 1200
+        assert data["images"][0]["width"] == 1600
+
+    def test_create_category_with_multiple_images(self, api_client, sample_store):
+        """Test creating a category with multiple images."""
+        category_data = {
+            "name": "Fashion",
+            "path": "/fashion",
+            "images": [
+                {
+                    "url": "https://example.com/fashion-banner.jpg",
+                    "alt_text": "Fashion banner",
+                },
+                {
+                    "url": "https://example.com/fashion-icon.png",
+                    "alt_text": "Fashion icon",
+                    "height": 256,
+                    "width": 256,
+                },
+                {
+                    "url": "https://example.com/fashion-promo.jpg",
+                },
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"]) == 3
+        assert data["images"][0]["url"] == "https://example.com/fashion-banner.jpg"
+        assert data["images"][1]["height"] == 256
+        assert data["images"][2]["alt_text"] is None
+
+    def test_create_category_with_image_attributes(self, api_client, sample_store):
+        """Test creating a category with images that have custom attributes."""
+        category_data = {
+            "name": "Home & Garden",
+            "path": "/home-garden",
+            "images": [
+                {
+                    "url": "https://example.com/home.jpg",
+                    "alt_text": "Home and garden category",
+                    "attributes": {
+                        "image_type": {
+                            "type": "string",
+                            "name": "image_type",
+                            "value": "banner",
+                        },
+                        "display_order": {
+                            "type": "integer",
+                            "name": "display_order",
+                            "value": 1,
+                        },
+                        "is_mobile_optimized": {
+                            "type": "bool",
+                            "name": "is_mobile_optimized",
+                            "value": True,
+                        },
+                    },
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"]) == 1
+        assert "attributes" in data["images"][0]
+        assert data["images"][0]["attributes"]["image_type"]["value"] == "banner"
+        assert data["images"][0]["attributes"]["display_order"]["value"] == 1
+        assert data["images"][0]["attributes"]["is_mobile_optimized"]["value"] is True
+
+    def test_create_category_without_images(self, api_client, sample_store):
+        """Test that categories can be created without images (images is optional)."""
+        category_data = {
+            "name": "Books",
+            "path": "/books",
+        }
+
+        response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["images"] is None
+
+    def test_create_category_with_empty_images_list(self, api_client, sample_store):
+        """Test creating a category with an empty images list."""
+        category_data = {
+            "name": "Sports",
+            "path": "/sports",
+            "images": [],
+        }
+
+        response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["images"] == []
+
+    def test_update_category_add_images(self, api_client, sample_store):
+        """Test adding images to an existing category."""
+        # Create category without images
+        category_data = {
+            "name": "Toys",
+            "path": "/toys",
+        }
+        create_response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data)
+        created_category = create_response.json()
+
+        # Update category with images
+        update_data = {
+            "images": [
+                {
+                    "url": "https://example.com/toys-banner.jpg",
+                    "alt_text": "Toys category",
+                }
+            ],
+        }
+
+        response = api_client.put(f"/api/v1/categories/{sample_store['id']}/{created_category['id']}", json=update_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"]) == 1
+        assert data["images"][0]["url"] == "https://example.com/toys-banner.jpg"
+
+    def test_update_category_modify_images(self, api_client, sample_store):
+        """Test modifying existing images of a category."""
+        # Create category with images
+        category_data = {
+            "name": "Beauty",
+            "path": "/beauty",
+            "images": [
+                {
+                    "url": "https://example.com/old-beauty.jpg",
+                    "alt_text": "Old beauty image",
+                }
+            ],
+        }
+        create_response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data)
+        created_category = create_response.json()
+
+        # Update images
+        update_data = {
+            "images": [
+                {
+                    "url": "https://example.com/new-beauty1.jpg",
+                    "alt_text": "New beauty image 1",
+                },
+                {
+                    "url": "https://example.com/new-beauty2.jpg",
+                    "alt_text": "New beauty image 2",
+                },
+            ],
+        }
+
+        response = api_client.put(f"/api/v1/categories/{sample_store['id']}/{created_category['id']}", json=update_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"]) == 2
+        assert data["images"][0]["url"] == "https://example.com/new-beauty1.jpg"
+        assert data["images"][1]["url"] == "https://example.com/new-beauty2.jpg"
+
+    def test_update_category_remove_images(self, api_client, sample_store):
+        """Test removing images from a category by setting to empty list."""
+        # Create category with images
+        category_data = {
+            "name": "Automotive",
+            "path": "/automotive",
+            "images": [
+                {
+                    "url": "https://example.com/auto.jpg",
+                }
+            ],
+        }
+        create_response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data)
+        created_category = create_response.json()
+
+        # Remove images
+        update_data = {"images": []}
+
+        response = api_client.put(f"/api/v1/categories/{sample_store['id']}/{created_category['id']}", json=update_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["images"] == []
+
+    def test_get_category_with_images(self, api_client, sample_store):
+        """Test retrieving a category with images."""
+        # Create category with images
+        category_data = {
+            "name": "Furniture",
+            "path": "/furniture",
+            "images": [
+                {
+                    "url": "https://example.com/furniture.jpg",
+                    "alt_text": "Furniture category",
+                    "height": 800,
+                    "width": 1200,
+                }
+            ],
+        }
+        create_response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data)
+        created_category = create_response.json()
+
+        # Retrieve category
+        response = api_client.get(f"/api/v1/categories/{sample_store['id']}/{created_category['id']}")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"]) == 1
+        assert data["images"][0]["url"] == "https://example.com/furniture.jpg"
+        assert data["images"][0]["alt_text"] == "Furniture category"
+
+    def test_list_categories_with_images(self, api_client, sample_store):
+        """Test listing categories includes images."""
+        # Create category with images
+        category_data1 = {
+            "name": "Category 1",
+            "path": "/cat1",
+            "images": [{"url": "https://example.com/cat1.jpg"}],
+        }
+        api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data1)
+
+        # Create category without images
+        category_data2 = {
+            "name": "Category 2",
+            "path": "/cat2",
+        }
+        api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data2)
+
+        # List categories
+        response = api_client.get(f"/api/v1/categories/{sample_store['id']}")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 2
+
+        # Find categories
+        cat_with_images = next(c for c in data if c["name"] == "Category 1")
+        cat_without_images = next(c for c in data if c["name"] == "Category 2")
+
+        assert len(cat_with_images["images"]) == 1
+        assert cat_without_images["images"] is None
+
+    def test_create_category_invalid_image_url(self, api_client, sample_store):
+        """Test that invalid image URLs are rejected."""
+        category_data = {
+            "name": "Invalid Image Category",
+            "path": "/invalid",
+            "images": [
+                {
+                    "url": "not-a-valid-url",
+                    "alt_text": "Invalid",
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data)
+
+        assert response.status_code == 422
+
+    def test_create_category_image_with_zero_dimensions(self, api_client, sample_store):
+        """Test that zero image dimensions are rejected."""
+        category_data = {
+            "name": "Zero Dimensions Category",
+            "path": "/zero",
+            "images": [
+                {
+                    "url": "https://example.com/image.jpg",
+                    "height": 0,
+                    "width": 500,
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data)
+
+        assert response.status_code == 422
+
+    def test_create_category_image_alt_text_empty(self, api_client, sample_store):
+        """Test that empty alt_text is rejected."""
+        category_data = {
+            "name": "Empty Alt Text Category",
+            "path": "/empty-alt",
+            "images": [
+                {
+                    "url": "https://example.com/image.jpg",
+                    "alt_text": "",
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data)
+
+        assert response.status_code == 422

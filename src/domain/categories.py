@@ -25,6 +25,7 @@ class CategoriesService:
             paths=new_category.paths,
             seo=new_category.seo,
             attributes=new_category.attributes or {},
+            images=new_category.images,
         )
         category = await category.create()
 
@@ -65,24 +66,17 @@ class CategoriesService:
         if not category or category.store_id != store_id or category.deleted_at is not None:
             return None
 
-        if update_data.name is not None:
-            category.name = update_data.name
+        # Update only fields that were explicitly set
+        update_dict = update_data.model_dump(exclude_unset=True)
 
-        if update_data.description is not None:
-            category.description = update_data.description
+        # Handle path update specially to regenerate paths
+        if "path" in update_dict:
+            category.path = update_dict["path"]
+            category.paths = CategoryModel.parse_path(update_dict["path"])
+            update_dict.pop("path")  # Remove so it's not set again in the loop
 
-        if update_data.status is not None:
-            category.status = update_data.status
-
-        if update_data.seo is not None:
-            category.seo = update_data.seo
-
-        if update_data.path is not None:
-            category.path = update_data.path
-            category.paths = CategoryModel.parse_path(update_data.path)
-
-        if update_data.attributes is not None:
-            category.attributes = update_data.attributes
+        for field, value in update_dict.items():
+            setattr(category, field, value)
 
         await category.save()
         return Category.model_validate(category.model_dump())

@@ -5,6 +5,7 @@ from pydantic_extra_types.pendulum_dt import DateTime
 
 from src.domain.types.attributes import AttributesMap
 from src.domain.types.categories import CategoryUUID
+from src.domain.types.media import Image
 from src.domain.types.prices import LocationPriceMap, PriceMap, RegionPriceMap
 from src.domain.types.variants import VariantUUID
 
@@ -71,6 +72,14 @@ BundleCategories = Annotated[
     ),
 ]
 
+BundleImages = Annotated[
+    list[Image],
+    Field(
+        default_factory=list,
+        description="List of images associated with the bundle",
+    ),
+]
+
 
 class NewBundle(BaseModel):
     name: BundleName
@@ -81,6 +90,7 @@ class NewBundle(BaseModel):
     price: PriceMap | None = None
     location_price: LocationPriceMap | None = None
     region_price: RegionPriceMap | None = None
+    images: BundleImages | None = None
 
 
 class Bundle(BaseModel):
@@ -93,6 +103,7 @@ class Bundle(BaseModel):
     price: PriceMap | None = None
     location_price: LocationPriceMap | None = None
     region_price: RegionPriceMap | None = None
+    images: BundleImages | None = None
     updated_at: DateTime
     created_at: DateTime
 
@@ -106,3 +117,4 @@ class UpdateBundle(BaseModel):
     price: PriceMap | None = None
     location_price: LocationPriceMap | None = None
     region_price: RegionPriceMap | None = None
+    images: BundleImages | None = None

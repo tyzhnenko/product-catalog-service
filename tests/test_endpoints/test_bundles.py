@@ -920,3 +920,341 @@ class TestBundleLocationPrice:
         assert len(data["location_price"]) == 2
         assert sample_location["id"] in data["location_price"]
         assert another_location["id"] in data["location_price"]
+
+
+class TestBundleImages:
+    """Tests for bundle images field."""
+
+    def test_create_bundle_with_single_image(self, api_client, sample_store):
+        """Test creating a bundle with a single image."""
+        bundle_data = {
+            "name": "Bundle with Image",
+            "images": [
+                {
+                    "url": "https://example.com/bundle1.jpg",
+                    "alt_text": "Bundle Image 1",
+                    "height": 1024,
+                    "width": 768,
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "images" in data
+        assert data["images"] is not None
+        assert len(data["images"]) == 1
+        assert data["images"][0]["url"] == "https://example.com/bundle1.jpg"
+        assert data["images"][0]["alt_text"] == "Bundle Image 1"
+        assert data["images"][0]["height"] == 1024
+        assert data["images"][0]["width"] == 768
+
+    def test_create_bundle_with_multiple_images(self, api_client, sample_store):
+        """Test creating a bundle with multiple images."""
+        bundle_data = {
+            "name": "Bundle with Multiple Images",
+            "images": [
+                {
+                    "url": "https://example.com/bundle-main.jpg",
+                    "alt_text": "Main bundle image",
+                },
+                {
+                    "url": "https://example.com/bundle-detail1.jpg",
+                    "alt_text": "Bundle detail 1",
+                    "height": 600,
+                    "width": 800,
+                },
+                {
+                    "url": "https://example.com/bundle-detail2.jpg",
+                },
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"]) == 3
+        assert data["images"][0]["url"] == "https://example.com/bundle-main.jpg"
+        assert data["images"][1]["height"] == 600
+        assert data["images"][2]["alt_text"] is None
+
+    def test_create_bundle_with_image_attributes(self, api_client, sample_store):
+        """Test creating a bundle with images that have custom attributes."""
+        bundle_data = {
+            "name": "Bundle with Image Attributes",
+            "images": [
+                {
+                    "url": "https://example.com/bundle-promo.jpg",
+                    "alt_text": "Promotional bundle image",
+                    "attributes": {
+                        "season": {
+                            "type": "string",
+                            "name": "season",
+                            "value": "winter",
+                        },
+                        "is_hero_image": {
+                            "type": "bool",
+                            "name": "is_hero_image",
+                            "value": True,
+                        },
+                        "priority": {
+                            "type": "integer",
+                            "name": "priority",
+                            "value": 10,
+                        },
+                    },
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"]) == 1
+        assert "attributes" in data["images"][0]
+        assert data["images"][0]["attributes"]["season"]["value"] == "winter"
+        assert data["images"][0]["attributes"]["is_hero_image"]["value"] is True
+        assert data["images"][0]["attributes"]["priority"]["value"] == 10
+
+    def test_create_bundle_without_images(self, api_client, sample_store):
+        """Test that bundles can be created without images (images is optional)."""
+        bundle_data = {
+            "name": "Bundle without Images",
+        }
+
+        response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["images"] is None
+
+    def test_create_bundle_with_empty_images_list(self, api_client, sample_store):
+        """Test creating a bundle with an empty images list."""
+        bundle_data = {
+            "name": "Bundle with Empty Images",
+            "images": [],
+        }
+
+        response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["images"] == []
+
+    def test_update_bundle_add_images(self, api_client, sample_store):
+        """Test adding images to an existing bundle."""
+        # Create bundle without images
+        bundle_data = {
+            "name": "Bundle to Update",
+        }
+        create_response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data)
+        created_bundle = create_response.json()
+
+        # Update bundle with images
+        update_data = {
+            "images": [
+                {
+                    "url": "https://example.com/new-bundle-image.jpg",
+                    "alt_text": "New bundle image",
+                }
+            ],
+        }
+
+        response = api_client.patch(f"/api/v1/bundles/{sample_store['id']}/{created_bundle['id']}", json=update_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"]) == 1
+        assert data["images"][0]["url"] == "https://example.com/new-bundle-image.jpg"
+
+    def test_update_bundle_modify_images(self, api_client, sample_store):
+        """Test modifying existing images of a bundle."""
+        # Create bundle with images
+        bundle_data = {
+            "name": "Bundle to Update",
+            "images": [
+                {
+                    "url": "https://example.com/old-bundle.jpg",
+                    "alt_text": "Old bundle image",
+                }
+            ],
+        }
+        create_response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data)
+        created_bundle = create_response.json()
+
+        # Update images
+        update_data = {
+            "images": [
+                {
+                    "url": "https://example.com/new-bundle1.jpg",
+                    "alt_text": "New bundle image 1",
+                },
+                {
+                    "url": "https://example.com/new-bundle2.jpg",
+                    "alt_text": "New bundle image 2",
+                },
+            ],
+        }
+
+        response = api_client.patch(f"/api/v1/bundles/{sample_store['id']}/{created_bundle['id']}", json=update_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"]) == 2
+        assert data["images"][0]["url"] == "https://example.com/new-bundle1.jpg"
+        assert data["images"][1]["url"] == "https://example.com/new-bundle2.jpg"
+
+    def test_update_bundle_remove_images(self, api_client, sample_store):
+        """Test removing images from a bundle by setting to empty list."""
+        # Create bundle with images
+        bundle_data = {
+            "name": "Bundle to Update",
+            "images": [
+                {
+                    "url": "https://example.com/bundle.jpg",
+                }
+            ],
+        }
+        create_response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data)
+        created_bundle = create_response.json()
+
+        # Remove images
+        update_data = {"images": []}
+
+        response = api_client.patch(f"/api/v1/bundles/{sample_store['id']}/{created_bundle['id']}", json=update_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["images"] == []
+
+    def test_get_bundle_with_images(self, api_client, sample_store):
+        """Test retrieving a bundle with images."""
+        # Create bundle with images
+        bundle_data = {
+            "name": "Bundle with Images",
+            "images": [
+                {
+                    "url": "https://example.com/bundle-hero.jpg",
+                    "alt_text": "Bundle hero image",
+                    "height": 1200,
+                    "width": 1600,
+                }
+            ],
+        }
+        create_response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data)
+        created_bundle = create_response.json()
+
+        # Retrieve bundle
+        response = api_client.get(f"/api/v1/bundles/{sample_store['id']}/{created_bundle['id']}")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"]) == 1
+        assert data["images"][0]["url"] == "https://example.com/bundle-hero.jpg"
+        assert data["images"][0]["alt_text"] == "Bundle hero image"
+
+    def test_list_bundles_with_images(self, api_client, sample_store):
+        """Test listing bundles includes images."""
+        # Create bundle with images
+        bundle_data1 = {
+            "name": "Bundle 1",
+            "images": [{"url": "https://example.com/bundle1.jpg"}],
+        }
+        api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data1)
+
+        # Create bundle without images
+        bundle_data2 = {
+            "name": "Bundle 2",
+        }
+        api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data2)
+
+        # List bundles
+        response = api_client.get(f"/api/v1/bundles/{sample_store['id']}")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 2
+
+        # Find bundles
+        bundle_with_images = next(b for b in data if b["name"] == "Bundle 1")
+        bundle_without_images = next(b for b in data if b["name"] == "Bundle 2")
+
+        assert len(bundle_with_images["images"]) == 1
+        assert bundle_without_images["images"] is None
+
+    def test_create_bundle_invalid_image_url(self, api_client, sample_store):
+        """Test that invalid image URLs are rejected."""
+        bundle_data = {
+            "name": "Bundle with Invalid URL",
+            "images": [
+                {
+                    "url": "invalid-url-format",
+                    "alt_text": "Invalid",
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data)
+
+        assert response.status_code == 422
+
+    def test_create_bundle_image_with_negative_height(self, api_client, sample_store):
+        """Test that negative image height is rejected."""
+        bundle_data = {
+            "name": "Bundle with Invalid Height",
+            "images": [
+                {
+                    "url": "https://example.com/bundle.jpg",
+                    "height": -500,
+                    "width": 800,
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data)
+
+        assert response.status_code == 422
+
+    def test_create_bundle_image_alt_text_max_length(self, api_client, sample_store):
+        """Test that alt_text at exactly max length (512) is accepted."""
+        bundle_data = {
+            "name": "Bundle with Max Alt Text",
+            "images": [
+                {
+                    "url": "https://example.com/bundle.jpg",
+                    "alt_text": "a" * 512,  # Exactly at max
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"][0]["alt_text"]) == 512
+
+    def test_create_bundle_with_components_and_images(self, api_client, sample_store, sample_variant, another_variant):
+        """Test creating a bundle with both components and images."""
+        bundle_data = {
+            "name": "Complete Bundle",
+            "description": "A bundle with components and images",
+            "components": [sample_variant["id"], another_variant["id"]],
+            "images": [
+                {
+                    "url": "https://example.com/complete-bundle.jpg",
+                    "alt_text": "Complete bundle promotional image",
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["components"]) == 2
+        assert len(data["images"]) == 1
+        assert data["images"][0]["url"] == "https://example.com/complete-bundle.jpg"

@@ -1632,3 +1632,341 @@ class TestVariantLocationPriceValidation:
         assert correct_location["id"] in data["location_price"]
         assert other_store_location["id"] not in data["location_price"]
         assert len(data["location_price"]) == 1
+
+
+class TestVariantImages:
+    """Tests for variant images field."""
+
+    def test_create_variant_with_single_image(self, api_client, sample_store, sample_product):
+        """Test creating a variant with a single image."""
+        variant_data = {
+            "title": "Variant with Image",
+            "options": [],
+            "images": [
+                {
+                    "url": "https://example.com/image1.jpg",
+                    "alt_text": "Variant Image 1",
+                    "height": 800,
+                    "width": 600,
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "images" in data
+        assert data["images"] is not None
+        assert len(data["images"]) == 1
+        assert data["images"][0]["url"] == "https://example.com/image1.jpg"
+        assert data["images"][0]["alt_text"] == "Variant Image 1"
+        assert data["images"][0]["height"] == 800
+        assert data["images"][0]["width"] == 600
+
+    def test_create_variant_with_multiple_images(self, api_client, sample_store, sample_product):
+        """Test creating a variant with multiple images."""
+        variant_data = {
+            "title": "Variant with Multiple Images",
+            "options": [],
+            "images": [
+                {
+                    "url": "https://example.com/image1.jpg",
+                    "alt_text": "Front view",
+                },
+                {
+                    "url": "https://example.com/image2.jpg",
+                    "alt_text": "Side view",
+                    "height": 1024,
+                    "width": 768,
+                },
+                {
+                    "url": "https://example.com/image3.jpg",
+                },
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"]) == 3
+        assert data["images"][0]["url"] == "https://example.com/image1.jpg"
+        assert data["images"][1]["height"] == 1024
+        assert data["images"][2]["alt_text"] is None
+
+    def test_create_variant_with_image_attributes(self, api_client, sample_store, sample_product):
+        """Test creating a variant with images that have custom attributes."""
+        variant_data = {
+            "title": "Variant with Image Attributes",
+            "options": [],
+            "images": [
+                {
+                    "url": "https://example.com/product.jpg",
+                    "alt_text": "Product image",
+                    "attributes": {
+                        "photographer": {
+                            "type": "string",
+                            "name": "photographer",
+                            "value": "John Doe",
+                        },
+                        "is_featured": {
+                            "type": "bool",
+                            "name": "is_featured",
+                            "value": True,
+                        },
+                    },
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"]) == 1
+        assert "attributes" in data["images"][0]
+        assert data["images"][0]["attributes"]["photographer"]["value"] == "John Doe"
+        assert data["images"][0]["attributes"]["is_featured"]["value"] is True
+
+    def test_create_variant_without_images(self, api_client, sample_store, sample_product):
+        """Test that variants can be created without images (images is optional)."""
+        variant_data = {
+            "title": "Variant without Images",
+            "options": [],
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["images"] is None
+
+    def test_create_variant_with_empty_images_list(self, api_client, sample_store, sample_product):
+        """Test creating a variant with an empty images list."""
+        variant_data = {
+            "title": "Variant with Empty Images",
+            "options": [],
+            "images": [],
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["images"] == []
+
+    def test_update_variant_add_images(self, api_client, sample_store, sample_product):
+        """Test adding images to an existing variant."""
+        # Create variant without images
+        variant_data = {
+            "title": "Variant to Update",
+            "options": [],
+        }
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        created_variant = create_response.json()
+
+        # Update variant with images
+        update_data = {
+            "images": [
+                {
+                    "url": "https://example.com/new-image.jpg",
+                    "alt_text": "New image",
+                }
+            ],
+        }
+
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{created_variant['id']}", json=update_data
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"]) == 1
+        assert data["images"][0]["url"] == "https://example.com/new-image.jpg"
+
+    def test_update_variant_modify_images(self, api_client, sample_store, sample_product):
+        """Test modifying existing images of a variant."""
+        # Create variant with images
+        variant_data = {
+            "title": "Variant to Update",
+            "options": [],
+            "images": [
+                {
+                    "url": "https://example.com/old-image.jpg",
+                    "alt_text": "Old image",
+                }
+            ],
+        }
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        created_variant = create_response.json()
+
+        # Update images
+        update_data = {
+            "images": [
+                {
+                    "url": "https://example.com/new-image1.jpg",
+                    "alt_text": "New image 1",
+                },
+                {
+                    "url": "https://example.com/new-image2.jpg",
+                    "alt_text": "New image 2",
+                },
+            ],
+        }
+
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{created_variant['id']}", json=update_data
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"]) == 2
+        assert data["images"][0]["url"] == "https://example.com/new-image1.jpg"
+        assert data["images"][1]["url"] == "https://example.com/new-image2.jpg"
+
+    def test_update_variant_remove_images(self, api_client, sample_store, sample_product):
+        """Test removing images from a variant by setting to empty list."""
+        # Create variant with images
+        variant_data = {
+            "title": "Variant to Update",
+            "options": [],
+            "images": [
+                {
+                    "url": "https://example.com/image.jpg",
+                }
+            ],
+        }
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        created_variant = create_response.json()
+
+        # Remove images
+        update_data = {"images": []}
+
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{created_variant['id']}", json=update_data
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["images"] == []
+
+    def test_get_variant_with_images(self, api_client, sample_store, sample_product):
+        """Test retrieving a variant with images."""
+        # Create variant with images
+        variant_data = {
+            "title": "Variant with Images",
+            "options": [],
+            "images": [
+                {
+                    "url": "https://example.com/image.jpg",
+                    "alt_text": "Test image",
+                    "height": 500,
+                    "width": 500,
+                }
+            ],
+        }
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        created_variant = create_response.json()
+
+        # Retrieve variant
+        response = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{created_variant['id']}"
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["images"]) == 1
+        assert data["images"][0]["url"] == "https://example.com/image.jpg"
+        assert data["images"][0]["alt_text"] == "Test image"
+
+    def test_list_variants_with_images(self, api_client, sample_store, sample_product):
+        """Test listing variants includes images."""
+        # Create variant with images
+        variant_data = {
+            "title": "Variant 1",
+            "options": [],
+            "images": [{"url": "https://example.com/image1.jpg"}],
+        }
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        # Create variant without images
+        variant_data2 = {
+            "title": "Variant 2",
+            "options": [],
+        }
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data2)
+
+        # List variants
+        response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 2
+
+        # Find variant with images
+        variant_with_images = next(v for v in data if v["title"] == "Variant 1")
+        variant_without_images = next(v for v in data if v["title"] == "Variant 2")
+
+        assert len(variant_with_images["images"]) == 1
+        assert variant_without_images["images"] is None
+
+    def test_create_variant_invalid_image_url(self, api_client, sample_store, sample_product):
+        """Test that invalid image URLs are rejected."""
+        variant_data = {
+            "title": "Variant with Invalid URL",
+            "options": [],
+            "images": [
+                {
+                    "url": "not-a-valid-url",
+                    "alt_text": "Invalid",
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 422
+
+    def test_create_variant_image_with_negative_dimensions(self, api_client, sample_store, sample_product):
+        """Test that negative image dimensions are rejected."""
+        variant_data = {
+            "title": "Variant with Invalid Dimensions",
+            "options": [],
+            "images": [
+                {
+                    "url": "https://example.com/image.jpg",
+                    "height": -100,
+                    "width": 500,
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 422
+
+    def test_create_variant_image_alt_text_too_long(self, api_client, sample_store, sample_product):
+        """Test that alt_text exceeding max length is rejected."""
+        variant_data = {
+            "title": "Variant with Long Alt Text",
+            "options": [],
+            "images": [
+                {
+                    "url": "https://example.com/image.jpg",
+                    "alt_text": "a" * 513,  # Max is 512
+                }
+            ],
+        }
+
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+
+        assert response.status_code == 422

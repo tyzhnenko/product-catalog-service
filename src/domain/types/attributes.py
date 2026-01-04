@@ -5,6 +5,8 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 from pydantic_extra_types.pendulum_dt import Date, DateTime
 
+from src.domain.types.base import HTTPURLField
+
 StringAttributeValue = Annotated[
     str,
     Field(
@@ -88,6 +90,16 @@ UUIDAttributeValue = Annotated[
 ]
 
 
+URLAttributeValue = Annotated[
+    HTTPURLField,
+    Field(
+        ...,
+        description="URL value",
+        json_schema_extra={"format": "uri"},
+    ),
+]
+
+
 class StringAttribute(BaseModel):
     type: Literal["string"] = "string"
     name: AttributeName
@@ -146,6 +158,12 @@ class UUIDAttribute(BaseModel):
     type: Literal["uuid"] = "uuid"
     name: AttributeName
     value: UUIDAttributeValue
+
+
+class URLAttribute(BaseModel):
+    type: Literal["url"] = "url"
+    name: AttributeName
+    value: URLAttributeValue
 
 
 class FloatRangeAttribute(BaseModel):
@@ -229,6 +247,18 @@ class ListOfUUIDsAttribute(BaseModel):
     ]
 
 
+class ListOfURLsAttribute(BaseModel):
+    type: Literal["list_of_urls"] = "list_of_urls"
+    name: AttributeName
+    values: Annotated[
+        list[URLAttributeValue],
+        Field(
+            ...,
+            description="List of URL values",
+        ),
+    ]
+
+
 Attribute = Annotated[
     StringAttribute
     | TextAttribute
@@ -239,6 +269,7 @@ Attribute = Annotated[
     | DateTimeAttribute
     | UUIDAttribute
     | DecimalAttribute
+    | URLAttribute
     | FloatRangeAttribute
     | IntegerRangeAttribute
     | DecimalRangeAttribute
@@ -246,7 +277,8 @@ Attribute = Annotated[
     | ListOfIntegersAttribute
     | ListOfFloatsAttribute
     | ListOfDecimalsAttribute
-    | ListOfUUIDsAttribute,
+    | ListOfUUIDsAttribute
+    | ListOfURLsAttribute,
     Field(
         ...,
         description="Attribute which can be of various types",

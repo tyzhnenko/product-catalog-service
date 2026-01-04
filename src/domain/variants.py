@@ -80,6 +80,7 @@ class VariantsService:
             price=new_variant.price,
             location_price=valid_location_price,
             region_price=new_variant.region_price,
+            images=new_variant.images,
         )
         variant = await variant.create()
         logger.info(f"Created variant {variant.id} for product {product_id}")

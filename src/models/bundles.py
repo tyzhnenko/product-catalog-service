@@ -5,6 +5,7 @@ from src.domain.types.bundles import (
     BundleCategories,
     BundleComponents,
     BundleDescription,
+    BundleImages,
     BundleName,
     BundleUUID,
 )
@@ -24,6 +25,7 @@ class BundleModel(BaseAppDocument):
     price: PriceMap | None
     location_price: LocationPriceMap | None
     region_price: RegionPriceMap | None
+    images: BundleImages | None = None
 
     class Settings:
         name = "bundles"

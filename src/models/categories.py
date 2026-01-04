@@ -4,6 +4,7 @@ from src.core.utils import split_path
 from src.domain.types.attributes import AttributesMap
 from src.domain.types.categories import (
     CategoryDescription,
+    CategoryImages,
     CategoryName,
     CategoryPath,
     CategorySEO,
@@ -24,6 +25,7 @@ class CategoryModel(BaseAppDocument):
     path: CategoryPath
     paths: list[str] = []
     attributes: AttributesMap
+    images: CategoryImages | None = None
 
     class Settings:
         name = "categories"

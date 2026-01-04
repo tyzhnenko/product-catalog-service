@@ -6,6 +6,7 @@ from src.domain.types.products import ProductUUID
 from src.domain.types.stores import StoreUUID
 from src.domain.types.variants import (
     VariantEAN,
+    VariantImages,
     VariantISBN,
     VariantJAN,
     VariantOptions,
@@ -32,6 +33,7 @@ class VariantModel(BaseAppDocument):
     price: PriceMap | None
     location_price: LocationPriceMap | None
     region_price: RegionPriceMap | None
+    images: VariantImages | None = None
 
     class Settings:
         name = "variants"

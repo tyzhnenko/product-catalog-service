@@ -3,6 +3,7 @@ from typing import Annotated
 from pydantic import UUID7, BaseModel, ConfigDict, Field
 
 from src.domain.types.attributes import AttributesMap
+from src.domain.types.media import Image
 from src.domain.types.prices import LocationPriceMap, PriceMap, RegionPriceMap
 
 VariantUUID = Annotated[
@@ -111,6 +112,14 @@ VariantOptions = Annotated[
     ),
 ]
 
+VariantImages = Annotated[
+    list[Image],
+    Field(
+        default_factory=list,
+        description="List of images associated with the variant",
+    ),
+]
+
 
 class NewProductVariant(BaseModel):
     model_config = ConfigDict(
@@ -131,6 +140,7 @@ class NewProductVariant(BaseModel):
     price: PriceMap | None = None
     location_price: LocationPriceMap | None = None
     region_price: RegionPriceMap | None = None
+    images: VariantImages | None = None
 
 
 class ProductVariant(BaseModel):
@@ -155,6 +165,7 @@ class ProductVariant(BaseModel):
     price: PriceMap | None = None
     location_price: LocationPriceMap | None = None
     region_price: RegionPriceMap | None = None
+    images: VariantImages | None = None
 
 
 class UpdateProductVariant(BaseModel):
@@ -176,3 +187,4 @@ class UpdateProductVariant(BaseModel):
     price: PriceMap | None = None
     location_price: LocationPriceMap | None = None
     region_price: RegionPriceMap | None = None
+    images: VariantImages | None = None

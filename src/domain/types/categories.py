@@ -6,6 +6,7 @@ from pydantic_extra_types.pendulum_dt import DateTime
 
 from src.core.utils import split_path
 from src.domain.types.attributes import AttributesMap
+from src.domain.types.media import Image
 
 CategoryUUID = Annotated[
     UUID7,
@@ -89,6 +90,14 @@ CategoryPath = Annotated[
     ),
 ]
 
+CategoryImages = Annotated[
+    list[Image],
+    Field(
+        default_factory=list,
+        description="List of images associated with the category",
+    ),
+]
+
 
 class CategoryStatusEnum(Enum):
     ACTIVE = "active"
@@ -137,6 +146,7 @@ class NewCategory(BaseModel):
     path: CategoryPath
     seo: CategorySEO | None = None
     attributes: AttributesMap | None = None
+    images: CategoryImages | None = None
 
     @property
     def paths(self) -> list[str]:
@@ -160,6 +170,7 @@ class Category(BaseModel):
     path: CategoryPath
     seo: CategorySEO | None
     attributes: AttributesMap | None
+    images: CategoryImages | None
     updated_at: DateTime
     created_at: DateTime
 
@@ -180,3 +191,4 @@ class UpdateCategory(BaseModel):
     seo: CategorySEO | None = None
     path: CategoryPath | None = None
     attributes: AttributesMap | None = None
+    images: CategoryImages | None = None
