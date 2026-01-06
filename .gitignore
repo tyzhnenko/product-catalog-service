@@ -165,3 +165,6 @@ fabric.properties
 
 # Ruff
 .ruff_cache/
+
+# Local settings file
+settings.local.yaml

@@ -10,13 +10,13 @@ app:
     - "http://127.0.0.1:8000"
 
 auth:
-  rw_x_api_key: "set_your_rw_api_key_here"
-  ro_x_api_key: "set_your_ro_api_key_here"
+  rw_x_api_key:
+  ro_x_api_key:
 
 db:
   driver: mongodb
-  host: localhost
-  user: catalog_user
-  password: set_your_secret_catalog_password
+  host:
+  user:
+  password:
   port: 27017
-  database: product_catalog
+  database:

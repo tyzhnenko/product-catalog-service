@@ -42,7 +42,7 @@ By using this project or its source code, for any purpose and in any shape or fo
 1. Ensure Docker and Docker Compose are installed on your machine.
 2. Clone the repository:
    ```bash
-   # git clone
+   git clone https://github.com/tyzhnenko/product-catalog-service.git
    cd product-catalog-service
    ```
 3. Edit `docker/docker-compose.yaml` to set your desired API keys and other configurations.
