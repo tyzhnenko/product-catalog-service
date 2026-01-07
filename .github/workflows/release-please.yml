@@ -1,0 +1,20 @@
+name: "Automated release PRs (release-please)"
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run release-please
+        uses: google-github-actions/release-please-action@v4
+        with:
+          release-type: "python"
+          package-name: "product-catalog-service"
+          path: "pyproject.toml"
+          token: ${{ secrets.GITHUB_TOKEN }}

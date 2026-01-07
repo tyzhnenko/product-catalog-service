@@ -1,0 +1,31 @@
+{
+    "packages": {
+        "": {
+            "release-type": "python",
+            "target-branch": "master",
+            "path": "pyproject.toml",
+            "bump-minor-pre-major": true,
+            "changelog-type": "markdown",
+            "changelog-path": "CHANGELOG.md",
+            "include-v-in-tag": true,
+            "pull-request-title-pattern": "chore: release ${version}",
+            "changelog-sections": [
+                { "type": "feat", "section": "Features" },
+                { "type": "fix", "section": "Bug Fixes" },
+                { "type": "chore", "section": "Chores" },
+                { "type": "docs", "section": "Documentation" },
+                { "type": "refactor", "section": "Refactors" },
+                { "type": "perf", "section": "Performance" },
+                { "type": "test", "section": "Tests" },
+                { "type": "build", "section": "Build" },
+                { "type": "ci", "section": "Continuous Integration" },
+                { "type": "style", "section": "Styles" },
+                { "type": "revert", "section": "Reverts" },
+                { "type": "breaking", "section": "Breaking Changes" },
+                { "type": "deps", "section": "Dependencies" },
+                { "type": "security", "section": "Security" },
+                { "type": "contributors", "section": "Contributors" }
+            ]
+        }
+    }
+}
