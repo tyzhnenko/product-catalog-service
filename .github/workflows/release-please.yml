@@ -5,6 +5,10 @@ on:
     branches: ["master"]
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -12,6 +16,6 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run release-please
-        uses: google-github-actions/release-please-action@v4
+        uses: googleapis/release-please-action@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
