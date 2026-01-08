@@ -5,8 +5,6 @@
             "target-branch": "master",
             "path": "pyproject.toml",
             "bump-minor-pre-major": true,
-            "changelog-type": "markdown",
-            "changelog-path": "CHANGELOG.md",
             "include-v-in-tag": true,
             "pull-request-title-pattern": "chore: release ${version}",
             "changelog-sections": [
