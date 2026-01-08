@@ -1,6 +1,6 @@
 {
     "packages": {
-        "": {
+        ".": {
             "release-type": "python",
             "target-branch": "master",
             "path": "pyproject.toml",
