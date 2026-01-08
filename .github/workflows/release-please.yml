@@ -2,7 +2,7 @@ name: "Automated release PRs (release-please)"
 
 on:
   push:
-    branches: ["main"]
+    branches: ["master"]
   workflow_dispatch:
 
 jobs:
