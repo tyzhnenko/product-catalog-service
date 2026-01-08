@@ -69,10 +69,10 @@ By using this project or its source code, for any purpose and in any shape or fo
     - `ci:` for CI/CD changes
     - `style:` for formatting changes
     - `revert:` for reverting changes
-    - `breaking:` for changes that break backward compatibility
     - `deps:` for dependency updates
     - `security:` for security fixes
     - `contributors:` for acknowledging contributors
+    - use an `!` after the type (e.g., `feat!:`) or add a `BREAKING CHANGE:` footer for changes that break backward compatibility
 - Keep PRs focused and small; include tests for new behavior.
 - Ensure CI basics pass locally: lint, format, type-check, and tests.
 

@@ -21,7 +21,6 @@
                 { "type": "ci", "section": "Continuous Integration" },
                 { "type": "style", "section": "Styles" },
                 { "type": "revert", "section": "Reverts" },
-                { "type": "breaking", "section": "Breaking Changes" },
                 { "type": "deps", "section": "Dependencies" },
                 { "type": "security", "section": "Security" },
                 { "type": "contributors", "section": "Contributors" }
