@@ -6,6 +6,7 @@
             "path": "pyproject.toml",
             "bump-minor-pre-major": true,
             "include-v-in-tag": true,
+            "tag-separator": "@",
             "pull-request-title-pattern": "chore: release ${version}",
             "changelog-sections": [
                 { "type": "feat", "section": "Features" },
