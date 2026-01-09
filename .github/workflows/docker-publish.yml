@@ -1,10 +1,7 @@
 name: Build and Push Docker Image
 
 on:
-  release:
-    types: [published]
   push:
-    branches: [master]
     tags:
       - "v*.*.*"
   workflow_dispatch:
@@ -47,6 +44,11 @@ jobs:
             type=semver,pattern={{major}}
             type=sha,prefix={{branch}}-
             type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Debug metadata tags output
+        run: |
+          echo "${{ steps.meta.outputs.tags }}"
+          echo "${{ steps.meta.outputs.labels }}"
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
