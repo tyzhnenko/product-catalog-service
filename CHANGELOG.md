@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.3...v0.1.4) (2026-01-09)
+
+
+### Continuous Integration
+
+* remove release trigger from Docker image build workflow ([62c988f](https://github.com/tyzhnenko/product-catalog-service/commit/62c988f3619b4a016b4f58929285e8db24fd23a2))
+
 ## [0.1.3](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.2...v0.1.3) (2026-01-09)
 
 
