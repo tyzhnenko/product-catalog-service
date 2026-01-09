@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.2...v0.1.3) (2026-01-09)
+
+
+### Continuous Integration
+
+* update release-please token to use RELEASE_PLEASE_TOKEN ([5fa3940](https://github.com/tyzhnenko/product-catalog-service/commit/5fa39407b84a2d647cb07d66cec28ff81c93b3ef))
+
 ## [0.1.2](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.1...v0.1.2) (2026-01-09)
 
 
