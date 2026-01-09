@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.4...v0.1.5) (2026-01-09)
+
+
+### Continuous Integration
+
+* add master branch in push triggers for image build action ([4ed8ca2](https://github.com/tyzhnenko/product-catalog-service/commit/4ed8ca27b292101fbbb69fb656aff609460b8fda))
+
 ## [0.1.4](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.3...v0.1.4) (2026-01-09)
 
 
