@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.0...v0.1.1) (2026-01-09)
+
+
+### Continuous Integration
+
+* update docker-publish workflow to remove release trigger and add debug step for metadata tags ([b9825e2](https://github.com/tyzhnenko/product-catalog-service/commit/b9825e2afd8e5229ac6b19e4bc9d50683833ee50))
+
 ## 0.1.0 (2026-01-08)
 
 
