@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.1...v0.1.2) (2026-01-09)
+
+
+### Continuous Integration
+
+* add release trigger for Docker image build and push workflow ([90803b5](https://github.com/tyzhnenko/product-catalog-service/commit/90803b5adef842cc79b116566d577da795ff71b8))
+
 ## [0.1.1](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.0...v0.1.1) (2026-01-09)
 
 
