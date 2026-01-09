@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.6...v0.1.7) (2026-01-09)
+
+
+### Continuous Integration
+
+* remove branch prefix from SHA metadata tag in Docker publish workflow ([b085e14](https://github.com/tyzhnenko/product-catalog-service/commit/b085e14134b09c5b9c10dd0488a25612d574d2fb))
+
 ## [0.1.6](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.5...v0.1.6) (2026-01-09)
 
 
