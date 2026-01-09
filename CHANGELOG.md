@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.5...v0.1.6) (2026-01-09)
+
+
+### Continuous Integration
+
+* update Docker metadata tags to include event ([72d26be](https://github.com/tyzhnenko/product-catalog-service/commit/72d26be64c0a737ffdc6ded3640886736eb0aed2))
+
 ## [0.1.5](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.4...v0.1.5) (2026-01-09)
 
 
