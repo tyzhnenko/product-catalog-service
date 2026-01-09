@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.7...v0.1.8) (2026-01-09)
+
+
+### Chores
+
+* add APP_SETTINGS_FILE environment variable in Dockerfile ([b84a220](https://github.com/tyzhnenko/product-catalog-service/commit/b84a220a3e6705f90b2ef2f07bf942019d4b4a6c))
+
 ## [0.1.7](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.6...v0.1.7) (2026-01-09)
 
 
