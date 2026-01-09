@@ -29,6 +29,8 @@ ENV PYTHONUNBUFFERED=1 \
 # Copy virtual environment from builder
 COPY --from=builder /app/.venv /app/.venv
 
+ENV APP_SETTINGS_FILE=/app/settings.yaml
+
 # Copy application code
 COPY src/ ./src/
 COPY docker/settings.yaml ./
