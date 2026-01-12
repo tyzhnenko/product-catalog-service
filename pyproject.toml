@@ -29,6 +29,7 @@ dev = [
     "pytest-cov>=7.0.0",
     "pytest-env>=1.2.0",
     "pytest-mongo>=3.2.1",
+    "openapi-python-client>=0.28.0",
 ]
 
 [build-system]
