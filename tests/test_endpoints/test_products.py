@@ -70,6 +70,10 @@ def sample_product_data(sample_category):
             ),
             "keywords": "ethiopian coffee, yirgacheffe, light roast, single origin",
         },
+        "attributes": {
+            "roast_level": {"type": "string", "name": "roast_level", "value": "light"},
+            "weight_grams": {"type": "integer", "name": "weight_grams", "value": 250},
+        },
     }
 
 
@@ -89,6 +93,10 @@ def another_product_data(another_category):
             "description": (
                 "Experience the smooth and balanced flavors of Colombian Supremo coffee, perfect for any time of day."
             ),
+        },
+        "attributes": {
+            "roast_level": {"type": "string", "name": "roast_level", "value": "medium"},
+            "organic": {"type": "bool", "name": "organic", "value": True},
         },
     }
 
@@ -119,6 +127,7 @@ class TestCreateProduct:
         assert data["categories"] == sample_product_data["categories"]
         assert data["seo"]["slug"] == sample_product_data["seo"]["slug"]
         assert data["status"] == "active"
+        assert data["attributes"] == sample_product_data["attributes"]
         assert "id" in data
         # Validate UUID7 format
         assert uuid.UUID(data["id"]).version == 7
@@ -134,6 +143,7 @@ class TestCreateProduct:
         assert data["tags"] == []
         assert data["categories"] == []
         assert data["status"] == "active"
+        assert data["attributes"] == {}
         assert "id" in data
 
     def test_create_product_missing_name(self, api_client, sample_store):
@@ -438,6 +448,27 @@ class TestUpdateProduct:
         assert response.status_code == 200
         data = response.json()
         assert data["tags"] == ["new-tag", "updated"]
+
+    def test_update_product_attributes(self, api_client, sample_product_data, sample_store):
+        """Test updating product attributes."""
+        # Create a product first
+        create_response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        product_id = create_response.json()["id"]
+
+        # Update attributes
+        update_data = {
+            "attributes": {
+                "roast_level": {"type": "string", "name": "roast_level", "value": "dark"},
+                "fair_trade": {"type": "bool", "name": "fair_trade", "value": True},
+            }
+        }
+        response = api_client.patch(f"/api/v1/products/{sample_store['id']}/{product_id}", json=update_data)
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["attributes"]["roast_level"]["value"] == "dark"
+        assert data["attributes"]["fair_trade"]["value"] is True
+        assert "weight_grams" not in data["attributes"]  # Original attribute should be replaced
 
     def test_update_product_categories(self, api_client, sample_product_data, sample_store, another_category):
         """Test updating product categories."""

@@ -51,17 +51,18 @@ class ProductsService:
             return None
 
         # Sanitize categories - keep only valid ones
-        valid_categories = await self._sanitize_categories(store_id, new_product.categories)
+        valid_categories = await self._sanitize_categories(store_id, new_product.categories or [])
 
         product = ProductModel(
             id=uuid7(),
             store_id=store_id,
             name=new_product.name,
             description=new_product.description,
+            brand=new_product.brand,
             tags=new_product.tags,
             seo=new_product.seo,
             status=ProductStatusEnum.ACTIVE,
-            attributes={},
+            attributes=new_product.attributes or {},
             categories=valid_categories,
         )
         product = await product.create()

@@ -5,6 +5,7 @@ from pydantic import UUID7, BaseModel, ConfigDict, Field
 from pydantic_extra_types.pendulum_dt import DateTime
 
 from src.domain.categories import CategoryUUID
+from src.domain.types.attributes import AttributesMap
 
 ProductUUID = Annotated[
     UUID7,
@@ -157,7 +158,8 @@ class NewProduct(BaseModel):
     brand: ProductBrand | None = None
     tags: ProductTags
     seo: ProductSEO | None = None
-    categories: ProductCategories
+    categories: ProductCategories | None = None
+    attributes: AttributesMap | None = None
 
 
 class Product(BaseModel):
@@ -177,6 +179,7 @@ class Product(BaseModel):
     seo: ProductSEO | None = None
     status: ProductStatus
     categories: ProductCategories
+    attributes: AttributesMap
     updated_at: DateTime
     created_at: DateTime
 
@@ -197,3 +200,4 @@ class UpdateProduct(BaseModel):
     seo: ProductSEO | None = None
     status: ProductStatus | None = None
     categories: ProductCategories | None = None
+    attributes: AttributesMap | None = None

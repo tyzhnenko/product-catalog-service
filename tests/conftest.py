@@ -1,11 +1,13 @@
 import logging
 import os
+import typing
 
 import pytest
 from fastapi.testclient import TestClient
 from pytest_mongo import factories
 
-from src.settings import Settings
+if typing.TYPE_CHECKING:
+    from src.settings import Settings
 
 if os.environ.get("CI"):
     mongo_proc = factories.mongo_noproc()  # type: ignore
