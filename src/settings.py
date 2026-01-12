@@ -31,11 +31,12 @@ class Database(BaseSettings):
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
+        extra="ignore",
         env_file=".env",
         env_file_encoding="utf-8",
         env_prefix="APP_",
         env_nested_delimiter="__",
-        yaml_file="settings.yaml",
+        yaml_file=os.environ.get("APP_SETTINGS_FILE", "settings.yaml"),
     )
 
     info: Info = Info()
