@@ -15,6 +15,7 @@ def configure_application(
 ) -> FastAPI:
     app = FastAPI(
         lifespan=services.build_combined_lifespan(),
+        separate_input_output_schemas=False,
     )
 
     configure_docs(app, settings)

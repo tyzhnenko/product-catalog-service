@@ -6,3 +6,6 @@ run:
 lint:
     echo "Linting the code..."
     uv run ruff check src/ tests/
+
+
+default: run
