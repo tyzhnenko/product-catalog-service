@@ -4,7 +4,6 @@ from fastapi import Depends, HTTPException, Response, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
-from src.domain.variants import DuplicateVariantOptionsError
 from src.domain.types.products import ProductUUID
 from src.domain.types.stores import StoreUUID
 from src.domain.types.variants import (
@@ -13,7 +12,7 @@ from src.domain.types.variants import (
     UpdateProductVariant,
     VariantUUID,
 )
-from src.domain.variants import VariantsService
+from src.domain.variants import DuplicateVariantOptionsError, VariantsService
 
 router = APIRouter()
 

@@ -1,6 +1,6 @@
+# ruff: noqa: S101, D100, D101, D102, D103
 """Tests for core.utils module."""
 
-import pytest
 from src.core.utils import split_path
 
 

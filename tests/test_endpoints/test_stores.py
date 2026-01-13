@@ -83,7 +83,7 @@ class TestCreateStore:
 
 
 class TestListStores:
-    """Tests for GET /api/v1/stores/"""
+    """Tests for GET /api/v1/stores/."""
 
     def test_list_stores_empty(self, api_client):
         """Test listing stores when database is empty."""
@@ -127,7 +127,7 @@ class TestListStores:
 
 
 class TestGetStore:
-    """Tests for GET /api/v1/stores/{store_id}"""
+    """Tests for GET /api/v1/stores/{store_id}."""
 
     def test_get_store_success(self, api_client, sample_store_data):
         """Test successful retrieval of a specific store."""
@@ -165,7 +165,7 @@ class TestGetStore:
 
 
 class TestUpdateStore:
-    """Tests for PUT /api/v1/stores/{store_id}"""
+    """Tests for PUT /api/v1/stores/{store_id}."""
 
     def test_update_store_name(self, api_client, sample_store_data):
         """Test updating store name."""
@@ -274,7 +274,7 @@ class TestUpdateStore:
 
 
 class TestDeleteStore:
-    """Tests for DELETE /api/v1/stores/{store_id}"""
+    """Tests for DELETE /api/v1/stores/{store_id}."""
 
     def test_delete_store_success(self, api_client, sample_store_data):
         """Test successful soft delete of a store."""
