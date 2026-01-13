@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.1.9](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.8...v0.1.9) (2026-01-13)
+
+
+### Bug Fixes
+
+* add missed attributes and brand fields in product models ([3eb8a23](https://github.com/tyzhnenko/product-catalog-service/commit/3eb8a2385910a6ccbf86a33b3c0ce8f086b32765))
+* disable separate input/output schemas generation ([c6cc87e](https://github.com/tyzhnenko/product-catalog-service/commit/c6cc87ebbfb3d2146cc0d8558e693e509febecc6))
+
+
+### Chores
+
+* add OpenAPI client generator config file ([742fd94](https://github.com/tyzhnenko/product-catalog-service/commit/742fd94d237d058ca810258acbc70e71feb2f626))
+* add openapi-python-client and dev dependencies ([8a938dd](https://github.com/tyzhnenko/product-catalog-service/commit/8a938dddd0c1acd6e6b65f76f63a10f832e3a8cd))
+* clean up imports and improve docstring punctuation in tests ([62a993e](https://github.com/tyzhnenko/product-catalog-service/commit/62a993ee5c489711498d9764aafe0b900f489617))
+* update settings to ignore extra parameters ([c55c6e7](https://github.com/tyzhnenko/product-catalog-service/commit/c55c6e7a5622089a5221df6c5c6b94c0a27646ef))
+
+
+### Continuous Integration
+
+* correct linter command syntax in CI workflow ([1424dd7](https://github.com/tyzhnenko/product-catalog-service/commit/1424dd724cd673f105700c2c465eda95cd0ffdda))
+* update CI workflow to include linting steps and add Justfile for task management ([a82ce5a](https://github.com/tyzhnenko/product-catalog-service/commit/a82ce5a33e9b14f7b99c8afe4f9cfccdd654d537))
+
 ## [0.1.8](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.7...v0.1.8) (2026-01-09)
 
 
