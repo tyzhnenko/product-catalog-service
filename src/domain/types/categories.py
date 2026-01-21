@@ -123,11 +123,10 @@ class CategorySEO(BaseModel):
         },
     )
 
-    slug: CategorySEOSlug
-    title: CategorySEOTitle
-    description: CategorySEODescription
-    keywords: CategorySEOKeywords
-    path: CategoryPath
+    slug: CategorySEOSlug | None = None
+    title: CategorySEOTitle | None = None
+    description: CategorySEODescription | None = None
+    keywords: CategorySEOKeywords | None = None
 
 
 class NewCategory(BaseModel):
