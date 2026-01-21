@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.10](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.9...v0.1.10) (2026-01-21)
+
+
+### Bug Fixes
+
+* make SEO fields optional in CategorySEO model ([ec0744d](https://github.com/tyzhnenko/product-catalog-service/commit/ec0744dae8a1a4cf09d31c4963e9f44484902573))
+
+
+### Documentation
+
+* enhance API endpoints with detailed descriptions and operation IDs ([a6009c4](https://github.com/tyzhnenko/product-catalog-service/commit/a6009c44d46cbf074ba187d04e94e067b21b0e75))
+
 ## [0.1.9](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.8...v0.1.9) (2026-01-13)
 
 
