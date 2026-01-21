@@ -11,7 +11,13 @@ from src.domain.types.stores import StoreUUID
 router = APIRouter()
 
 
-@router.get("/{store_id}", dependencies=[Security(ro_access)])
+@router.get(
+    "/{store_id}",
+    name="List Locations",
+    description="Retrieve a list of all locations for a specific store.",
+    operation_id="list_locations",
+    dependencies=[Security(ro_access)],
+)
 async def list_locations(
     store_id: StoreUUID,
     service: Annotated[LocationsService, Depends(LocationsService)],
@@ -25,7 +31,13 @@ async def list_locations(
     return locations
 
 
-@router.post("/{store_id}", dependencies=[Security(rw_access)])
+@router.post(
+    "/{store_id}",
+    name="Create Location",
+    description="Create a new location for a specific store.",
+    operation_id="create_location",
+    dependencies=[Security(rw_access)],
+)
 async def create_location(
     store_id: StoreUUID,
     new_location: NewLocation,
@@ -40,7 +52,13 @@ async def create_location(
     return location
 
 
-@router.get("/{store_id}/{location_id}", dependencies=[Security(ro_access)])
+@router.get(
+    "/{store_id}/{location_id}",
+    name="Get Location",
+    description="Retrieve details of a specific location by its ID for a specific store.",
+    operation_id="get_location",
+    dependencies=[Security(ro_access)],
+)
 async def get_location(
     store_id: StoreUUID,
     location_id: LocationUUID,
@@ -55,7 +73,13 @@ async def get_location(
     return location
 
 
-@router.put("/{store_id}/{location_id}", dependencies=[Security(rw_access)])
+@router.put(
+    "/{store_id}/{location_id}",
+    name="Update Location",
+    description="Update details of a specific location by its ID for a specific store.",
+    operation_id="update_location",
+    dependencies=[Security(rw_access)],
+)
 async def update_location(
     store_id: StoreUUID,
     location_id: LocationUUID,
@@ -72,7 +96,13 @@ async def update_location(
     return updated_location
 
 
-@router.delete("/{store_id}/{location_id}", dependencies=[Security(rw_access)])
+@router.delete(
+    "/{store_id}/{location_id}",
+    name="Delete Location",
+    description="Delete a specific location by its ID for a specific store.",
+    operation_id="delete_location",
+    dependencies=[Security(rw_access)],
+)
 async def delete_location(
     store_id: StoreUUID,
     location_id: LocationUUID,

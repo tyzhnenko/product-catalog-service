@@ -8,6 +8,7 @@ StoreUUID = Annotated[
     UUID7,
     Field(
         ...,
+        title="Store UUID",
         description="Unique identifier for a store",
         json_schema_extra={
             "format": "uuid",
@@ -19,6 +20,7 @@ StoreName = Annotated[
     str,
     Field(
         ...,
+        title="Store Name",
         min_length=1,
         max_length=256,
         description="Name of the store",

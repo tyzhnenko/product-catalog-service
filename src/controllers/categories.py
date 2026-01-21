@@ -11,7 +11,13 @@ from src.domain.types.stores import StoreUUID
 router = APIRouter()
 
 
-@router.get("/{store_id}", dependencies=[Security(ro_access)])
+@router.get(
+    "/{store_id}",
+    name="List Categories",
+    description="Retrieve a list of all categories for a specific store.",
+    operation_id="list_categories",
+    dependencies=[Security(ro_access)],
+)
 async def list_categories(
     store_id: StoreUUID,
     service: Annotated[CategoriesService, Depends(CategoriesService)],
@@ -25,7 +31,13 @@ async def list_categories(
     return categories
 
 
-@router.post("/{store_id}", dependencies=[Security(rw_access)])
+@router.post(
+    "/{store_id}",
+    name="Create Category",
+    description="Create a new category for a specific store.",
+    operation_id="create_category",
+    dependencies=[Security(rw_access)],
+)
 async def create_category(
     store_id: StoreUUID,
     new_category: NewCategory,
@@ -40,7 +52,13 @@ async def create_category(
     return category
 
 
-@router.get("/{store_id}/{category_id}", dependencies=[Security(ro_access)])
+@router.get(
+    "/{store_id}/{category_id}",
+    name="Get Category",
+    description="Retrieve details of a specific category by its ID for a specific store.",
+    operation_id="get_category",
+    dependencies=[Security(ro_access)],
+)
 async def get_category(
     store_id: StoreUUID,
     category_id: CategoryUUID,
@@ -55,7 +73,13 @@ async def get_category(
     return category
 
 
-@router.put("/{store_id}/{category_id}", dependencies=[Security(rw_access)])
+@router.put(
+    "/{store_id}/{category_id}",
+    name="Update Category",
+    description="Update details of a specific category by its ID for a specific store.",
+    operation_id="update_category",
+    dependencies=[Security(rw_access)],
+)
 async def update_category(
     store_id: StoreUUID,
     category_id: CategoryUUID,
@@ -72,7 +96,13 @@ async def update_category(
     return updated_category
 
 
-@router.delete("/{store_id}/{category_id}", dependencies=[Security(rw_access)])
+@router.delete(
+    "/{store_id}/{category_id}",
+    name="Delete Category",
+    description="Delete a specific category by its ID for a specific store.",
+    operation_id="delete_category",
+    dependencies=[Security(rw_access)],
+)
 async def delete_category(
     store_id: StoreUUID,
     category_id: CategoryUUID,

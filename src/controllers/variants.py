@@ -17,7 +17,13 @@ from src.domain.variants import DuplicateVariantOptionsError, VariantsService
 router = APIRouter()
 
 
-@router.get("/{store_id}/{product_id}", dependencies=[Security(ro_access)])
+@router.get(
+    "/{store_id}/{product_id}",
+    name="List Variants",
+    description="Retrieve a list of all variants for a specific product.",
+    operation_id="list_variants",
+    dependencies=[Security(ro_access)],
+)
 async def list_variants(
     store_id: StoreUUID,
     product_id: ProductUUID,
@@ -33,7 +39,13 @@ async def list_variants(
     return variants
 
 
-@router.post("/{store_id}/{product_id}", dependencies=[Security(rw_access)])
+@router.post(
+    "/{store_id}/{product_id}",
+    name="Create Variant",
+    description="Create a new variant for a specific product.",
+    operation_id="create_variant",
+    dependencies=[Security(rw_access)],
+)
 async def create_variant(
     store_id: StoreUUID,
     product_id: ProductUUID,
@@ -56,7 +68,13 @@ async def create_variant(
     return variant
 
 
-@router.get("/{store_id}/{product_id}/{variant_id}", dependencies=[Security(ro_access)])
+@router.get(
+    "/{store_id}/{product_id}/{variant_id}",
+    name="Get Variant",
+    description="Retrieve a specific variant by its unique identifier.",
+    operation_id="get_variant",
+    dependencies=[Security(ro_access)],
+)
 async def get_variant(
     store_id: StoreUUID,
     product_id: ProductUUID,
@@ -73,7 +91,13 @@ async def get_variant(
     return variant
 
 
-@router.patch("/{store_id}/{product_id}/{variant_id}", dependencies=[Security(rw_access)])
+@router.patch(
+    "/{store_id}/{product_id}/{variant_id}",
+    name="Update Variant",
+    description="Update a specific variant's information.",
+    operation_id="update_variant",
+    dependencies=[Security(rw_access)],
+)
 async def update_variant(
     store_id: StoreUUID,
     product_id: ProductUUID,
@@ -97,7 +121,13 @@ async def update_variant(
     return updated_variant
 
 
-@router.delete("/{store_id}/{product_id}/{variant_id}", dependencies=[Security(rw_access)])
+@router.delete(
+    "/{store_id}/{product_id}/{variant_id}",
+    name="Delete Variant",
+    description="Delete a specific variant (soft delete).",
+    operation_id="delete_variant",
+    dependencies=[Security(rw_access)],
+)
 async def delete_variant(
     store_id: StoreUUID,
     product_id: ProductUUID,

@@ -50,6 +50,7 @@ Price = Annotated[
     DecimalPrice | DecimalRangePrice | DecimalQuantityPrice,
     Field(
         ...,
+        title="Price",
         description="Price information which can be of various types",
     ),
 ]
@@ -58,6 +59,7 @@ PriceMap = Annotated[
     dict[str, Price],
     Field(
         default_factory=dict,
+        title="Price Map",
         description="Mapping of price identifiers to their corresponding Price objects",
     ),
 ]
@@ -66,6 +68,7 @@ LocationPriceMap = Annotated[
     dict[LocationUUID, PriceMap],
     Field(
         default_factory=dict,
+        title="Location Price Map",
         description="Mapping of location identifiers to their corresponding PriceMap",
     ),
 ]
@@ -74,6 +77,7 @@ RegionPriceMap = Annotated[
     dict[CountryCode, PriceMap],
     Field(
         default_factory=dict,
+        title="Region Price Map",
         description="Mapping of region identifiers to their corresponding PriceMap",
     ),
 ]

@@ -11,7 +11,13 @@ from src.domain.types.stores import StoreUUID
 router = APIRouter()
 
 
-@router.get("/{store_id}", dependencies=[Security(ro_access)])
+@router.get(
+    "/{store_id}",
+    name="List Products",
+    description="Retrieve a list of all products for a specific store.",
+    operation_id="list_products",
+    dependencies=[Security(ro_access)],
+)
 async def list_products(
     store_id: StoreUUID,
     service: Annotated[ProductsService, Depends(ProductsService)],
@@ -26,7 +32,13 @@ async def list_products(
     return products
 
 
-@router.post("/{store_id}", dependencies=[Security(rw_access)])
+@router.post(
+    "/{store_id}",
+    name="Create Product",
+    description="Create a new product for a specific store.",
+    operation_id="create_product",
+    dependencies=[Security(rw_access)],
+)
 async def create_product(
     store_id: StoreUUID,
     new_product: NewProduct,
@@ -42,7 +54,13 @@ async def create_product(
     return product
 
 
-@router.get("/{store_id}/{product_id}", dependencies=[Security(ro_access)])
+@router.get(
+    "/{store_id}/{product_id}",
+    name="Get Product",
+    description="Retrieve a specific product by its unique identifier.",
+    operation_id="get_product",
+    dependencies=[Security(ro_access)],
+)
 async def get_product(
     store_id: StoreUUID,
     product_id: ProductUUID,
@@ -58,7 +76,13 @@ async def get_product(
     return product
 
 
-@router.patch("/{store_id}/{product_id}", dependencies=[Security(rw_access)])
+@router.patch(
+    "/{store_id}/{product_id}",
+    name="Update Product",
+    description="Update a specific product's information.",
+    operation_id="update_product",
+    dependencies=[Security(rw_access)],
+)
 async def update_product(
     store_id: StoreUUID,
     product_id: ProductUUID,
@@ -75,7 +99,13 @@ async def update_product(
     return updated_product
 
 
-@router.delete("/{store_id}/{product_id}", dependencies=[Security(rw_access)])
+@router.delete(
+    "/{store_id}/{product_id}",
+    name="Delete Product",
+    description="Delete a specific product (soft delete).",
+    operation_id="delete_product",
+    dependencies=[Security(rw_access)],
+)
 async def delete_product(
     store_id: StoreUUID,
     product_id: ProductUUID,

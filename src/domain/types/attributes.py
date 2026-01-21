@@ -281,6 +281,7 @@ Attribute = Annotated[
     | ListOfURLsAttribute,
     Field(
         ...,
+        title="Attribute",
         description="Attribute which can be of various types",
     ),
 ]
@@ -289,6 +290,7 @@ AttributesList = Annotated[
     list[Attribute],
     Field(
         default_factory=list,
+        title="Attributes List",
         description="List of attributes",
     ),
 ]
@@ -297,6 +299,7 @@ AttributesMap = Annotated[
     dict[str, Attribute],
     Field(
         default_factory=dict,
+        title="Attributes Map",
         description="Map of attribute name to attribute",
     ),
 ]

@@ -11,7 +11,13 @@ from src.domain.types.stores import StoreUUID
 router = APIRouter()
 
 
-@router.get("/{store_id}", dependencies=[Security(ro_access)])
+@router.get(
+    "/{store_id}",
+    name="List Bundles",
+    description="List all bundles for a specific store.",
+    operation_id="list_bundles",
+    dependencies=[Security(ro_access)],
+)
 async def list_bundles(
     store_id: StoreUUID,
     service: Annotated[BundlesService, Depends(BundlesService)],
@@ -26,7 +32,13 @@ async def list_bundles(
     return bundles
 
 
-@router.post("/{store_id}", dependencies=[Security(rw_access)])
+@router.post(
+    "/{store_id}",
+    name="Create Bundle",
+    description="Create a new bundle for a specific store.",
+    operation_id="create_bundle",
+    dependencies=[Security(rw_access)],
+)
 async def create_bundle(
     store_id: StoreUUID,
     new_bundle: NewBundle,
@@ -42,7 +54,13 @@ async def create_bundle(
     return bundle
 
 
-@router.get("/{store_id}/{bundle_id}", dependencies=[Security(ro_access)])
+@router.get(
+    "/{store_id}/{bundle_id}",
+    name="Get Bundle",
+    description="Get a specific bundle by ID.",
+    operation_id="get_bundle",
+    dependencies=[Security(ro_access)],
+)
 async def get_bundle(
     store_id: StoreUUID,
     bundle_id: BundleUUID,
@@ -58,7 +76,13 @@ async def get_bundle(
     return bundle
 
 
-@router.patch("/{store_id}/{bundle_id}", dependencies=[Security(rw_access)])
+@router.patch(
+    "/{store_id}/{bundle_id}",
+    name="Update Bundle",
+    description="Update a bundle's information.",
+    operation_id="update_bundle",
+    dependencies=[Security(rw_access)],
+)
 async def update_bundle(
     store_id: StoreUUID,
     bundle_id: BundleUUID,
@@ -75,7 +99,13 @@ async def update_bundle(
     return updated_bundle
 
 
-@router.delete("/{store_id}/{bundle_id}", dependencies=[Security(rw_access)])
+@router.delete(
+    "/{store_id}/{bundle_id}",
+    name="Delete Bundle",
+    description="Delete a bundle.",
+    operation_id="delete_bundle",
+    dependencies=[Security(rw_access)],
+)
 async def delete_bundle(
     store_id: StoreUUID,
     bundle_id: BundleUUID,
