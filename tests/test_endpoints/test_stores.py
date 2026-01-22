@@ -541,6 +541,21 @@ class TestStoreRecursiveDelete:
         delete_response = api_client.delete(f"/api/v1/stores/{store_id}")
         assert delete_response.status_code == 204
 
+        deleted_category = api_client.get(f"/api/v1/categories/{store_id}/{category_response.json()['id']}")
+        assert deleted_category.status_code == 404
+
+        deleted_location = api_client.get(f"/api/v1/locations/{store_id}/{location_response.json()['id']}")
+        assert deleted_location.status_code == 404
+
+        deleted_product = api_client.get(f"/api/v1/products/{store_id}/{product_id}")
+        assert deleted_product.status_code == 404
+
+        deleted_bundle = api_client.get(f"/api/v1/bundles/{store_id}/{bundle_response.json()['id']}")
+        assert deleted_bundle.status_code == 404
+
+        deleted_variant = api_client.get(f"/api/v1/variants/{store_id}/{product_id}/{variant_response.json()['id']}")
+        assert deleted_variant.status_code == 404
+
         # Verify all resources are gone from lists
         categories_list = api_client.get(f"/api/v1/categories/{store_id}")
         products_list = api_client.get(f"/api/v1/products/{store_id}")
@@ -548,7 +563,7 @@ class TestStoreRecursiveDelete:
         locations_list = api_client.get(f"/api/v1/locations/{store_id}")
 
         # All should return 404 (store not found) or empty lists depending on implementation
-        assert categories_list.status_code in [404, 200]
-        assert products_list.status_code in [404, 200]
-        assert bundles_list.status_code in [404, 200]
-        assert locations_list.status_code in [404, 200]
+        assert categories_list.status_code == 404 or categories_list.json() == []
+        assert products_list.status_code == 404 or products_list.json() == []
+        assert bundles_list.status_code == 404 or bundles_list.json() == []
+        assert locations_list.status_code == 404 or locations_list.json() == []
