@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.10...v0.2.0) (2026-01-22)
+
+
+### Features
+
+* implement soft delete cascading for stores and products ([69b24fa](https://github.com/tyzhnenko/product-catalog-service/commit/69b24fa0d4ed1108d0570ae11454984c8dc5d2a6))
+
+
+### Tests
+
+* enhance recursive delete tests to verify resource removal ([195dcaf](https://github.com/tyzhnenko/product-catalog-service/commit/195dcaf9a84ae796e9632f9003571bceaf53076d))
+
 ## [0.1.10](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.9...v0.1.10) (2026-01-21)
 
 
