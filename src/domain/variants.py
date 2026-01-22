@@ -119,8 +119,8 @@ class VariantsService:
         self, store_id: StoreUUID, product_id: ProductUUID, new_variant: NewProductVariant
     ) -> ProductVariant | None:
         # Check if product exists and belongs to the store (product query validates store ownership)
-        product = await ProductModel.get(product_id)
-        if not product or product.store_id != store_id or product.deleted_at is not None:
+        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        if not product:
             logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
             return None
 
@@ -155,8 +155,8 @@ class VariantsService:
 
     async def list_variants(self, store_id: StoreUUID, product_id: ProductUUID) -> list[ProductVariant] | None:
         # Check if product exists and belongs to the store
-        product = await ProductModel.get(product_id)
-        if not product or product.store_id != store_id or product.deleted_at is not None:
+        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        if not product:
             logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
             return None
 
@@ -170,13 +170,15 @@ class VariantsService:
         self, store_id: StoreUUID, product_id: ProductUUID, variant_id: VariantUUID
     ) -> ProductVariant | None:
         # Check if product exists and belongs to the store
-        product = await ProductModel.get(product_id)
-        if not product or product.store_id != store_id or product.deleted_at is not None:
+        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        if not product:
             logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
             return None
 
-        variant = await VariantModel.get(variant_id)
-        if variant and variant.product_id == product_id and variant.store_id == store_id and variant.deleted_at is None:
+        variant = await VariantModel.find(
+            {"_id": variant_id, "product_id": product_id, "store_id": store_id, "deleted_at": None}
+        ).first_or_none()
+        if variant:
             return ProductVariant.model_validate(variant)
         logger.warning(f"Variant not found or access denied: variant_id={variant_id}, product_id={product_id}")
         return None
@@ -189,18 +191,15 @@ class VariantsService:
         update_data: UpdateProductVariant,
     ) -> ProductVariant | None:
         # Check if product exists and belongs to the store
-        product = await ProductModel.get(product_id)
-        if not product or product.store_id != store_id or product.deleted_at is not None:
+        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        if not product:
             logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
             return None
 
-        variant = await VariantModel.get(variant_id)
-        if (
-            not variant
-            or variant.product_id != product_id
-            or variant.store_id != store_id
-            or variant.deleted_at is not None
-        ):
+        variant = await VariantModel.find(
+            {"_id": variant_id, "product_id": product_id, "store_id": store_id, "deleted_at": None}
+        ).first_or_none()
+        if not variant:
             logger.warning(f"Variant not found or access denied: variant_id={variant_id}, product_id={product_id}")
             return None
 
@@ -231,18 +230,15 @@ class VariantsService:
 
     async def delete_variant(self, store_id: StoreUUID, product_id: ProductUUID, variant_id: VariantUUID) -> bool:
         # Check if product exists and belongs to the store
-        product = await ProductModel.get(product_id)
-        if not product or product.store_id != store_id or product.deleted_at is not None:
+        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        if not product:
             logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
             return False
 
-        variant = await VariantModel.get(variant_id)
-        if (
-            not variant
-            or variant.product_id != product_id
-            or variant.store_id != store_id
-            or variant.deleted_at is not None
-        ):
+        variant = await VariantModel.find(
+            {"_id": variant_id, "product_id": product_id, "store_id": store_id, "deleted_at": None}
+        ).first_or_none()
+        if not variant:
             logger.warning(f"Variant not found or access denied: variant_id={variant_id}, product_id={product_id}")
             return False
 

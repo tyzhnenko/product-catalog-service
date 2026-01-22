@@ -113,7 +113,7 @@ class BundlesService:
 
         """
         # Check if store exists
-        store = await StoreModel.get(store_id)
+        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
@@ -160,7 +160,7 @@ class BundlesService:
 
         """
         # Check if store exists
-        store = await StoreModel.get(store_id)
+        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
@@ -181,13 +181,13 @@ class BundlesService:
 
         """
         # Check if store exists
-        store = await StoreModel.get(store_id)
+        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
 
-        bundle = await BundleModel.get(bundle_id)
-        if bundle and bundle.store_id == store_id and bundle.deleted_at is None:
+        bundle = await BundleModel.find({"_id": bundle_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        if bundle:
             return Bundle.model_validate(bundle.model_dump())
         logger.warning(f"Bundle not found or access denied: bundle_id={bundle_id}, store_id={store_id}")
         return None
@@ -210,13 +210,13 @@ class BundlesService:
 
         """
         # Check if store exists
-        store = await StoreModel.get(store_id)
+        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
 
-        bundle = await BundleModel.get(bundle_id)
-        if not bundle or bundle.store_id != store_id or bundle.deleted_at is not None:
+        bundle = await BundleModel.find({"_id": bundle_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        if not bundle:
             logger.warning(f"Bundle not found or access denied: bundle_id={bundle_id}, store_id={store_id}")
             return None
 
@@ -256,13 +256,13 @@ class BundlesService:
 
         """
         # Check if store exists
-        store = await StoreModel.get(store_id)
+        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return False
 
-        bundle = await BundleModel.get(bundle_id)
-        if not bundle or bundle.store_id != store_id or bundle.deleted_at is not None:
+        bundle = await BundleModel.find({"_id": bundle_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        if not bundle:
             logger.warning(f"Bundle not found or access denied: bundle_id={bundle_id}, store_id={store_id}")
             return False
 

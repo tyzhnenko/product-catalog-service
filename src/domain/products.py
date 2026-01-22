@@ -15,6 +15,7 @@ from src.domain.types.stores import StoreUUID
 from src.models.categories import CategoryModel
 from src.models.products import ProductModel
 from src.models.stores import StoreModel
+from src.models.variants import VariantModel
 
 
 class ProductsService:
@@ -45,7 +46,7 @@ class ProductsService:
 
     async def create_product(self, store_id: StoreUUID, new_product: NewProduct) -> Product | None:
         # Check if store exists
-        store = await StoreModel.get(store_id)
+        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
@@ -72,7 +73,7 @@ class ProductsService:
 
     async def list_products(self, store_id: StoreUUID) -> list[Product] | None:
         # Check if store exists
-        store = await StoreModel.get(store_id)
+        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
@@ -83,13 +84,13 @@ class ProductsService:
 
     async def get_product(self, store_id: StoreUUID, product_id: ProductUUID) -> Product | None:
         # Check if store exists
-        store = await StoreModel.get(store_id)
+        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
 
-        product = await ProductModel.get(product_id)
-        if product and product.store_id == store_id and product.deleted_at is None:
+        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        if product:
             return Product.model_validate(product)
         logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
         return None
@@ -101,13 +102,13 @@ class ProductsService:
         update_data: UpdateProduct,
     ) -> Product | None:
         # Check if store exists
-        store = await StoreModel.get(store_id)
+        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
 
-        product = await ProductModel.get(product_id)
-        if not product or product.store_id != store_id or product.deleted_at is not None:
+        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        if not product:
             logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
             return None
 
@@ -127,17 +128,26 @@ class ProductsService:
 
     async def delete_product(self, store_id: StoreUUID, product_id: ProductUUID) -> bool:
         # Check if store exists
-        store = await StoreModel.get(store_id)
+        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return False
 
-        product = await ProductModel.get(product_id)
-        if not product or product.store_id != store_id or product.deleted_at is not None:
+        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        if not product:
             logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
             return False
 
-        product.deleted_at = pendulum.now()
+        now = pendulum.now()
+
+        # Soft delete all variants of this product
+        variants_result = await VariantModel.find({"product_id": product_id, "deleted_at": None}).update_many(
+            {"$set": {"deleted_at": now}}
+        )
+        logger.info(f"Soft deleted {getattr(variants_result, 'modified_count', 0)} variants for product {product_id}")
+
+        # Delete the product itself
+        product.deleted_at = now
         await product.save()
         logger.info(f"Deleted product {product_id} for store {store_id}")
         return True

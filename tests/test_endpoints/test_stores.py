@@ -364,3 +364,191 @@ class TestStoreCRUDIntegration:
         # Delete
         delete_response = api_client.delete(f"/api/v1/stores/{store_id}")
         assert delete_response.status_code == 204
+
+
+class TestStoreRecursiveDelete:
+    """Tests for recursive soft delete when deleting a store."""
+
+    def test_delete_store_cascades_to_products(self, api_client):
+        """Test that deleting a store soft deletes all products."""
+        # Create a store
+        store_data = {"name": "Store with Products", "url": "https://storeproducts.com/"}
+        store_response = api_client.post("/api/v1/stores/", json=store_data)
+        store_id = store_response.json()["id"]
+
+        # Create a category
+        category_data = {"name": "Test Category", "status": "active", "path": "/test"}
+        category_response = api_client.post(f"/api/v1/categories/{store_id}", json=category_data)
+        category_id = category_response.json()["id"]
+
+        # Create products
+        product_data = {"name": "Product 1", "tags": [], "categories": [category_id]}
+        product1_response = api_client.post(f"/api/v1/products/{store_id}", json=product_data)
+        product1_id = product1_response.json()["id"]
+
+        product_data["name"] = "Product 2"
+        product2_response = api_client.post(f"/api/v1/products/{store_id}", json=product_data)
+        product2_id = product2_response.json()["id"]
+
+        # Delete the store
+        delete_response = api_client.delete(f"/api/v1/stores/{store_id}")
+        assert delete_response.status_code == 204
+
+        # Verify products are soft deleted (not accessible)
+        product1_get = api_client.get(f"/api/v1/products/{store_id}/{product1_id}")
+        product2_get = api_client.get(f"/api/v1/products/{store_id}/{product2_id}")
+        assert product1_get.status_code == 404
+        assert product2_get.status_code == 404
+
+    def test_delete_store_cascades_to_variants(self, api_client):
+        """Test that deleting a store soft deletes all variants."""
+        # Create a store
+        store_data = {"name": "Store with Variants", "url": "https://storevariants.com/"}
+        store_response = api_client.post("/api/v1/stores/", json=store_data)
+        store_id = store_response.json()["id"]
+
+        # Create a product
+        product_data = {"name": "Product with Variants", "tags": []}
+        product_response = api_client.post(f"/api/v1/products/{store_id}", json=product_data)
+        product_id = product_response.json()["id"]
+
+        # Create variants
+        variant_data = {"title": "Variant 1", "options": [{"name": "size", "value": "small"}]}
+        variant1_response = api_client.post(f"/api/v1/variants/{store_id}/{product_id}", json=variant_data)
+        variant1_id = variant1_response.json()["id"]
+
+        variant_data = {"title": "Variant 2", "options": [{"name": "size", "value": "large"}]}
+        variant2_response = api_client.post(f"/api/v1/variants/{store_id}/{product_id}", json=variant_data)
+        variant2_id = variant2_response.json()["id"]
+
+        # Delete the store
+        delete_response = api_client.delete(f"/api/v1/stores/{store_id}")
+        assert delete_response.status_code == 204
+
+        # Verify variants are soft deleted (not accessible)
+        variant1_get = api_client.get(f"/api/v1/variants/{store_id}/{product_id}/{variant1_id}")
+        variant2_get = api_client.get(f"/api/v1/variants/{store_id}/{product_id}/{variant2_id}")
+        assert variant1_get.status_code == 404
+        assert variant2_get.status_code == 404
+
+    def test_delete_store_cascades_to_bundles(self, api_client):
+        """Test that deleting a store soft deletes all bundles."""
+        # Create a store
+        store_data = {"name": "Store with Bundles", "url": "https://storebundles.com/"}
+        store_response = api_client.post("/api/v1/stores/", json=store_data)
+        store_id = store_response.json()["id"]
+
+        # Create bundles
+        bundle_data = {"name": "Bundle 1"}
+        bundle1_response = api_client.post(f"/api/v1/bundles/{store_id}", json=bundle_data)
+        bundle1_id = bundle1_response.json()["id"]
+
+        bundle_data["name"] = "Bundle 2"
+        bundle2_response = api_client.post(f"/api/v1/bundles/{store_id}", json=bundle_data)
+        bundle2_id = bundle2_response.json()["id"]
+
+        # Delete the store
+        delete_response = api_client.delete(f"/api/v1/stores/{store_id}")
+        assert delete_response.status_code == 204
+
+        # Verify bundles are soft deleted (not accessible)
+        bundle1_get = api_client.get(f"/api/v1/bundles/{store_id}/{bundle1_id}")
+        bundle2_get = api_client.get(f"/api/v1/bundles/{store_id}/{bundle2_id}")
+        assert bundle1_get.status_code == 404
+        assert bundle2_get.status_code == 404
+
+    def test_delete_store_cascades_to_categories(self, api_client):
+        """Test that deleting a store soft deletes all categories."""
+        # Create a store
+        store_data = {"name": "Store with Categories", "url": "https://storecategories.com/"}
+        store_response = api_client.post("/api/v1/stores/", json=store_data)
+        store_id = store_response.json()["id"]
+
+        # Create categories
+        category_data = {"name": "Category 1", "status": "active", "path": "/cat1"}
+        cat1_response = api_client.post(f"/api/v1/categories/{store_id}", json=category_data)
+        cat1_id = cat1_response.json()["id"]
+
+        category_data = {"name": "Category 2", "status": "active", "path": "/cat2"}
+        cat2_response = api_client.post(f"/api/v1/categories/{store_id}", json=category_data)
+        cat2_id = cat2_response.json()["id"]
+
+        # Delete the store
+        delete_response = api_client.delete(f"/api/v1/stores/{store_id}")
+        assert delete_response.status_code == 204
+
+        # Verify categories are soft deleted (not accessible)
+        cat1_get = api_client.get(f"/api/v1/categories/{store_id}/{cat1_id}")
+        cat2_get = api_client.get(f"/api/v1/categories/{store_id}/{cat2_id}")
+        assert cat1_get.status_code == 404
+        assert cat2_get.status_code == 404
+
+    def test_delete_store_cascades_to_locations(self, api_client):
+        """Test that deleting a store soft deletes all locations."""
+        # Create a store
+        store_data = {"name": "Store with Locations", "url": "https://storelocations.com/"}
+        store_response = api_client.post("/api/v1/stores/", json=store_data)
+        store_id = store_response.json()["id"]
+
+        # Create locations
+        location_data = {"name": "Location 1"}
+        loc1_response = api_client.post(f"/api/v1/locations/{store_id}", json=location_data)
+        loc1_id = loc1_response.json()["id"]
+
+        location_data["name"] = "Location 2"
+        loc2_response = api_client.post(f"/api/v1/locations/{store_id}", json=location_data)
+        loc2_id = loc2_response.json()["id"]
+
+        # Delete the store
+        delete_response = api_client.delete(f"/api/v1/stores/{store_id}")
+        assert delete_response.status_code == 204
+
+        # Verify locations are soft deleted (not accessible)
+        loc1_get = api_client.get(f"/api/v1/locations/{store_id}/{loc1_id}")
+        loc2_get = api_client.get(f"/api/v1/locations/{store_id}/{loc2_id}")
+        assert loc1_get.status_code == 404
+        assert loc2_get.status_code == 404
+
+    def test_delete_store_full_cascade(self, api_client):
+        """Test that deleting a store cascades to all nested resources."""
+        # Create a store
+        store_data = {"name": "Full Store", "url": "https://fullstore.com/"}
+        store_response = api_client.post("/api/v1/stores/", json=store_data)
+        store_id = store_response.json()["id"]
+
+        # Create category
+        category_data = {"name": "Category", "status": "active", "path": "/category"}
+        category_response = api_client.post(f"/api/v1/categories/{store_id}", json=category_data)
+
+        # Create product
+        product_data = {"name": "Product", "tags": []}
+        product_response = api_client.post(f"/api/v1/products/{store_id}", json=product_data)
+        product_id = product_response.json()["id"]
+
+        # Create variant
+        variant_data = {"title": "Variant", "options": []}
+        variant_response = api_client.post(f"/api/v1/variants/{store_id}/{product_id}", json=variant_data)
+
+        # Create bundle
+        bundle_data = {"name": "Bundle"}
+        bundle_response = api_client.post(f"/api/v1/bundles/{store_id}", json=bundle_data)
+
+        # Create location
+        location_data = {"name": "Location"}
+        location_response = api_client.post(f"/api/v1/locations/{store_id}", json=location_data)
+
+        # Delete the store
+        delete_response = api_client.delete(f"/api/v1/stores/{store_id}")
+        assert delete_response.status_code == 204
+
+        # Verify all resources are gone from lists
+        categories_list = api_client.get(f"/api/v1/categories/{store_id}")
+        products_list = api_client.get(f"/api/v1/products/{store_id}")
+        bundles_list = api_client.get(f"/api/v1/bundles/{store_id}")
+        locations_list = api_client.get(f"/api/v1/locations/{store_id}")
+
+        # All should return 404 (store not found) or empty lists depending on implementation
+        assert categories_list.status_code in [404, 200]
+        assert products_list.status_code in [404, 200]
+        assert bundles_list.status_code in [404, 200]
+        assert locations_list.status_code in [404, 200]

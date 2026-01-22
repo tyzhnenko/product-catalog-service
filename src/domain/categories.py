@@ -11,7 +11,7 @@ from src.models.stores import StoreModel
 class CategoriesService:
     async def create_category(self, store_id: StoreUUID, new_category: NewCategory) -> Category | None:
         # Check if store exists
-        store = await StoreModel.get(store_id)
+        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             return None
 
@@ -33,7 +33,7 @@ class CategoriesService:
 
     async def list_categories(self, store_id: StoreUUID) -> list[Category] | None:
         # Check if store exists
-        store = await StoreModel.get(store_id)
+        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             return None
 
@@ -42,12 +42,14 @@ class CategoriesService:
 
     async def get_category(self, store_id: StoreUUID, category_id: CategoryUUID) -> Category | None:
         # Check if store exists
-        store = await StoreModel.get(store_id)
+        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             return None
 
-        category = await CategoryModel.get(category_id)
-        if category and category.store_id == store_id and category.deleted_at is None:
+        category = await CategoryModel.find(
+            {"_id": category_id, "store_id": store_id, "deleted_at": None}
+        ).first_or_none()
+        if category:
             return Category.model_validate(category.model_dump())
         return None
 
@@ -58,12 +60,14 @@ class CategoriesService:
         update_data: UpdateCategory,
     ) -> Category | None:
         # Check if store exists
-        store = await StoreModel.get(store_id)
+        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             return None
 
-        category = await CategoryModel.get(category_id)
-        if not category or category.store_id != store_id or category.deleted_at is not None:
+        category = await CategoryModel.find(
+            {"_id": category_id, "store_id": store_id, "deleted_at": None}
+        ).first_or_none()
+        if not category:
             return None
 
         # Update only fields that were explicitly set
@@ -83,12 +87,14 @@ class CategoriesService:
 
     async def delete_category(self, store_id: StoreUUID, category_id: CategoryUUID) -> bool:
         # Check if store exists
-        store = await StoreModel.get(store_id)
+        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             return False
 
-        category = await CategoryModel.get(category_id)
-        if not category or category.store_id != store_id or category.deleted_at is not None:
+        category = await CategoryModel.find(
+            {"_id": category_id, "store_id": store_id, "deleted_at": None}
+        ).first_or_none()
+        if not category:
             return False
 
         category.deleted_at = pendulum.now()

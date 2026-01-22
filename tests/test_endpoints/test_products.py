@@ -642,3 +642,99 @@ class TestProductCRUDIntegration:
         # Verify deletion
         get_deleted_response = api_client.get(f"/api/v1/products/{sample_store['id']}/{product_id}")
         assert get_deleted_response.status_code == 404
+
+
+class TestProductRecursiveDelete:
+    """Tests for recursive soft delete when deleting a product."""
+
+    def test_delete_product_cascades_to_variants(self, api_client, sample_store):
+        """Test that deleting a product soft deletes all its variants."""
+        # Create a product
+        product_data = {"name": "Product with Variants", "tags": []}
+        product_response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=product_data)
+        product_id = product_response.json()["id"]
+
+        # Create multiple variants
+        variant1_data = {"title": "Small", "options": [{"name": "size", "value": "small"}]}
+        variant1_response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{product_id}", json=variant1_data)
+        variant1_id = variant1_response.json()["id"]
+
+        variant2_data = {"title": "Medium", "options": [{"name": "size", "value": "medium"}]}
+        variant2_response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{product_id}", json=variant2_data)
+        variant2_id = variant2_response.json()["id"]
+
+        variant3_data = {"title": "Large", "options": [{"name": "size", "value": "large"}]}
+        variant3_response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{product_id}", json=variant3_data)
+        variant3_id = variant3_response.json()["id"]
+
+        # Verify variants exist before deletion
+        variants_list = api_client.get(f"/api/v1/variants/{sample_store['id']}/{product_id}")
+        assert variants_list.status_code == 200
+        assert len(variants_list.json()) == 3
+
+        # Delete the product
+        delete_response = api_client.delete(f"/api/v1/products/{sample_store['id']}/{product_id}")
+        assert delete_response.status_code == 204
+
+        # Verify all variants are soft deleted (not accessible)
+        variant1_get = api_client.get(f"/api/v1/variants/{sample_store['id']}/{product_id}/{variant1_id}")
+        variant2_get = api_client.get(f"/api/v1/variants/{sample_store['id']}/{product_id}/{variant2_id}")
+        variant3_get = api_client.get(f"/api/v1/variants/{sample_store['id']}/{product_id}/{variant3_id}")
+
+        assert variant1_get.status_code == 404
+        assert variant2_get.status_code == 404
+        assert variant3_get.status_code == 404
+
+        # Verify the variants list is empty or returns 404
+        variants_list_after = api_client.get(f"/api/v1/variants/{sample_store['id']}/{product_id}")
+        assert variants_list_after.status_code in [404, 200]
+        if variants_list_after.status_code == 200:
+            assert len(variants_list_after.json()) == 0
+
+    def test_delete_product_with_no_variants(self, api_client, sample_store):
+        """Test that deleting a product with no variants works correctly."""
+        # Create a product without variants
+        product_data = {"name": "Product without Variants", "tags": []}
+        product_response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=product_data)
+        product_id = product_response.json()["id"]
+
+        # Delete the product
+        delete_response = api_client.delete(f"/api/v1/products/{sample_store['id']}/{product_id}")
+        assert delete_response.status_code == 204
+
+        # Verify product is deleted
+        product_get = api_client.get(f"/api/v1/products/{sample_store['id']}/{product_id}")
+        assert product_get.status_code == 404
+
+    def test_delete_product_multiple_with_variants(self, api_client, sample_store):
+        """Test deleting multiple products each with their own variants."""
+        # Create first product with variants
+        product1_data = {"name": "Product 1", "tags": []}
+        product1_response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=product1_data)
+        product1_id = product1_response.json()["id"]
+
+        variant1_data = {"title": "Product 1 Variant", "options": [{"name": "color", "value": "red"}]}
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{product1_id}", json=variant1_data)
+
+        # Create second product with variants
+        product2_data = {"name": "Product 2", "tags": []}
+        product2_response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=product2_data)
+        product2_id = product2_response.json()["id"]
+
+        variant2_data = {"title": "Product 2 Variant", "options": [{"name": "color", "value": "blue"}]}
+        variant2_response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{product2_id}", json=variant2_data)
+        variant2_id = variant2_response.json()["id"]
+
+        # Delete first product
+        delete1_response = api_client.delete(f"/api/v1/products/{sample_store['id']}/{product1_id}")
+        assert delete1_response.status_code == 204
+
+        # Verify first product is deleted but second product and its variant still exist
+        product1_get = api_client.get(f"/api/v1/products/{sample_store['id']}/{product1_id}")
+        assert product1_get.status_code == 404
+
+        product2_get = api_client.get(f"/api/v1/products/{sample_store['id']}/{product2_id}")
+        assert product2_get.status_code == 200
+
+        variant2_get = api_client.get(f"/api/v1/variants/{sample_store['id']}/{product2_id}/{variant2_id}")
+        assert variant2_get.status_code == 200
