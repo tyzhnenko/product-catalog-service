@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 from src.domain.types.common import CountryCode
 from src.domain.types.locations import LocationUUID
 
-PriceName = Annotated[
+type PriceName = Annotated[
     str,
     Field(
         ...,
@@ -16,7 +16,7 @@ PriceName = Annotated[
     ),
 ]
 
-DecimalPriceValue = Annotated[
+type DecimalPriceValue = Annotated[
     Decimal,
     Field(
         ...,
@@ -46,7 +46,7 @@ class DecimalQuantityPrice(BaseModel):
     value: DecimalPriceValue
 
 
-Price = Annotated[
+type Price = Annotated[
     DecimalPrice | DecimalRangePrice | DecimalQuantityPrice,
     Field(
         ...,
@@ -55,7 +55,7 @@ Price = Annotated[
     ),
 ]
 
-PriceMap = Annotated[
+type PriceMap = Annotated[
     dict[str, Price],
     Field(
         default_factory=dict,
@@ -64,7 +64,7 @@ PriceMap = Annotated[
     ),
 ]
 
-LocationPriceMap = Annotated[
+type LocationPriceMap = Annotated[
     dict[LocationUUID, PriceMap],
     Field(
         default_factory=dict,
@@ -73,7 +73,7 @@ LocationPriceMap = Annotated[
     ),
 ]
 
-RegionPriceMap = Annotated[
+type RegionPriceMap = Annotated[
     dict[CountryCode, PriceMap],
     Field(
         default_factory=dict,

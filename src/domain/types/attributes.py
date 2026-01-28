@@ -7,7 +7,7 @@ from pydantic_extra_types.pendulum_dt import Date, DateTime
 
 from src.domain.types.base import HTTPURLField
 
-StringAttributeValue = Annotated[
+type StringAttributeValue = Annotated[
     str,
     Field(
         ...,
@@ -16,7 +16,7 @@ StringAttributeValue = Annotated[
 ]
 
 
-TextAttributeValue = Annotated[
+type TextAttributeValue = Annotated[
     Text,
     Field(
         ...,
@@ -25,7 +25,7 @@ TextAttributeValue = Annotated[
 ]
 
 
-IntegerAttributeValue = Annotated[
+type IntegerAttributeValue = Annotated[
     int,
     Field(
         ...,
@@ -34,7 +34,7 @@ IntegerAttributeValue = Annotated[
 ]
 
 
-FloatAttributeValue = Annotated[
+type FloatAttributeValue = Annotated[
     float,
     Field(
         ...,
@@ -43,7 +43,7 @@ FloatAttributeValue = Annotated[
 ]
 
 
-DecimalAttributeValue = Annotated[
+type DecimalAttributeValue = Annotated[
     Decimal,
     Field(
         ...,
@@ -52,7 +52,7 @@ DecimalAttributeValue = Annotated[
 ]
 
 
-AttributeName = Annotated[
+type AttributeName = Annotated[
     str,
     Field(
         ...,
@@ -60,7 +60,7 @@ AttributeName = Annotated[
     ),
 ]
 
-DateAttributeValue = Annotated[
+type DateAttributeValue = Annotated[
     Date,
     Field(
         ...,
@@ -70,7 +70,7 @@ DateAttributeValue = Annotated[
 ]
 
 
-DateTimeAttributeValue = Annotated[
+type DateTimeAttributeValue = Annotated[
     DateTime,
     Field(
         ...,
@@ -80,7 +80,7 @@ DateTimeAttributeValue = Annotated[
 ]
 
 
-UUIDAttributeValue = Annotated[
+type UUIDAttributeValue = Annotated[
     UUID,
     Field(
         ...,
@@ -90,7 +90,7 @@ UUIDAttributeValue = Annotated[
 ]
 
 
-URLAttributeValue = Annotated[
+type URLAttributeValue = Annotated[
     HTTPURLField,
     Field(
         ...,
@@ -259,7 +259,7 @@ class ListOfURLsAttribute(BaseModel):
     ]
 
 
-Attribute = Annotated[
+type Attribute = Annotated[
     StringAttribute
     | TextAttribute
     | IntegerAttribute
@@ -286,7 +286,7 @@ Attribute = Annotated[
     ),
 ]
 
-AttributesList = Annotated[
+type AttributesList = Annotated[
     list[Attribute],
     Field(
         default_factory=list,
@@ -295,7 +295,7 @@ AttributesList = Annotated[
     ),
 ]
 
-AttributesMap = Annotated[
+type AttributesMap = Annotated[
     dict[str, Attribute],
     Field(
         default_factory=dict,

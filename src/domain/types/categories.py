@@ -8,7 +8,7 @@ from src.core.utils import split_path
 from src.domain.types.attributes import AttributesMap
 from src.domain.types.media import Image
 
-CategoryUUID = Annotated[
+type CategoryUUID = Annotated[
     UUID7,
     Field(
         ...,
@@ -19,7 +19,7 @@ CategoryUUID = Annotated[
     ),
 ]
 
-CategoryName = Annotated[
+type CategoryName = Annotated[
     str,
     Field(
         ...,
@@ -29,7 +29,7 @@ CategoryName = Annotated[
     ),
 ]
 
-CategoryDescription = Annotated[
+type CategoryDescription = Annotated[
     str,
     Field(
         ...,
@@ -39,7 +39,7 @@ CategoryDescription = Annotated[
     ),
 ]
 
-CategorySEOSlug = Annotated[
+type CategorySEOSlug = Annotated[
     str,
     Field(
         ...,
@@ -49,7 +49,7 @@ CategorySEOSlug = Annotated[
     ),
 ]
 
-CategorySEOTitle = Annotated[
+type CategorySEOTitle = Annotated[
     str,
     Field(
         ...,
@@ -59,7 +59,7 @@ CategorySEOTitle = Annotated[
     ),
 ]
 
-CategorySEODescription = Annotated[
+type CategorySEODescription = Annotated[
     str,
     Field(
         ...,
@@ -69,7 +69,7 @@ CategorySEODescription = Annotated[
     ),
 ]
 
-CategorySEOKeywords = Annotated[
+type CategorySEOKeywords = Annotated[
     str,
     Field(
         ...,
@@ -79,7 +79,7 @@ CategorySEOKeywords = Annotated[
     ),
 ]
 
-CategoryPath = Annotated[
+type CategoryPath = Annotated[
     str,
     Field(
         ...,
@@ -90,7 +90,7 @@ CategoryPath = Annotated[
     ),
 ]
 
-CategoryImages = Annotated[
+type CategoryImages = Annotated[
     list[Image],
     Field(
         default_factory=list,
@@ -104,7 +104,7 @@ class CategoryStatusEnum(Enum):
     INACTIVE = "inactive"
 
 
-CategoryStatus = Annotated[
+type CategoryStatus = Annotated[
     CategoryStatusEnum,
     Field(
         ...,

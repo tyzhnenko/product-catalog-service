@@ -9,7 +9,7 @@ from src.domain.types.media import Image
 from src.domain.types.prices import LocationPriceMap, PriceMap, RegionPriceMap
 from src.domain.types.variants import VariantUUID
 
-BundleUUID = Annotated[
+type BundleUUID = Annotated[
     UUID7,
     Field(
         ...,
@@ -20,7 +20,7 @@ BundleUUID = Annotated[
     ),
 ]
 
-BundleName = Annotated[
+type BundleName = Annotated[
     str,
     Field(
         ...,
@@ -30,7 +30,7 @@ BundleName = Annotated[
     ),
 ]
 
-BundleDescription = Annotated[
+type BundleDescription = Annotated[
     str,
     Field(
         ...,
@@ -40,7 +40,7 @@ BundleDescription = Annotated[
     ),
 ]
 
-BundleComponent = Annotated[
+type BundleComponent = Annotated[
     VariantUUID,
     Field(
         ...,
@@ -48,7 +48,7 @@ BundleComponent = Annotated[
     ),
 ]
 
-BundleComponents = Annotated[
+type BundleComponents = Annotated[
     list[BundleComponent],
     Field(
         default_factory=list,
@@ -56,7 +56,7 @@ BundleComponents = Annotated[
     ),
 ]
 
-BundleCategory = Annotated[
+type BundleCategory = Annotated[
     CategoryUUID,
     Field(
         ...,
@@ -64,7 +64,7 @@ BundleCategory = Annotated[
     ),
 ]
 
-BundleCategories = Annotated[
+type BundleCategories = Annotated[
     list[BundleCategory],
     Field(
         default_factory=list,
@@ -72,7 +72,7 @@ BundleCategories = Annotated[
     ),
 ]
 
-BundleImages = Annotated[
+type BundleImages = Annotated[
     list[Image],
     Field(
         default_factory=list,

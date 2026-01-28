@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from src.domain.types.attributes import AttributesMap
 from src.domain.types.base import HTTPURLField
 
-ImageURL = Annotated[
+type ImageURL = Annotated[
     HTTPURLField,
     Field(
         ...,
@@ -13,7 +13,7 @@ ImageURL = Annotated[
     ),
 ]
 
-ImageHeight = Annotated[
+type ImageHeight = Annotated[
     int,
     Field(
         ...,
@@ -22,7 +22,7 @@ ImageHeight = Annotated[
     ),
 ]
 
-ImageWidth = Annotated[
+type ImageWidth = Annotated[
     int,
     Field(
         ...,
@@ -31,7 +31,7 @@ ImageWidth = Annotated[
     ),
 ]
 
-ImageAltText = Annotated[
+type ImageAltText = Annotated[
     str,
     Field(
         ...,

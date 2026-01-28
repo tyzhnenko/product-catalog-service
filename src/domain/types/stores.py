@@ -4,7 +4,7 @@ from pydantic import UUID7, BaseModel, ConfigDict, Field
 
 from src.domain.types.base import HTTPURLField
 
-StoreUUID = Annotated[
+type StoreUUID = Annotated[
     UUID7,
     Field(
         ...,
@@ -16,7 +16,7 @@ StoreUUID = Annotated[
     ),
 ]
 
-StoreName = Annotated[
+type StoreName = Annotated[
     str,
     Field(
         ...,

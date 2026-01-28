@@ -5,7 +5,7 @@ from pydantic import UUID7, BaseModel, ConfigDict, Field
 from src.domain.types.attributes import AttributesMap
 from src.domain.types.stores import StoreUUID
 
-LocationUUID = Annotated[
+type LocationUUID = Annotated[
     UUID7,
     Field(
         ...,
@@ -16,7 +16,7 @@ LocationUUID = Annotated[
     ),
 ]
 
-LocationName = Annotated[
+type LocationName = Annotated[
     str,
     Field(
         ...,

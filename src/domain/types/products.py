@@ -7,7 +7,7 @@ from pydantic_extra_types.pendulum_dt import DateTime
 from src.domain.categories import CategoryUUID
 from src.domain.types.attributes import AttributesMap
 
-ProductUUID = Annotated[
+type ProductUUID = Annotated[
     UUID7,
     Field(
         ...,
@@ -18,7 +18,7 @@ ProductUUID = Annotated[
     ),
 ]
 
-ProductName = Annotated[
+type ProductName = Annotated[
     str,
     Field(
         ...,
@@ -28,7 +28,7 @@ ProductName = Annotated[
     ),
 ]
 
-ProductDescription = Annotated[
+type ProductDescription = Annotated[
     str,
     Field(
         ...,
@@ -38,7 +38,7 @@ ProductDescription = Annotated[
     ),
 ]
 
-ProductBrand = Annotated[
+type ProductBrand = Annotated[
     str,
     Field(
         ...,
@@ -48,7 +48,7 @@ ProductBrand = Annotated[
     ),
 ]
 
-ProductTags = Annotated[
+type ProductTags = Annotated[
     list[str],
     Field(
         default_factory=list,
@@ -57,7 +57,7 @@ ProductTags = Annotated[
 ]
 
 
-ProductSEOSlug = Annotated[
+type ProductSEOSlug = Annotated[
     str,
     Field(
         ...,
@@ -67,7 +67,7 @@ ProductSEOSlug = Annotated[
     ),
 ]
 
-ProductCategory = Annotated[
+type ProductCategory = Annotated[
     CategoryUUID,
     Field(
         ...,
@@ -75,7 +75,7 @@ ProductCategory = Annotated[
     ),
 ]
 
-ProductCategories = Annotated[
+type ProductCategories = Annotated[
     list[ProductCategory],
     Field(
         default_factory=list,
@@ -83,7 +83,7 @@ ProductCategories = Annotated[
     ),
 ]
 
-ProductSEOTitle = Annotated[
+type ProductSEOTitle = Annotated[
     str,
     Field(
         ...,
@@ -93,7 +93,7 @@ ProductSEOTitle = Annotated[
     ),
 ]
 
-ProductSEODescription = Annotated[
+type ProductSEODescription = Annotated[
     str,
     Field(
         ...,
@@ -103,7 +103,7 @@ ProductSEODescription = Annotated[
     ),
 ]
 
-ProductSEOKeywords = Annotated[
+type ProductSEOKeywords = Annotated[
     str,
     Field(
         ...,
@@ -120,7 +120,7 @@ class ProductStatusEnum(Enum):
     DRAFT = "draft"
 
 
-ProductStatus = Annotated[
+type ProductStatus = Annotated[
     ProductStatusEnum,
     Field(
         ProductStatusEnum.ACTIVE,

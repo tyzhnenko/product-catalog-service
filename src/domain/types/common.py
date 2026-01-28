@@ -3,7 +3,7 @@ from typing import Annotated
 from pydantic import Field
 from pydantic_extra_types.country import CountryAlpha2
 
-CountryCode = Annotated[
+type CountryCode = Annotated[
     CountryAlpha2,
     Field(
         ...,

@@ -6,7 +6,7 @@ from src.domain.types.attributes import AttributesMap
 from src.domain.types.media import Image
 from src.domain.types.prices import LocationPriceMap, PriceMap, RegionPriceMap
 
-VariantUUID = Annotated[
+type VariantUUID = Annotated[
     UUID7,
     Field(
         ...,
@@ -18,7 +18,7 @@ VariantUUID = Annotated[
 ]
 
 
-VariantTitle = Annotated[
+type VariantTitle = Annotated[
     str,
     Field(
         ...,
@@ -29,7 +29,7 @@ VariantTitle = Annotated[
 ]
 
 
-VariantSKU = Annotated[
+type VariantSKU = Annotated[
     str,
     Field(
         ...,
@@ -39,7 +39,7 @@ VariantSKU = Annotated[
     ),
 ]
 
-VariantUPC = Annotated[
+type VariantUPC = Annotated[
     str,
     Field(
         ...,
@@ -50,7 +50,7 @@ VariantUPC = Annotated[
 ]
 
 
-VariantEAN = Annotated[
+type VariantEAN = Annotated[
     str,
     Field(
         ...,
@@ -61,7 +61,7 @@ VariantEAN = Annotated[
 ]
 
 
-VariantJAN = Annotated[
+type VariantJAN = Annotated[
     str,
     Field(
         ...,
@@ -72,7 +72,7 @@ VariantJAN = Annotated[
 ]
 
 
-VariantISBN = Annotated[
+type VariantISBN = Annotated[
     str,
     Field(
         ...,
@@ -104,7 +104,7 @@ class VariantOption(BaseModel):
     ]
 
 
-VariantOptions = Annotated[
+type VariantOptions = Annotated[
     list[VariantOption],
     Field(
         default_factory=list,
@@ -112,7 +112,7 @@ VariantOptions = Annotated[
     ),
 ]
 
-VariantImages = Annotated[
+type VariantImages = Annotated[
     list[Image],
     Field(
         default_factory=list,
