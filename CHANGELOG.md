@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.2.1](https://github.com/tyzhnenko/product-catalog-service/compare/v0.2.0...v0.2.1) (2026-02-02)
+
+
+### Chores
+
+* remove unused UUID7 import from domain types and test files ([70e92db](https://github.com/tyzhnenko/product-catalog-service/commit/70e92dbe1b45c95877455e31a8537d5415044f53))
+* update type annotations for attributes, bundles, categories, common, locations, media, prices, products, stores, and variants ([b9c056b](https://github.com/tyzhnenko/product-catalog-service/commit/b9c056b4006a86e1c43594ad6764b19fce988d56))
+
+
+### Refactors
+
+* Refactor ID types to use PydanticObjectId ([e72c01e](https://github.com/tyzhnenko/product-catalog-service/commit/e72c01e791274cadc08c8016c4f48c4a924111fa))
+
 ## [0.2.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.1.10...v0.2.0) (2026-01-22)
 
 
