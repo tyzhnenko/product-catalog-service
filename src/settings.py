@@ -13,6 +13,7 @@ class Info(BaseSettings):
 class App(BaseSettings):
     debug: bool = False
     cors_origins: list[str] = []
+    log_format: str = "text"  # "text" or "json"
 
 
 class Auth(BaseSettings):

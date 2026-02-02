@@ -1,3 +1,4 @@
+from src.core.logging import config_logger
 from src.core.types import FastAPIServices
 from src.db import use_beanie
 from src.settings import Settings
@@ -5,6 +6,9 @@ from src.settings import Settings
 
 def configure_services(settings: Settings) -> tuple[FastAPIServices, Settings]:
     services = FastAPIServices()
+
+    # Configure logging
+    config_logger(settings)
 
     use_beanie(services, settings)
 
