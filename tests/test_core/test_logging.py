@@ -1,9 +1,8 @@
+# ruff: noqa: S101
 """Tests for logging configuration."""
 
 import json
 import logging
-
-import pytest
 
 from src.core.logging import JSONFormatter, config_logger
 from src.settings import App, Settings

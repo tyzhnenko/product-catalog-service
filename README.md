@@ -53,6 +53,33 @@ By using this project or its source code, for any purpose and in any shape or fo
 5. Access the API at `http://localhost:8000` and Mongo Express at `http://localhost:8081`.
 
 
+## Configuration
+
+### Logging
+
+The service supports both text and JSON log formats. You can configure the log format in your settings file:
+
+```yaml
+app:
+  debug: true
+  log_format: text  # Options: "text" or "json"
+```
+
+**Text format** (default):
+```
+2026-02-02 23:12:01,462 - INFO logging.py:48 -- Logging level set to DEBUG
+2026-02-02 23:12:01,462 - INFO api.py:23 -- Application starting
+```
+
+**JSON format**:
+```json
+{"timestamp": "2026-02-02T23:12:01.463963", "level": "INFO", "logger": "product_catalog_service", "message": "Logging level set to DEBUG", "module": "logging", "function": "config_logger", "line": 48}
+{"timestamp": "2026-02-02T23:12:01.464031", "level": "INFO", "logger": "product_catalog_service", "message": "Application starting", "module": "api", "function": "startup", "line": 23}
+```
+
+JSON format is particularly useful for log aggregation tools like ELK, Splunk, or CloudWatch.
+
+
 ## Contributing
 
 ### Development Workflow
