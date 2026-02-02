@@ -111,3 +111,17 @@ def test_config_logger_json_format(caplog):
     # Should use JSONFormatter
     handler = logger.handlers[0]
     assert isinstance(handler.formatter, JSONFormatter)
+
+
+def test_log_format_validation():
+    """Test that log_format only accepts valid values."""
+    import pytest
+    from pydantic import ValidationError
+
+    # Valid values should work
+    App(log_format="text")
+    App(log_format="json")
+
+    # Invalid value should raise ValidationError
+    with pytest.raises(ValidationError):
+        App(log_format="invalid")

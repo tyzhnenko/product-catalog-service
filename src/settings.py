@@ -1,4 +1,5 @@
 import os
+from typing import Literal
 
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict, YamlConfigSettingsSource
 
@@ -13,7 +14,7 @@ class Info(BaseSettings):
 class App(BaseSettings):
     debug: bool = False
     cors_origins: list[str] = []
-    log_format: str = "text"  # "text" or "json"
+    log_format: Literal["text", "json"] = "text"
 
 
 class Auth(BaseSettings):
