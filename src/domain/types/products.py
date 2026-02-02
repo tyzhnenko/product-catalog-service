@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Annotated
 
 from beanie import PydanticObjectId
-from pydantic import UUID7, BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic_extra_types.pendulum_dt import DateTime
 
 from src.domain.categories import CategoryID

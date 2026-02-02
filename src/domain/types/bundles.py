@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from beanie import PydanticObjectId
-from pydantic import UUID7, BaseModel, Field
+from pydantic import BaseModel, Field
 from pydantic_extra_types.pendulum_dt import DateTime
 
 from src.domain.types.attributes import AttributesMap

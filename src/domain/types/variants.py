@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from beanie import PydanticObjectId
-from pydantic import UUID7, BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from src.domain.types.attributes import AttributesMap
 from src.domain.types.media import Image

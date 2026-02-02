@@ -1,8 +1,6 @@
 # ruff: noqa: S101, D100, D101, D102, D103
-import uuid
-
-from beanie import PydanticObjectId
 import pytest
+from beanie import PydanticObjectId
 
 
 @pytest.fixture
