@@ -1,6 +1,7 @@
 # ruff: noqa: S101, D100, D101, D102, D103
-import uuid
+# import uuid
 
+from beanie import PydanticObjectId
 import pytest
 
 
@@ -167,8 +168,6 @@ class TestCreateBundle:
         assert "USD" in data["price"]
         assert data["price"]["USD"]["value"] == "45.99"
         assert "id" in data
-        # Validate UUID7 format
-        assert uuid.UUID(data["id"]).version == 7
 
     def test_create_bundle_minimal_fields(self, api_client, minimal_bundle_data, sample_store):
         """Test bundle creation with minimal required fields."""
@@ -209,7 +208,7 @@ class TestCreateBundle:
 
     def test_create_bundle_nonexistent_store(self, api_client, sample_bundle_data):
         """Test bundle creation with non-existent store."""
-        non_existent_store_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_store_id = str(PydanticObjectId())
 
         response = api_client.post(f"/api/v1/bundles/{non_existent_store_id}", json=sample_bundle_data)
 
@@ -230,7 +229,7 @@ class TestCreateBundle:
         """Test bundle creation with non-existent category - should filter it out."""
         invalid_data = {
             "name": "Test Bundle",
-            "categories": ["01939d8e-1234-7890-abcd-ef0123456789"],  # Non-existent category
+            "categories": [str(PydanticObjectId())],  # Non-existent category
         }
 
         response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=invalid_data)
@@ -269,7 +268,7 @@ class TestCreateBundle:
         """Test bundle creation with non-existent component - should filter it out."""
         invalid_data = {
             "name": "Test Bundle",
-            "components": ["01939d8e-1234-7890-abcd-ef0123456789"],  # Non-existent variant
+            "components": [str(PydanticObjectId())],  # Non-existent variant
         }
 
         response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=invalid_data)
@@ -348,8 +347,8 @@ class TestCreateBundle:
             "name": "Mixed Categories Bundle",
             "categories": [
                 sample_category["id"],
-                "01939d8e-1234-7890-abcd-ef0123456789",  # Invalid
-                "01939d8e-5678-7890-abcd-ef0123456789",  # Invalid
+                str(PydanticObjectId()),  # Invalid
+                str(PydanticObjectId()),  # Invalid
             ],
         }
 
@@ -367,8 +366,8 @@ class TestCreateBundle:
             "name": "Mixed Components Bundle",
             "components": [
                 sample_variant["id"],
-                "01939d8e-1234-7890-abcd-ef0123456789",  # Invalid
-                "01939d8e-5678-7890-abcd-ef0123456789",  # Invalid
+                str(PydanticObjectId()),  # Invalid
+                str(PydanticObjectId()),  # Invalid
             ],
         }
 
@@ -439,7 +438,7 @@ class TestListBundles:
 
     def test_list_bundles_nonexistent_store(self, api_client):
         """Test listing bundles for non-existent store."""
-        non_existent_store_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_store_id = str(PydanticObjectId())
 
         response = api_client.get(f"/api/v1/bundles/{non_existent_store_id}")
 
@@ -468,7 +467,7 @@ class TestGetBundle:
 
     def test_get_bundle_not_found(self, api_client, sample_store):
         """Test getting a non-existent bundle."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         response = api_client.get(f"/api/v1/bundles/{sample_store['id']}/{non_existent_id}")
 
@@ -630,7 +629,7 @@ class TestUpdateBundle:
 
     def test_update_bundle_not_found(self, api_client, sample_store):
         """Test updating a non-existent bundle."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
         update_data = {"name": "Updated Name"}
 
         response = api_client.patch(f"/api/v1/bundles/{sample_store['id']}/{non_existent_id}", json=update_data)
@@ -658,7 +657,7 @@ class TestUpdateBundle:
         bundle_id = create_response.json()["id"]
 
         # Update with invalid category
-        update_data = {"categories": ["01939d8e-1234-7890-abcd-ef0123456789"]}
+        update_data = {"categories": [str(PydanticObjectId())]}
         response = api_client.patch(f"/api/v1/bundles/{sample_store['id']}/{bundle_id}", json=update_data)
 
         assert response.status_code == 200
@@ -673,7 +672,7 @@ class TestUpdateBundle:
         bundle_id = create_response.json()["id"]
 
         # Update with invalid component
-        update_data = {"components": ["01939d8e-1234-7890-abcd-ef0123456789"]}
+        update_data = {"components": [str(PydanticObjectId())]}
         response = api_client.patch(f"/api/v1/bundles/{sample_store['id']}/{bundle_id}", json=update_data)
 
         assert response.status_code == 200
@@ -703,7 +702,7 @@ class TestDeleteBundle:
 
     def test_delete_bundle_not_found(self, api_client, sample_store):
         """Test deleting a non-existent bundle."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         response = api_client.delete(f"/api/v1/bundles/{sample_store['id']}/{non_existent_id}")
 
@@ -801,7 +800,7 @@ class TestBundleLocationPrice:
             "name": "Mixed Locations Bundle",
             "location_price": {
                 sample_location["id"]: {"retail": {"type": "decimal", "name": "Retail Price", "value": "49.99"}},
-                "01939d8e-1234-7890-abcd-ef0123456789": {  # Invalid location
+                str(PydanticObjectId("69812032a59bbebca50b6461")): {  # Invalid location
                     "retail": {"type": "decimal", "name": "Retail Price", "value": "59.99"}
                 },
             },
@@ -813,16 +812,14 @@ class TestBundleLocationPrice:
         data = response.json()
         assert data["location_price"] is not None
         assert sample_location["id"] in data["location_price"]
-        assert "01939d8e-1234-7890-abcd-ef0123456789" not in data["location_price"]
+        assert "69812032a59bbebca50b6461" not in data["location_price"]
 
     def test_create_bundle_all_invalid_locations_becomes_none(self, api_client, sample_store):
         """Test that when all locations are invalid, location_price becomes None."""
         bundle_data = {
             "name": "Invalid Locations Bundle",
             "location_price": {
-                "01939d8e-1234-7890-abcd-ef0123456789": {
-                    "retail": {"type": "decimal", "name": "Retail Price", "value": "49.99"}
-                },
+                str(PydanticObjectId()): {"retail": {"type": "decimal", "name": "Retail Price", "value": "49.99"}},
             },
         }
 
@@ -888,7 +885,7 @@ class TestBundleLocationPrice:
         update_data = {
             "location_price": {
                 sample_location["id"]: {"retail": {"type": "decimal", "name": "Retail Price", "value": "39.99"}},
-                "01939d8e-1234-7890-abcd-ef0123456789": {
+                str(PydanticObjectId("69812032a59bbebca50b6461")): {
                     "retail": {"type": "decimal", "name": "Retail Price", "value": "49.99"}
                 },
             }
@@ -899,7 +896,7 @@ class TestBundleLocationPrice:
         data = response.json()
         assert data["location_price"] is not None
         assert sample_location["id"] in data["location_price"]
-        assert "01939d8e-1234-7890-abcd-ef0123456789" not in data["location_price"]
+        assert "69812032a59bbebca50b6461" not in data["location_price"]
 
     def test_create_bundle_with_multiple_location_prices(
         self, api_client, sample_store, sample_location, another_location

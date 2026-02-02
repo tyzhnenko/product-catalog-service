@@ -1,22 +1,22 @@
-from uuid import uuid7
+# from uuid import uuid7
 
 import pendulum
 
-from src.domain.types.locations import Location, LocationUUID, NewLocation, UpdateLocation
-from src.domain.types.stores import StoreUUID
+from src.domain.types.locations import Location, LocationID, NewLocation, UpdateLocation
+from src.domain.types.stores import StoreID
 from src.models.locations import LocationModel
 from src.models.stores import StoreModel
 
 
 class LocationsService:
-    async def create_location(self, store_id: StoreUUID, new_location: NewLocation) -> Location | None:
+    async def create_location(self, store_id: StoreID, new_location: NewLocation) -> Location | None:
         # Check if store exists
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             return None
 
         location = LocationModel(
-            id=uuid7(),
+            # id=uuid7(),
             name=new_location.name,
             store_id=store_id,
             attributes=new_location.attributes,
@@ -25,7 +25,7 @@ class LocationsService:
 
         return Location.model_validate(location)
 
-    async def list_locations(self, store_id: StoreUUID) -> list[Location] | None:
+    async def list_locations(self, store_id: StoreID) -> list[Location] | None:
         # Check if store exists
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
@@ -34,7 +34,7 @@ class LocationsService:
         locations = await LocationModel.find({"store_id": store_id, "deleted_at": None}).to_list()
         return [Location.model_validate(location) for location in locations]
 
-    async def get_location(self, store_id: StoreUUID, location_id: LocationUUID) -> Location | None:
+    async def get_location(self, store_id: StoreID, location_id: LocationID) -> Location | None:
         # Check if store exists
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
@@ -49,8 +49,8 @@ class LocationsService:
 
     async def update_location(
         self,
-        store_id: StoreUUID,
-        location_id: LocationUUID,
+        store_id: StoreID,
+        location_id: LocationID,
         update_data: UpdateLocation,
     ) -> Location | None:
         # Check if store exists
@@ -73,7 +73,7 @@ class LocationsService:
         await location.save()
         return Location.model_validate(location)
 
-    async def delete_location(self, store_id: StoreUUID, location_id: LocationUUID) -> bool:
+    async def delete_location(self, store_id: StoreID, location_id: LocationID) -> bool:
         # Check if store exists
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:

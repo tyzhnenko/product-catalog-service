@@ -1,6 +1,7 @@
 # ruff: noqa: S101, D100, D101, D102, D103
 import uuid
 
+from beanie import PydanticObjectId
 import pytest
 
 
@@ -137,8 +138,6 @@ class TestCreateVariant:
         assert len(data["options"]) == 2
         assert len(data["attributes"]) == 2
         assert "id" in data
-        # Validate UUID7 format
-        assert uuid.UUID(data["id"]).version == 7
 
     def test_create_variant_minimal_fields(self, api_client, minimal_variant_data, sample_store, sample_product):
         """Test variant creation with minimal required fields."""
@@ -184,7 +183,7 @@ class TestCreateVariant:
 
     def test_create_variant_nonexistent_store(self, api_client, sample_variant_data, sample_product):
         """Test variant creation with non-existent store."""
-        non_existent_store_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_store_id = str(PydanticObjectId())
 
         response = api_client.post(
             f"/api/v1/variants/{non_existent_store_id}/{sample_product['id']}", json=sample_variant_data
@@ -195,7 +194,7 @@ class TestCreateVariant:
 
     def test_create_variant_nonexistent_product(self, api_client, sample_variant_data, sample_store):
         """Test variant creation with non-existent product."""
-        non_existent_product_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_product_id = str(PydanticObjectId())
 
         response = api_client.post(
             f"/api/v1/variants/{sample_store['id']}/{non_existent_product_id}", json=sample_variant_data
@@ -355,7 +354,7 @@ class TestListVariants:
 
     def test_list_variants_nonexistent_product(self, api_client, sample_store):
         """Test listing variants for non-existent product."""
-        non_existent_product_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_product_id = str(PydanticObjectId())
 
         response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{non_existent_product_id}")
 
@@ -386,7 +385,7 @@ class TestGetVariant:
 
     def test_get_variant_not_found(self, api_client, sample_store, sample_product):
         """Test getting a non-existent variant."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{non_existent_id}")
 
@@ -500,7 +499,7 @@ class TestUpdateVariant:
 
     def test_update_variant_not_found(self, api_client, sample_store, sample_product):
         """Test updating a non-existent variant."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         update_data = {"title": "Updated Title"}
         response = api_client.patch(
@@ -628,7 +627,7 @@ class TestDeleteVariant:
 
     def test_delete_variant_not_found(self, api_client, sample_store, sample_product):
         """Test deleting a non-existent variant."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         response = api_client.delete(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{non_existent_id}")
 
@@ -1618,7 +1617,7 @@ class TestVariantLocationPriceValidation:
         self, api_client, sample_store, sample_product, sample_location
     ):
         """Test that invalid location IDs are filtered out when creating a variant."""
-        invalid_location_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        invalid_location_id = str(PydanticObjectId())
         variant_data = {
             "title": "Coffee with Mixed Locations",
             "options": [],
@@ -1644,12 +1643,8 @@ class TestVariantLocationPriceValidation:
             "title": "Coffee with Invalid Locations",
             "options": [],
             "location_price": {
-                "01939d8e-1111-7890-abcd-ef0123456789": {
-                    "retail": {"type": "decimal", "name": "Invalid 1", "value": "20.00"}
-                },
-                "01939d8e-2222-7890-abcd-ef0123456789": {
-                    "retail": {"type": "decimal", "name": "Invalid 2", "value": "25.00"}
-                },
+                str(PydanticObjectId()): {"retail": {"type": "decimal", "name": "Invalid 1", "value": "20.00"}},
+                str(PydanticObjectId()): {"retail": {"type": "decimal", "name": "Invalid 2", "value": "25.00"}},
             },
         }
 
@@ -1703,7 +1698,7 @@ class TestVariantLocationPriceValidation:
         variant_id = create_response.json()["id"]
 
         # Update with mixed valid/invalid locations
-        invalid_location_id = "01939d8e-9999-7890-abcd-ef0123456789"
+        invalid_location_id = str(PydanticObjectId())
         update_data = {
             "location_price": {
                 sample_location["id"]: {"retail": {"type": "decimal", "name": "Valid", "value": "22.00"}},
@@ -1742,9 +1737,7 @@ class TestVariantLocationPriceValidation:
         # Update with all invalid locations
         update_data = {
             "location_price": {
-                "01939d8e-aaaa-7890-abcd-ef0123456789": {
-                    "retail": {"type": "decimal", "name": "Invalid", "value": "25.00"}
-                }
+                str(PydanticObjectId()): {"retail": {"type": "decimal", "name": "Invalid", "value": "25.00"}}
             }
         }
 

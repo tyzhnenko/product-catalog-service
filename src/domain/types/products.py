@@ -1,20 +1,18 @@
 from enum import Enum
 from typing import Annotated
 
+from beanie import PydanticObjectId
 from pydantic import UUID7, BaseModel, ConfigDict, Field
 from pydantic_extra_types.pendulum_dt import DateTime
 
-from src.domain.categories import CategoryUUID
+from src.domain.categories import CategoryID
 from src.domain.types.attributes import AttributesMap
 
-type ProductUUID = Annotated[
-    UUID7,
+type ProductID = Annotated[
+    PydanticObjectId,
     Field(
         ...,
         description="Unique identifier for a product",
-        json_schema_extra={
-            "format": "uuid",
-        },
     ),
 ]
 
@@ -68,7 +66,7 @@ type ProductSEOSlug = Annotated[
 ]
 
 type ProductCategory = Annotated[
-    CategoryUUID,
+    CategoryID,
     Field(
         ...,
         description="Category identifier for the product",
@@ -171,7 +169,7 @@ class Product(BaseModel):
         },
     )
 
-    id: ProductUUID
+    id: ProductID
     name: ProductName
     description: ProductDescription | None = None
     brand: ProductBrand | None = None

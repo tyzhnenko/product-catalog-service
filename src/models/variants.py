@@ -2,8 +2,8 @@ from pymongo import IndexModel
 
 from src.domain.types.attributes import AttributesMap
 from src.domain.types.prices import LocationPriceMap, PriceMap, RegionPriceMap
-from src.domain.types.products import ProductUUID
-from src.domain.types.stores import StoreUUID
+from src.domain.types.products import ProductID
+from src.domain.types.stores import StoreID
 from src.domain.types.variants import (
     VariantEAN,
     VariantImages,
@@ -13,15 +13,13 @@ from src.domain.types.variants import (
     VariantSKU,
     VariantTitle,
     VariantUPC,
-    VariantUUID,
 )
 from src.models.base import BaseAppDocument
 
 
 class VariantModel(BaseAppDocument):
-    id: VariantUUID  # type: ignore
-    store_id: StoreUUID
-    product_id: ProductUUID
+    store_id: StoreID
+    product_id: ProductID
     title: VariantTitle
     sku: VariantSKU | None
     upc: VariantUPC | None

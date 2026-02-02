@@ -1,6 +1,7 @@
 # ruff: noqa: S101, D100, D101, D102, D103
 import uuid
 
+from beanie import PydanticObjectId
 import pytest
 
 
@@ -90,8 +91,6 @@ class TestCreateLocation:
         assert data["store_id"] == sample_location_data["store_id"]
         assert data["attributes"] == {}
         assert "id" in data
-        # Validate UUID7 format
-        assert uuid.UUID(data["id"]).version == 7
 
     def test_create_location_with_attributes(self, api_client, location_with_attributes_data, sample_store):
         """Test successful location creation with attributes."""
@@ -104,8 +103,6 @@ class TestCreateLocation:
         assert data["store_id"] == location_with_attributes_data["store_id"]
         assert data["attributes"] == location_with_attributes_data["attributes"]
         assert "id" in data
-        # Validate UUID7 format
-        assert uuid.UUID(data["id"]).version == 7
 
     def test_create_location_missing_name(self, api_client, sample_store):
         """Test location creation without name."""
@@ -132,7 +129,7 @@ class TestCreateLocation:
         """Test location creation with invalid store_id UUID format."""
         invalid_data = {
             "name": "Test Location",
-            "store_id": "01939d8e-1234-7890-abcd-ef0123456789",
+            "store_id": str(PydanticObjectId()),
         }
 
         response = api_client.post("/api/v1/locations/not-a-valid-uuid", json=invalid_data)
@@ -141,7 +138,7 @@ class TestCreateLocation:
 
     def test_create_location_nonexistent_store(self, api_client):
         """Test location creation with non-existent store."""
-        non_existent_store_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_store_id = str(PydanticObjectId())
         invalid_data = {
             "name": "Test Location",
             "store_id": non_existent_store_id,
@@ -221,7 +218,7 @@ class TestGetLocation:
     def test_get_location_not_found(self, api_client, sample_store):
         """Test getting a non-existent location."""
         # Generate a random UUID7
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         response = api_client.get(f"/api/v1/locations/{sample_store['id']}/{non_existent_id}")
 
@@ -338,7 +335,7 @@ class TestUpdateLocation:
 
     def test_update_location_not_found(self, api_client, sample_store):
         """Test updating a non-existent location."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         update_data = {
             "name": "Updated Name",
@@ -381,7 +378,7 @@ class TestDeleteLocation:
 
     def test_delete_location_not_found(self, api_client, sample_store):
         """Test deleting a non-existent location."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         response = api_client.delete(f"/api/v1/locations/{sample_store['id']}/{non_existent_id}")
 

@@ -9,15 +9,13 @@ from src.domain.types.categories import (
     CategoryPath,
     CategorySEO,
     CategoryStatus,
-    CategoryUUID,
 )
-from src.domain.types.stores import StoreUUID
+from src.domain.types.stores import StoreID
 from src.models.base import BaseAppDocument
 
 
 class CategoryModel(BaseAppDocument):
-    id: CategoryUUID  # type: ignore
-    store_id: StoreUUID
+    store_id: StoreID
     name: CategoryName
     description: CategoryDescription | None = None
     status: CategoryStatus

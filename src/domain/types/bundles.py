@@ -1,22 +1,20 @@
 from typing import Annotated
 
+from beanie import PydanticObjectId
 from pydantic import UUID7, BaseModel, Field
 from pydantic_extra_types.pendulum_dt import DateTime
 
 from src.domain.types.attributes import AttributesMap
-from src.domain.types.categories import CategoryUUID
+from src.domain.types.categories import CategoryID
 from src.domain.types.media import Image
 from src.domain.types.prices import LocationPriceMap, PriceMap, RegionPriceMap
-from src.domain.types.variants import VariantUUID
+from src.domain.types.variants import VariantID
 
-type BundleUUID = Annotated[
-    UUID7,
+type BundleID = Annotated[
+    PydanticObjectId,
     Field(
         ...,
         description="Unique identifier for a bundle",
-        json_schema_extra={
-            "format": "uuid",
-        },
     ),
 ]
 
@@ -41,7 +39,7 @@ type BundleDescription = Annotated[
 ]
 
 type BundleComponent = Annotated[
-    VariantUUID,
+    VariantID,
     Field(
         ...,
         description="Identifier of a variant included in the bundle",
@@ -57,7 +55,7 @@ type BundleComponents = Annotated[
 ]
 
 type BundleCategory = Annotated[
-    CategoryUUID,
+    CategoryID,
     Field(
         ...,
         description="Category identifier for the bundle",
@@ -94,7 +92,7 @@ class NewBundle(BaseModel):
 
 
 class Bundle(BaseModel):
-    id: BundleUUID
+    id: BundleID
     name: BundleName
     description: BundleDescription | None = None
     components: BundleComponents | None = None

@@ -2,6 +2,7 @@ from decimal import Decimal
 from typing import Annotated, Literal, Text
 from uuid import UUID
 
+from beanie import PydanticObjectId
 from pydantic import BaseModel, Field
 from pydantic_extra_types.pendulum_dt import Date, DateTime
 
@@ -89,6 +90,8 @@ type UUIDAttributeValue = Annotated[
     ),
 ]
 
+type ObjectIdValue = Annotated[PydanticObjectId, Field(..., description="ObjectId value")]
+
 
 type URLAttributeValue = Annotated[
     HTTPURLField,
@@ -158,6 +161,12 @@ class UUIDAttribute(BaseModel):
     type: Literal["uuid"] = "uuid"
     name: AttributeName
     value: UUIDAttributeValue
+
+
+class ObjectIdAttribute(BaseModel):
+    type: Literal["object_id"] = "object_id"
+    name: AttributeName
+    value: ObjectIdValue
 
 
 class URLAttribute(BaseModel):
@@ -247,6 +256,18 @@ class ListOfUUIDsAttribute(BaseModel):
     ]
 
 
+class ListOfObjectIdsAttribute(BaseModel):
+    type: Literal["list_of_object_ids"] = "list_of_object_ids"
+    name: AttributeName
+    values: Annotated[
+        list[ObjectIdValue],
+        Field(
+            ...,
+            description="List of ObjectId values",
+        ),
+    ]
+
+
 class ListOfURLsAttribute(BaseModel):
     type: Literal["list_of_urls"] = "list_of_urls"
     name: AttributeName
@@ -268,6 +289,7 @@ type Attribute = Annotated[
     | DateAttribute
     | DateTimeAttribute
     | UUIDAttribute
+    | ObjectIdAttribute
     | DecimalAttribute
     | URLAttribute
     | FloatRangeAttribute
@@ -278,6 +300,7 @@ type Attribute = Annotated[
     | ListOfFloatsAttribute
     | ListOfDecimalsAttribute
     | ListOfUUIDsAttribute
+    | ListOfObjectIdsAttribute
     | ListOfURLsAttribute,
     Field(
         ...,

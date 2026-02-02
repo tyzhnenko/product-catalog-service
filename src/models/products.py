@@ -1,7 +1,7 @@
 from pymongo import IndexModel
 
-from src.domain.categories import CategoryUUID
 from src.domain.types.attributes import AttributesMap
+from src.domain.types.categories import CategoryID
 from src.domain.types.products import (
     ProductBrand,
     ProductDescription,
@@ -9,15 +9,13 @@ from src.domain.types.products import (
     ProductSEO,
     ProductStatus,
     ProductTags,
-    ProductUUID,
 )
-from src.domain.types.stores import StoreUUID
+from src.domain.types.stores import StoreID
 from src.models.base import BaseAppDocument
 
 
 class ProductModel(BaseAppDocument):
-    id: ProductUUID  # type: ignore
-    store_id: StoreUUID
+    store_id: StoreID
     name: ProductName
     description: ProductDescription | None = None
     brand: ProductBrand | None = None
@@ -25,7 +23,7 @@ class ProductModel(BaseAppDocument):
     status: ProductStatus
     seo: ProductSEO | None = None
     attributes: AttributesMap
-    categories: list[CategoryUUID] = []
+    categories: list[CategoryID] = []
 
     class Settings:
         name = "products"

@@ -1,18 +1,16 @@
 from typing import Annotated
 
+from beanie import PydanticObjectId
 from pydantic import UUID7, BaseModel, ConfigDict, Field
 
 from src.domain.types.attributes import AttributesMap
-from src.domain.types.stores import StoreUUID
+from src.domain.types.stores import StoreID
 
-type LocationUUID = Annotated[
-    UUID7,
+type LocationID = Annotated[
+    PydanticObjectId,
     Field(
         ...,
         description="Unique identifier for a location",
-        json_schema_extra={
-            "format": "uuid",
-        },
     ),
 ]
 
@@ -41,9 +39,9 @@ class Location(BaseModel):
         from_attributes=True,
     )
 
-    id: LocationUUID
+    id: LocationID
     name: LocationName
-    store_id: StoreUUID
+    store_id: StoreID
     attributes: AttributesMap
 
 

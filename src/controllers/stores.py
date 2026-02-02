@@ -5,7 +5,7 @@ from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.domain.stores import StoresService
-from src.domain.types.stores import NewStore, Store, StoreUUID, UpdateStore
+from src.domain.types.stores import NewStore, Store, StoreID, UpdateStore
 
 router = APIRouter()
 
@@ -46,7 +46,7 @@ async def create_store(
     dependencies=[Security(ro_access)],
 )
 async def get_store(
-    store_id: StoreUUID,
+    store_id: StoreID,
     service: Annotated[StoresService, Depends(StoresService)],
 ) -> Store:
     store = await service.get_store(store_id)
@@ -66,7 +66,7 @@ async def get_store(
     dependencies=[Security(rw_access)],
 )
 async def update_store(
-    store_id: StoreUUID,
+    store_id: StoreID,
     update_data: UpdateStore,
     service: Annotated[StoresService, Depends(StoresService)],
 ):
@@ -88,7 +88,7 @@ async def update_store(
     dependencies=[Security(rw_access)],
 )
 async def delete_store(
-    store_id: StoreUUID,
+    store_id: StoreID,
     service: Annotated[StoresService, Depends(StoresService)],
 ):
     success = await service.delete_store(store_id)

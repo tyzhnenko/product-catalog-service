@@ -1,6 +1,7 @@
 # ruff: noqa: S101, D100, D101, D102, D103
 import uuid
 
+from beanie import PydanticObjectId
 import pytest
 
 
@@ -129,8 +130,6 @@ class TestCreateProduct:
         assert data["status"] == "active"
         assert data["attributes"] == sample_product_data["attributes"]
         assert "id" in data
-        # Validate UUID7 format
-        assert uuid.UUID(data["id"]).version == 7
 
     def test_create_product_minimal_fields(self, api_client, minimal_product_data, sample_store):
         """Test product creation with minimal required fields."""
@@ -175,7 +174,7 @@ class TestCreateProduct:
 
     def test_create_product_nonexistent_store(self, api_client, sample_product_data):
         """Test product creation with non-existent store."""
-        non_existent_store_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_store_id = str(PydanticObjectId())
 
         response = api_client.post(f"/api/v1/products/{non_existent_store_id}", json=sample_product_data)
 
@@ -199,7 +198,7 @@ class TestCreateProduct:
         invalid_data = {
             "name": "Test Product",
             "tags": [],
-            "categories": ["01939d8e-1234-7890-abcd-ef0123456789"],  # Non-existent category
+            "categories": [str(PydanticObjectId())],  # Non-existent category
         }
 
         response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=invalid_data)
@@ -259,8 +258,8 @@ class TestCreateProduct:
             "tags": [],
             "categories": [
                 sample_category["id"],
-                "01939d8e-1234-7890-abcd-ef0123456789",  # Invalid
-                "01939d8e-5678-7890-abcd-ef0123456789",  # Invalid
+                str(PydanticObjectId()),  # Invalid
+                str(PydanticObjectId()),  # Invalid
             ],
         }
 
@@ -331,7 +330,7 @@ class TestListProducts:
 
     def test_list_products_nonexistent_store(self, api_client):
         """Test listing products for non-existent store."""
-        non_existent_store_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_store_id = str(PydanticObjectId())
 
         response = api_client.get(f"/api/v1/products/{non_existent_store_id}")
 
@@ -360,7 +359,7 @@ class TestGetProduct:
 
     def test_get_product_not_found(self, api_client, sample_store):
         """Test getting a non-existent product."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         response = api_client.get(f"/api/v1/products/{sample_store['id']}/{non_existent_id}")
 
@@ -523,7 +522,7 @@ class TestUpdateProduct:
         product_id = create_response.json()["id"]
 
         # Try to update with invalid category
-        update_data = {"categories": ["01939d8e-1234-7890-abcd-ef0123456789"]}
+        update_data = {"categories": [str(PydanticObjectId())]}
         response = api_client.patch(f"/api/v1/products/{sample_store['id']}/{product_id}", json=update_data)
 
         assert response.status_code == 200
@@ -533,7 +532,7 @@ class TestUpdateProduct:
 
     def test_update_product_not_found(self, api_client, sample_store):
         """Test updating a non-existent product."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         update_data = {"name": "Updated Name"}
         response = api_client.patch(f"/api/v1/products/{sample_store['id']}/{non_existent_id}", json=update_data)
@@ -571,7 +570,7 @@ class TestDeleteProduct:
 
     def test_delete_product_not_found(self, api_client, sample_store):
         """Test deleting a non-existent product."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         response = api_client.delete(f"/api/v1/products/{sample_store['id']}/{non_existent_id}")
 

@@ -1,15 +1,14 @@
 from pymongo import IndexModel
 
 from src.domain.types.attributes import AttributesMap
-from src.domain.types.locations import LocationName, LocationUUID
-from src.domain.types.stores import StoreUUID
+from src.domain.types.locations import LocationName
+from src.domain.types.stores import StoreID
 from src.models.base import BaseAppDocument
 
 
 class LocationModel(BaseAppDocument):
-    id: LocationUUID  # type: ignore
     name: LocationName
-    store_id: StoreUUID
+    store_id: StoreID
     attributes: AttributesMap
 
     class Settings:

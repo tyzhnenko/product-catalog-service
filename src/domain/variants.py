@@ -1,18 +1,18 @@
 from typing import cast
-from uuid import uuid7
 
+# from uuid import uuid7
 import pendulum
 
 from src.core.logging import logger
-from src.domain.types.locations import LocationUUID
+from src.domain.types.locations import LocationID
 from src.domain.types.prices import LocationPriceMap
-from src.domain.types.products import ProductUUID
-from src.domain.types.stores import StoreUUID
+from src.domain.types.products import ProductID
+from src.domain.types.stores import StoreID
 from src.domain.types.variants import (
     NewProductVariant,
     ProductVariant,
     UpdateProductVariant,
-    VariantUUID,
+    VariantID,
 )
 from src.models.locations import LocationModel
 from src.models.products import ProductModel
@@ -28,10 +28,10 @@ class DuplicateVariantOptionsError(Exception):
 class VariantsService:
     async def _check_duplicate_options(
         self,
-        product_id: ProductUUID,
-        store_id: StoreUUID,
+        product_id: ProductID,
+        store_id: StoreID,
         options: list,
-        exclude_variant_id: VariantUUID | None = None,
+        exclude_variant_id: VariantID | None = None,
     ) -> bool:
         """Check if a variant with the same options already exists for the product.
 
@@ -83,7 +83,7 @@ class VariantsService:
         return False
 
     async def _sanitize_location_prices(
-        self, store_id: StoreUUID, location_price: LocationPriceMap | None
+        self, store_id: StoreID, location_price: LocationPriceMap | None
     ) -> LocationPriceMap | None:
         """Filter location_price to only include valid location IDs that exist and belong to the specified store."""
         if not location_price:
@@ -97,7 +97,7 @@ class VariantsService:
         ).to_list()
 
         # Create a set of valid location IDs using their native type (e.g., UUID7)
-        valid_location_ids = {cast(LocationUUID, loc.id) for loc in locations}
+        valid_location_ids = {cast(LocationID, loc.id) for loc in locations}
 
         # Filter location_price to only include valid locations
         sanitized_location_price = {
@@ -116,7 +116,7 @@ class VariantsService:
         return sanitized_location_price if sanitized_location_price else None
 
     async def create_variant(
-        self, store_id: StoreUUID, product_id: ProductUUID, new_variant: NewProductVariant
+        self, store_id: StoreID, product_id: ProductID, new_variant: NewProductVariant
     ) -> ProductVariant | None:
         # Check if product exists and belongs to the store (product query validates store ownership)
         product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
@@ -132,7 +132,7 @@ class VariantsService:
         valid_location_price = await self._sanitize_location_prices(store_id, new_variant.location_price)
 
         variant = VariantModel(
-            id=uuid7(),
+            # id=uuid7(),
             store_id=store_id,
             product_id=product_id,
             title=new_variant.title,
@@ -153,7 +153,7 @@ class VariantsService:
 
         return ProductVariant.model_validate(variant)
 
-    async def list_variants(self, store_id: StoreUUID, product_id: ProductUUID) -> list[ProductVariant] | None:
+    async def list_variants(self, store_id: StoreID, product_id: ProductID) -> list[ProductVariant] | None:
         # Check if product exists and belongs to the store
         product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
         if not product:
@@ -167,7 +167,7 @@ class VariantsService:
         return [ProductVariant.model_validate(variant) for variant in variants]
 
     async def get_variant(
-        self, store_id: StoreUUID, product_id: ProductUUID, variant_id: VariantUUID
+        self, store_id: StoreID, product_id: ProductID, variant_id: VariantID
     ) -> ProductVariant | None:
         # Check if product exists and belongs to the store
         product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
@@ -185,9 +185,9 @@ class VariantsService:
 
     async def update_variant(
         self,
-        store_id: StoreUUID,
-        product_id: ProductUUID,
-        variant_id: VariantUUID,
+        store_id: StoreID,
+        product_id: ProductID,
+        variant_id: VariantID,
         update_data: UpdateProductVariant,
     ) -> ProductVariant | None:
         # Check if product exists and belongs to the store
@@ -228,7 +228,7 @@ class VariantsService:
         logger.info(f"Updated variant {variant_id} for product {product_id}")
         return ProductVariant.model_validate(variant)
 
-    async def delete_variant(self, store_id: StoreUUID, product_id: ProductUUID, variant_id: VariantUUID) -> bool:
+    async def delete_variant(self, store_id: StoreID, product_id: ProductID, variant_id: VariantID) -> bool:
         # Check if product exists and belongs to the store
         product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
         if not product:

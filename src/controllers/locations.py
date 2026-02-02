@@ -5,8 +5,8 @@ from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.domain.locations import LocationsService
-from src.domain.types.locations import Location, LocationUUID, NewLocation, UpdateLocation
-from src.domain.types.stores import StoreUUID
+from src.domain.types.locations import Location, LocationID, NewLocation, UpdateLocation
+from src.domain.types.stores import StoreID
 
 router = APIRouter()
 
@@ -19,7 +19,7 @@ router = APIRouter()
     dependencies=[Security(ro_access)],
 )
 async def list_locations(
-    store_id: StoreUUID,
+    store_id: StoreID,
     service: Annotated[LocationsService, Depends(LocationsService)],
 ) -> list[Location]:
     locations = await service.list_locations(store_id)
@@ -39,7 +39,7 @@ async def list_locations(
     dependencies=[Security(rw_access)],
 )
 async def create_location(
-    store_id: StoreUUID,
+    store_id: StoreID,
     new_location: NewLocation,
     service: Annotated[LocationsService, Depends(LocationsService)],
 ) -> Location:
@@ -60,8 +60,8 @@ async def create_location(
     dependencies=[Security(ro_access)],
 )
 async def get_location(
-    store_id: StoreUUID,
-    location_id: LocationUUID,
+    store_id: StoreID,
+    location_id: LocationID,
     service: Annotated[LocationsService, Depends(LocationsService)],
 ) -> Location:
     location = await service.get_location(store_id, location_id)
@@ -81,8 +81,8 @@ async def get_location(
     dependencies=[Security(rw_access)],
 )
 async def update_location(
-    store_id: StoreUUID,
-    location_id: LocationUUID,
+    store_id: StoreID,
+    location_id: LocationID,
     update_data: UpdateLocation,
     service: Annotated[LocationsService, Depends(LocationsService)],
 ):
@@ -104,8 +104,8 @@ async def update_location(
     dependencies=[Security(rw_access)],
 )
 async def delete_location(
-    store_id: StoreUUID,
-    location_id: LocationUUID,
+    store_id: StoreID,
+    location_id: LocationID,
     service: Annotated[LocationsService, Depends(LocationsService)],
 ):
     success = await service.delete_location(store_id, location_id)

@@ -7,16 +7,14 @@ from src.domain.types.bundles import (
     BundleDescription,
     BundleImages,
     BundleName,
-    BundleUUID,
 )
 from src.domain.types.prices import LocationPriceMap, PriceMap, RegionPriceMap
-from src.domain.types.stores import StoreUUID
+from src.domain.types.stores import StoreID
 from src.models.base import BaseAppDocument
 
 
 class BundleModel(BaseAppDocument):
-    id: BundleUUID  # type: ignore
-    store_id: StoreUUID
+    store_id: StoreID
     name: BundleName
     description: BundleDescription | None
     components: BundleComponents | None

@@ -5,8 +5,8 @@ from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.domain.categories import CategoriesService
-from src.domain.types.categories import Category, CategoryUUID, NewCategory, UpdateCategory
-from src.domain.types.stores import StoreUUID
+from src.domain.types.categories import Category, CategoryID, NewCategory, UpdateCategory
+from src.domain.types.stores import StoreID
 
 router = APIRouter()
 
@@ -19,7 +19,7 @@ router = APIRouter()
     dependencies=[Security(ro_access)],
 )
 async def list_categories(
-    store_id: StoreUUID,
+    store_id: StoreID,
     service: Annotated[CategoriesService, Depends(CategoriesService)],
 ) -> list[Category]:
     categories = await service.list_categories(store_id)
@@ -39,7 +39,7 @@ async def list_categories(
     dependencies=[Security(rw_access)],
 )
 async def create_category(
-    store_id: StoreUUID,
+    store_id: StoreID,
     new_category: NewCategory,
     service: Annotated[CategoriesService, Depends(CategoriesService)],
 ) -> Category:
@@ -60,8 +60,8 @@ async def create_category(
     dependencies=[Security(ro_access)],
 )
 async def get_category(
-    store_id: StoreUUID,
-    category_id: CategoryUUID,
+    store_id: StoreID,
+    category_id: CategoryID,
     service: Annotated[CategoriesService, Depends(CategoriesService)],
 ) -> Category:
     category = await service.get_category(store_id, category_id)
@@ -81,8 +81,8 @@ async def get_category(
     dependencies=[Security(rw_access)],
 )
 async def update_category(
-    store_id: StoreUUID,
-    category_id: CategoryUUID,
+    store_id: StoreID,
+    category_id: CategoryID,
     update_data: UpdateCategory,
     service: Annotated[CategoriesService, Depends(CategoriesService)],
 ):
@@ -104,8 +104,8 @@ async def update_category(
     dependencies=[Security(rw_access)],
 )
 async def delete_category(
-    store_id: StoreUUID,
-    category_id: CategoryUUID,
+    store_id: StoreID,
+    category_id: CategoryID,
     service: Annotated[CategoriesService, Depends(CategoriesService)],
 ):
     success = await service.delete_category(store_id, category_id)

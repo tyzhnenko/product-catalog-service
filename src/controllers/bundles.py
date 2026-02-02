@@ -5,8 +5,8 @@ from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.domain.bundles import BundlesService
-from src.domain.types.bundles import Bundle, BundleUUID, NewBundle, UpdateBundle
-from src.domain.types.stores import StoreUUID
+from src.domain.types.bundles import Bundle, BundleID, NewBundle, UpdateBundle
+from src.domain.types.stores import StoreID
 
 router = APIRouter()
 
@@ -19,7 +19,7 @@ router = APIRouter()
     dependencies=[Security(ro_access)],
 )
 async def list_bundles(
-    store_id: StoreUUID,
+    store_id: StoreID,
     service: Annotated[BundlesService, Depends(BundlesService)],
 ) -> list[Bundle]:
     """List all bundles for a specific store."""
@@ -40,7 +40,7 @@ async def list_bundles(
     dependencies=[Security(rw_access)],
 )
 async def create_bundle(
-    store_id: StoreUUID,
+    store_id: StoreID,
     new_bundle: NewBundle,
     service: Annotated[BundlesService, Depends(BundlesService)],
 ) -> Bundle:
@@ -62,8 +62,8 @@ async def create_bundle(
     dependencies=[Security(ro_access)],
 )
 async def get_bundle(
-    store_id: StoreUUID,
-    bundle_id: BundleUUID,
+    store_id: StoreID,
+    bundle_id: BundleID,
     service: Annotated[BundlesService, Depends(BundlesService)],
 ) -> Bundle:
     """Get a specific bundle by ID."""
@@ -84,8 +84,8 @@ async def get_bundle(
     dependencies=[Security(rw_access)],
 )
 async def update_bundle(
-    store_id: StoreUUID,
-    bundle_id: BundleUUID,
+    store_id: StoreID,
+    bundle_id: BundleID,
     update_data: UpdateBundle,
     service: Annotated[BundlesService, Depends(BundlesService)],
 ) -> Bundle:
@@ -107,8 +107,8 @@ async def update_bundle(
     dependencies=[Security(rw_access)],
 )
 async def delete_bundle(
-    store_id: StoreUUID,
-    bundle_id: BundleUUID,
+    store_id: StoreID,
+    bundle_id: BundleID,
     service: Annotated[BundlesService, Depends(BundlesService)],
 ) -> Response:
     """Delete a bundle (soft delete)."""

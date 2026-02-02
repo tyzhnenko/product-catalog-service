@@ -6,7 +6,7 @@ import pydantic
 from pydantic import BaseModel, Field
 
 from src.domain.types.common import CountryCode
-from src.domain.types.locations import LocationUUID
+from src.domain.types.locations import LocationID
 
 type PriceName = Annotated[
     str,
@@ -65,7 +65,7 @@ type PriceMap = Annotated[
 ]
 
 type LocationPriceMap = Annotated[
-    dict[LocationUUID, PriceMap],
+    dict[LocationID, PriceMap],
     Field(
         default_factory=dict,
         title="Location Price Map",

@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Annotated
 
+from beanie import PydanticObjectId
 from pydantic import UUID7, BaseModel, ConfigDict, Field
 from pydantic_extra_types.pendulum_dt import DateTime
 
@@ -8,14 +9,11 @@ from src.core.utils import split_path
 from src.domain.types.attributes import AttributesMap
 from src.domain.types.media import Image
 
-type CategoryUUID = Annotated[
-    UUID7,
+type CategoryID = Annotated[
+    PydanticObjectId,
     Field(
         ...,
         description="Unique identifier for a category",
-        json_schema_extra={
-            "format": "uuid",
-        },
     ),
 ]
 
@@ -162,7 +160,7 @@ class Category(BaseModel):
         },
     )
 
-    id: CategoryUUID
+    id: CategoryID
     name: CategoryName
     description: CategoryDescription | None
     status: CategoryStatus

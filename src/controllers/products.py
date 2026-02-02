@@ -5,8 +5,8 @@ from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.domain.products import ProductsService
-from src.domain.types.products import NewProduct, Product, ProductUUID, UpdateProduct
-from src.domain.types.stores import StoreUUID
+from src.domain.types.products import NewProduct, Product, ProductID, UpdateProduct
+from src.domain.types.stores import StoreID
 
 router = APIRouter()
 
@@ -19,7 +19,7 @@ router = APIRouter()
     dependencies=[Security(ro_access)],
 )
 async def list_products(
-    store_id: StoreUUID,
+    store_id: StoreID,
     service: Annotated[ProductsService, Depends(ProductsService)],
 ) -> list[Product]:
     """List all products for a specific store."""
@@ -40,7 +40,7 @@ async def list_products(
     dependencies=[Security(rw_access)],
 )
 async def create_product(
-    store_id: StoreUUID,
+    store_id: StoreID,
     new_product: NewProduct,
     service: Annotated[ProductsService, Depends(ProductsService)],
 ) -> Product:
@@ -62,8 +62,8 @@ async def create_product(
     dependencies=[Security(ro_access)],
 )
 async def get_product(
-    store_id: StoreUUID,
-    product_id: ProductUUID,
+    store_id: StoreID,
+    product_id: ProductID,
     service: Annotated[ProductsService, Depends(ProductsService)],
 ) -> Product:
     """Get a specific product by ID."""
@@ -84,8 +84,8 @@ async def get_product(
     dependencies=[Security(rw_access)],
 )
 async def update_product(
-    store_id: StoreUUID,
-    product_id: ProductUUID,
+    store_id: StoreID,
+    product_id: ProductID,
     update_data: UpdateProduct,
     service: Annotated[ProductsService, Depends(ProductsService)],
 ) -> Product:
@@ -107,8 +107,8 @@ async def update_product(
     dependencies=[Security(rw_access)],
 )
 async def delete_product(
-    store_id: StoreUUID,
-    product_id: ProductUUID,
+    store_id: StoreID,
+    product_id: ProductID,
     service: Annotated[ProductsService, Depends(ProductsService)],
 ) -> Response:
     """Delete a product (soft delete)."""

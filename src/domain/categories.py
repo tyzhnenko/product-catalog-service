@@ -1,22 +1,22 @@
-from uuid import uuid7
+# from uuid import uuid7
 
 import pendulum
 
-from src.domain.types.categories import Category, CategoryUUID, NewCategory, UpdateCategory
-from src.domain.types.stores import StoreUUID
+from src.domain.types.categories import Category, CategoryID, NewCategory, UpdateCategory
+from src.domain.types.stores import StoreID
 from src.models.categories import CategoryModel
 from src.models.stores import StoreModel
 
 
 class CategoriesService:
-    async def create_category(self, store_id: StoreUUID, new_category: NewCategory) -> Category | None:
+    async def create_category(self, store_id: StoreID, new_category: NewCategory) -> Category | None:
         # Check if store exists
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             return None
 
         category = CategoryModel(
-            id=uuid7(),
+            # id=uuid7(),
             store_id=store_id,
             name=new_category.name,
             description=new_category.description,
@@ -31,7 +31,7 @@ class CategoriesService:
 
         return Category.model_validate(category.model_dump())
 
-    async def list_categories(self, store_id: StoreUUID) -> list[Category] | None:
+    async def list_categories(self, store_id: StoreID) -> list[Category] | None:
         # Check if store exists
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
@@ -40,7 +40,7 @@ class CategoriesService:
         categories = await CategoryModel.find({"store_id": store_id, "deleted_at": None}).to_list()
         return [Category.model_validate(category.model_dump()) for category in categories]
 
-    async def get_category(self, store_id: StoreUUID, category_id: CategoryUUID) -> Category | None:
+    async def get_category(self, store_id: StoreID, category_id: CategoryID) -> Category | None:
         # Check if store exists
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
@@ -55,8 +55,8 @@ class CategoriesService:
 
     async def update_category(
         self,
-        store_id: StoreUUID,
-        category_id: CategoryUUID,
+        store_id: StoreID,
+        category_id: CategoryID,
         update_data: UpdateCategory,
     ) -> Category | None:
         # Check if store exists
@@ -85,7 +85,7 @@ class CategoriesService:
         await category.save()
         return Category.model_validate(category.model_dump())
 
-    async def delete_category(self, store_id: StoreUUID, category_id: CategoryUUID) -> bool:
+    async def delete_category(self, store_id: StoreID, category_id: CategoryID) -> bool:
         # Check if store exists
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:

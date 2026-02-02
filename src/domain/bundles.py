@@ -1,15 +1,15 @@
 from typing import cast
-from uuid import uuid7
 
+# from uuid import uuid7
 import pendulum
 
 from src.core.logging import logger
-from src.domain.types.bundles import Bundle, BundleUUID, NewBundle, UpdateBundle
-from src.domain.types.categories import CategoryUUID
-from src.domain.types.locations import LocationUUID
+from src.domain.types.bundles import Bundle, BundleID, NewBundle, UpdateBundle
+from src.domain.types.categories import CategoryID
+from src.domain.types.locations import LocationID
 from src.domain.types.prices import LocationPriceMap
-from src.domain.types.stores import StoreUUID
-from src.domain.types.variants import VariantUUID
+from src.domain.types.stores import StoreID
+from src.domain.types.variants import VariantID
 from src.models.bundles import BundleModel
 from src.models.categories import CategoryModel
 from src.models.locations import LocationModel
@@ -18,7 +18,7 @@ from src.models.variants import VariantModel
 
 
 class BundlesService:
-    async def _sanitize_categories(self, store_id: StoreUUID, category_ids: list[CategoryUUID]) -> list[CategoryUUID]:
+    async def _sanitize_categories(self, store_id: StoreID, category_ids: list[CategoryID]) -> list[CategoryID]:
         """Filter category IDs to only include valid ones that exist and belong to the specified store."""
         if not category_ids:
             return []
@@ -29,7 +29,7 @@ class BundlesService:
         ).to_list()
 
         # Return only valid category IDs
-        valid_ids: list[CategoryUUID] = [cat.id for cat in categories]  # type: ignore[misc]
+        valid_ids: list[CategoryID] = [cat.id for cat in categories]  # type: ignore[misc]
 
         # Log if any categories were filtered out
         if len(valid_ids) != len(category_ids):
@@ -43,7 +43,7 @@ class BundlesService:
 
         return valid_ids
 
-    async def _sanitize_components(self, store_id: StoreUUID, component_ids: list[VariantUUID]) -> list[VariantUUID]:
+    async def _sanitize_components(self, store_id: StoreID, component_ids: list[VariantID]) -> list[VariantID]:
         """Filter component IDs to only include valid variant IDs that exist and belong to the specified store."""
         if not component_ids:
             return []
@@ -54,7 +54,7 @@ class BundlesService:
         ).to_list()
 
         # Return only valid variant IDs
-        valid_ids: list[VariantUUID] = [cast(VariantUUID, var.id) for var in variants]
+        valid_ids: list[VariantID] = [cast(VariantID, var.id) for var in variants]
 
         # Log if any components were filtered out
         if len(valid_ids) != len(component_ids):
@@ -69,7 +69,7 @@ class BundlesService:
         return valid_ids
 
     async def _sanitize_location_prices(
-        self, store_id: StoreUUID, location_price: LocationPriceMap | None
+        self, store_id: StoreID, location_price: LocationPriceMap | None
     ) -> LocationPriceMap | None:
         """Filter location_price to only include valid location IDs that exist and belong to the specified store."""
         if not location_price:
@@ -83,7 +83,7 @@ class BundlesService:
         ).to_list()
 
         # Create a set of valid location IDs using their native type (e.g., UUID7)
-        valid_location_ids = {cast(LocationUUID, loc.id) for loc in locations}
+        valid_location_ids = {cast(LocationID, loc.id) for loc in locations}
 
         # Filter location_price to only include valid locations
         sanitized_location_price = {
@@ -101,7 +101,7 @@ class BundlesService:
 
         return sanitized_location_price if sanitized_location_price else None
 
-    async def create_bundle(self, store_id: StoreUUID, new_bundle: NewBundle) -> Bundle | None:
+    async def create_bundle(self, store_id: StoreID, new_bundle: NewBundle) -> Bundle | None:
         """Create a new bundle in the specified store.
 
         Args:
@@ -132,7 +132,7 @@ class BundlesService:
         valid_location_price = await self._sanitize_location_prices(store_id, new_bundle.location_price)
 
         bundle = BundleModel(
-            id=uuid7(),
+            # id=uuid7(),
             store_id=store_id,
             name=new_bundle.name,
             description=new_bundle.description,
@@ -149,7 +149,7 @@ class BundlesService:
 
         return Bundle.model_validate(bundle.model_dump())
 
-    async def list_bundles(self, store_id: StoreUUID) -> list[Bundle] | None:
+    async def list_bundles(self, store_id: StoreID) -> list[Bundle] | None:
         """List all non-deleted bundles for a specific store.
 
         Args:
@@ -169,7 +169,7 @@ class BundlesService:
         logger.debug(f"Found {len(bundles)} bundles for store {store_id}")
         return [Bundle.model_validate(bundle.model_dump()) for bundle in bundles]
 
-    async def get_bundle(self, store_id: StoreUUID, bundle_id: BundleUUID) -> Bundle | None:
+    async def get_bundle(self, store_id: StoreID, bundle_id: BundleID) -> Bundle | None:
         """Get a specific bundle by ID from a store.
 
         Args:
@@ -194,8 +194,8 @@ class BundlesService:
 
     async def update_bundle(
         self,
-        store_id: StoreUUID,
-        bundle_id: BundleUUID,
+        store_id: StoreID,
+        bundle_id: BundleID,
         update_data: UpdateBundle,
     ) -> Bundle | None:
         """Update an existing bundle's information.
@@ -244,7 +244,7 @@ class BundlesService:
         logger.info(f"Updated bundle {bundle_id} for store {store_id}")
         return Bundle.model_validate(bundle.model_dump())
 
-    async def delete_bundle(self, store_id: StoreUUID, bundle_id: BundleUUID) -> bool:
+    async def delete_bundle(self, store_id: StoreID, bundle_id: BundleID) -> bool:
         """Soft delete a bundle by setting its deleted_at timestamp.
 
         Args:

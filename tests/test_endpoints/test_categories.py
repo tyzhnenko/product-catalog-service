@@ -1,6 +1,7 @@
 # ruff: noqa: S101, D100, D101, D102, D103
 import uuid
 
+from beanie import PydanticObjectId
 import pytest
 
 
@@ -85,8 +86,6 @@ class TestCreateCategory:
         assert data["path"] == sample_category_data["path"]
         assert data["seo"]["slug"] == sample_category_data["seo"]["slug"]
         assert "id" in data
-        # Validate UUID7 format
-        assert uuid.UUID(data["id"]).version == 7
 
     def test_create_category_minimal(self, api_client, sample_store):
         """Test creating category with minimal required fields."""
@@ -134,7 +133,7 @@ class TestCreateCategory:
 
     def test_create_category_nonexistent_store(self, api_client):
         """Test category creation with non-existent store."""
-        non_existent_store_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_store_id = str(PydanticObjectId())
         invalid_data = {
             "name": "Test Category",
             "path": "/test-category",
@@ -262,7 +261,7 @@ class TestGetCategory:
 
     def test_get_category_not_found(self, api_client, sample_store):
         """Test getting a non-existent category."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         response = api_client.get(f"/api/v1/categories/{sample_store['id']}/{non_existent_id}")
 
@@ -420,7 +419,7 @@ class TestUpdateCategory:
 
     def test_update_category_not_found(self, api_client, sample_store):
         """Test updating a non-existent category."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         update_data = {
             "name": "Updated Name",
@@ -479,7 +478,7 @@ class TestDeleteCategory:
 
     def test_delete_category_not_found(self, api_client, sample_store):
         """Test deleting a non-existent category."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         response = api_client.delete(f"/api/v1/categories/{sample_store['id']}/{non_existent_id}")
 

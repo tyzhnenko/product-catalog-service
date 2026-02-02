@@ -1,17 +1,17 @@
-from uuid import uuid7
+# from uuid import uuid7
 
 import pendulum
 
 from src.core.logging import logger
-from src.domain.types.categories import CategoryUUID
+from src.domain.types.categories import CategoryID
 from src.domain.types.products import (
     NewProduct,
     Product,
+    ProductID,
     ProductStatusEnum,
-    ProductUUID,
     UpdateProduct,
 )
-from src.domain.types.stores import StoreUUID
+from src.domain.types.stores import StoreID
 from src.models.categories import CategoryModel
 from src.models.products import ProductModel
 from src.models.stores import StoreModel
@@ -19,7 +19,7 @@ from src.models.variants import VariantModel
 
 
 class ProductsService:
-    async def _sanitize_categories(self, store_id: StoreUUID, category_ids: list[CategoryUUID]) -> list[CategoryUUID]:
+    async def _sanitize_categories(self, store_id: StoreID, category_ids: list[CategoryID]) -> list[CategoryID]:
         """Filter category IDs to only include valid ones that exist and belong to the specified store."""
         if not category_ids:
             return []
@@ -30,7 +30,7 @@ class ProductsService:
         ).to_list()
 
         # Return only valid category IDs
-        valid_ids: list[CategoryUUID] = [cat.id for cat in categories]  # type: ignore[misc]
+        valid_ids: list[CategoryID] = [cat.id for cat in categories]  # type: ignore[misc]
 
         # Log if any categories were filtered out
         if len(valid_ids) != len(category_ids):
@@ -44,7 +44,7 @@ class ProductsService:
 
         return valid_ids
 
-    async def create_product(self, store_id: StoreUUID, new_product: NewProduct) -> Product | None:
+    async def create_product(self, store_id: StoreID, new_product: NewProduct) -> Product | None:
         # Check if store exists
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
@@ -55,7 +55,7 @@ class ProductsService:
         valid_categories = await self._sanitize_categories(store_id, new_product.categories or [])
 
         product = ProductModel(
-            id=uuid7(),
+            # id=uuid7(),
             store_id=store_id,
             name=new_product.name,
             description=new_product.description,
@@ -71,7 +71,7 @@ class ProductsService:
 
         return Product.model_validate(product)
 
-    async def list_products(self, store_id: StoreUUID) -> list[Product] | None:
+    async def list_products(self, store_id: StoreID) -> list[Product] | None:
         # Check if store exists
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
@@ -82,7 +82,7 @@ class ProductsService:
         logger.debug(f"Found {len(products)} products for store {store_id}")
         return [Product.model_validate(product) for product in products]
 
-    async def get_product(self, store_id: StoreUUID, product_id: ProductUUID) -> Product | None:
+    async def get_product(self, store_id: StoreID, product_id: ProductID) -> Product | None:
         # Check if store exists
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
@@ -97,8 +97,8 @@ class ProductsService:
 
     async def update_product(
         self,
-        store_id: StoreUUID,
-        product_id: ProductUUID,
+        store_id: StoreID,
+        product_id: ProductID,
         update_data: UpdateProduct,
     ) -> Product | None:
         # Check if store exists
@@ -126,7 +126,7 @@ class ProductsService:
         logger.info(f"Updated product {product_id} for store {store_id}")
         return Product.model_validate(product)
 
-    async def delete_product(self, store_id: StoreUUID, product_id: ProductUUID) -> bool:
+    async def delete_product(self, store_id: StoreID, product_id: ProductID) -> bool:
         # Check if store exists
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:

@@ -1,9 +1,9 @@
-from uuid import uuid7
+# from uuid import uuid7
 
 import pendulum
 
 from src.core.logging import logger
-from src.domain.types.stores import NewStore, Store, StoreUUID, UpdateStore
+from src.domain.types.stores import NewStore, Store, StoreID, UpdateStore
 from src.models.bundles import BundleModel
 from src.models.categories import CategoryModel
 from src.models.locations import LocationModel
@@ -15,7 +15,6 @@ from src.models.variants import VariantModel
 class StoresService:
     async def create_store(self, new_store: NewStore) -> Store:
         store = StoreModel(
-            id=uuid7(),
             name=new_store.name,
             url=new_store.url,
         )
@@ -27,7 +26,7 @@ class StoresService:
         stores = await StoreModel.find({"deleted_at": None}).to_list()
         return [Store.model_validate(store) for store in stores]
 
-    async def get_store(self, store_id: StoreUUID) -> Store | None:
+    async def get_store(self, store_id: StoreID) -> Store | None:
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if store:
             return Store.model_validate(store)
@@ -35,7 +34,7 @@ class StoresService:
 
     async def update_store(
         self,
-        store_id: StoreUUID,
+        store_id: StoreID,
         update_data: UpdateStore,
     ) -> Store | None:
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
@@ -50,7 +49,7 @@ class StoresService:
         await store.save()
         return Store.model_validate(store)
 
-    async def delete_store(self, store_id: StoreUUID) -> bool:
+    async def delete_store(self, store_id: StoreID) -> bool:
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             return False

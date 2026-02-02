@@ -1,6 +1,7 @@
 # ruff: noqa: S101, D100, D101, D102, D103
 import uuid
 
+from beanie import PydanticObjectId
 import pytest
 
 
@@ -35,8 +36,6 @@ class TestCreateStore:
         assert data["name"] == sample_store_data["name"]
         assert data["url"] == sample_store_data["url"]
         assert "id" in data
-        # Validate UUID7 format
-        assert uuid.UUID(data["id"]).version == 7
 
     def test_create_store_invalid_url(self, api_client):
         """Test store creation with invalid URL."""
@@ -148,7 +147,7 @@ class TestGetStore:
     def test_get_store_not_found(self, api_client):
         """Test getting a non-existent store."""
         # Generate a random UUID7
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         response = api_client.get(f"/api/v1/stores/{non_existent_id}")
 
@@ -229,7 +228,7 @@ class TestUpdateStore:
 
     def test_update_store_not_found(self, api_client):
         """Test updating a non-existent store."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         update_data = {
             "name": "Updated Name",
@@ -290,7 +289,7 @@ class TestDeleteStore:
 
     def test_delete_store_not_found(self, api_client):
         """Test deleting a non-existent store."""
-        non_existent_id = "01939d8e-1234-7890-abcd-ef0123456789"
+        non_existent_id = str(PydanticObjectId())
 
         response = api_client.delete(f"/api/v1/stores/{non_existent_id}")
 

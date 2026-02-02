@@ -1,13 +1,15 @@
 from typing import Annotated
 
+from beanie import PydanticObjectId
 from pydantic import UUID7, BaseModel, ConfigDict, Field
 
 from src.domain.types.attributes import AttributesMap
 from src.domain.types.media import Image
 from src.domain.types.prices import LocationPriceMap, PriceMap, RegionPriceMap
+from src.domain.types.products import ProductID
 
-type VariantUUID = Annotated[
-    UUID7,
+type VariantID = Annotated[
+    PydanticObjectId,
     Field(
         ...,
         description="Unique identifier for a variant",
@@ -152,8 +154,8 @@ class ProductVariant(BaseModel):
         },
     )
 
-    id: VariantUUID
-    product_id: UUID7
+    id: VariantID
+    product_id: ProductID
     title: VariantTitle
     sku: VariantSKU | None = None
     upc: VariantUPC | None = None

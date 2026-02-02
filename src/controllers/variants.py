@@ -4,13 +4,13 @@ from fastapi import Depends, HTTPException, Response, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
-from src.domain.types.products import ProductUUID
-from src.domain.types.stores import StoreUUID
+from src.domain.types.products import ProductID
+from src.domain.types.stores import StoreID
 from src.domain.types.variants import (
     NewProductVariant,
     ProductVariant,
     UpdateProductVariant,
-    VariantUUID,
+    VariantID,
 )
 from src.domain.variants import DuplicateVariantOptionsError, VariantsService
 
@@ -25,8 +25,8 @@ router = APIRouter()
     dependencies=[Security(ro_access)],
 )
 async def list_variants(
-    store_id: StoreUUID,
-    product_id: ProductUUID,
+    store_id: StoreID,
+    product_id: ProductID,
     service: Annotated[VariantsService, Depends(VariantsService)],
 ) -> list[ProductVariant]:
     """List all variants for a specific product."""
@@ -47,8 +47,8 @@ async def list_variants(
     dependencies=[Security(rw_access)],
 )
 async def create_variant(
-    store_id: StoreUUID,
-    product_id: ProductUUID,
+    store_id: StoreID,
+    product_id: ProductID,
     new_variant: NewProductVariant,
     service: Annotated[VariantsService, Depends(VariantsService)],
 ) -> ProductVariant:
@@ -76,9 +76,9 @@ async def create_variant(
     dependencies=[Security(ro_access)],
 )
 async def get_variant(
-    store_id: StoreUUID,
-    product_id: ProductUUID,
-    variant_id: VariantUUID,
+    store_id: StoreID,
+    product_id: ProductID,
+    variant_id: VariantID,
     service: Annotated[VariantsService, Depends(VariantsService)],
 ) -> ProductVariant:
     """Get a specific variant by ID."""
@@ -99,9 +99,9 @@ async def get_variant(
     dependencies=[Security(rw_access)],
 )
 async def update_variant(
-    store_id: StoreUUID,
-    product_id: ProductUUID,
-    variant_id: VariantUUID,
+    store_id: StoreID,
+    product_id: ProductID,
+    variant_id: VariantID,
     update_data: UpdateProductVariant,
     service: Annotated[VariantsService, Depends(VariantsService)],
 ) -> ProductVariant:
@@ -129,9 +129,9 @@ async def update_variant(
     dependencies=[Security(rw_access)],
 )
 async def delete_variant(
-    store_id: StoreUUID,
-    product_id: ProductUUID,
-    variant_id: VariantUUID,
+    store_id: StoreID,
+    product_id: ProductID,
+    variant_id: VariantID,
     service: Annotated[VariantsService, Depends(VariantsService)],
 ) -> Response:
     """Delete a variant (soft delete)."""

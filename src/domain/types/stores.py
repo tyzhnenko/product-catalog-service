@@ -1,11 +1,12 @@
 from typing import Annotated
 
+from beanie import PydanticObjectId
 from pydantic import UUID7, BaseModel, ConfigDict, Field
 
 from src.domain.types.base import HTTPURLField
 
-type StoreUUID = Annotated[
-    UUID7,
+type StoreID = Annotated[
+    PydanticObjectId,
     Field(
         ...,
         title="Store UUID",
@@ -42,7 +43,7 @@ class Store(BaseModel):
         from_attributes=True,
     )
 
-    id: StoreUUID
+    id: StoreID
     name: StoreName
     url: HTTPURLField
 
