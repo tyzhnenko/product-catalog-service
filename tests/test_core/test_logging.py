@@ -4,7 +4,7 @@
 import json
 import logging
 
-from src.core.logging import JSONFormatter, config_logger
+from src.core.logging import AccessLogFormatter, JSONFormatter, config_logger
 from src.settings import App, Settings
 
 
@@ -125,3 +125,61 @@ def test_log_format_validation():
     # Invalid value should raise ValidationError
     with pytest.raises(ValidationError):
         App(log_format="invalid")
+
+
+def test_access_log_formatter_basic():
+    """Test that AccessLogFormatter produces valid JSON output for access logs."""
+    formatter = AccessLogFormatter()
+    record = logging.LogRecord(
+        name="uvicorn.access",
+        level=logging.INFO,
+        pathname="access.py",
+        lineno=10,
+        msg='%s - "%s" %s',
+        args=("127.0.0.1:8000", "GET /api/v1/stores/ HTTP/1.1", 200),
+        exc_info=None,
+    )
+    record.client_addr = "127.0.0.1:8000"
+    record.request_line = "GET /api/v1/stores/ HTTP/1.1"
+    record.status_code = 200
+
+    result = formatter.format(record)
+
+    # Should be valid JSON
+    log_data = json.loads(result)
+
+    # Should contain expected fields
+    assert log_data["level"] == "INFO"
+    assert log_data["logger"] == "uvicorn.access"
+    assert log_data["client_addr"] == "127.0.0.1:8000"
+    assert log_data["request_line"] == "GET /api/v1/stores/ HTTP/1.1"
+    assert log_data["status_code"] == 200
+    assert "timestamp" in log_data
+    assert "message" in log_data
+
+
+def test_config_logger_configures_uvicorn_loggers():
+    """Test that config_logger also configures uvicorn access and error loggers."""
+    settings = Settings()
+    settings.app = App(debug=True, log_format="json")
+
+    # Clear any existing handlers
+    from src.core.logging import logger
+
+    logger.handlers.clear()
+    access_logger = logging.getLogger("uvicorn.access")
+    access_logger.handlers.clear()
+    error_logger = logging.getLogger("uvicorn.error")
+    error_logger.handlers.clear()
+
+    config_logger(settings)
+
+    # Check uvicorn.access logger
+    assert len(access_logger.handlers) > 0
+    assert isinstance(access_logger.handlers[0].formatter, AccessLogFormatter)
+    assert access_logger.propagate is False
+
+    # Check uvicorn.error logger
+    assert len(error_logger.handlers) > 0
+    assert isinstance(error_logger.handlers[0].formatter, JSONFormatter)
+    assert error_logger.propagate is False

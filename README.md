@@ -57,13 +57,15 @@ By using this project or its source code, for any purpose and in any shape or fo
 
 ### Logging
 
-The service supports both text and JSON log formats. You can configure the log format in your settings file:
+The service supports both text and JSON log formats for application logs, uvicorn access logs, and uvicorn error logs. You can configure the log format in your settings file:
 
 ```yaml
 app:
   debug: true
   log_format: text  # Options: "text" or "json"
 ```
+
+#### Application Logs
 
 **Text format** (default):
 ```
@@ -75,6 +77,20 @@ app:
 ```json
 {"timestamp": "2026-02-02T23:12:01.463963", "level": "INFO", "logger": "product_catalog_service", "message": "Logging level set to DEBUG", "module": "logging", "function": "config_logger", "line": 48}
 {"timestamp": "2026-02-02T23:12:01.464031", "level": "INFO", "logger": "product_catalog_service", "message": "Application starting", "module": "api", "function": "startup", "line": 23}
+```
+
+#### Uvicorn Access Logs
+
+**Text format** (default):
+```
+127.0.0.1:8000 - "GET /api/v1/stores/ HTTP/1.1" 200
+127.0.0.1:8000 - "POST /api/v1/products/ HTTP/1.1" 201
+```
+
+**JSON format**:
+```json
+{"timestamp": "2026-02-03T23:27:42.468536", "level": "INFO", "logger": "uvicorn.access", "client_addr": "127.0.0.1:8000", "request_line": "GET /api/v1/stores/ HTTP/1.1", "status_code": 200, "message": "127.0.0.1:8000 - \"GET /api/v1/stores/ HTTP/1.1\" 200"}
+{"timestamp": "2026-02-03T23:27:42.468570", "level": "INFO", "logger": "uvicorn.access", "client_addr": "127.0.0.1:8000", "request_line": "POST /api/v1/products/ HTTP/1.1", "status_code": 201, "message": "127.0.0.1:8000 - \"POST /api/v1/products/ HTTP/1.1\" 201"}
 ```
 
 JSON format is particularly useful for log aggregation tools like ELK, Splunk, or CloudWatch.
