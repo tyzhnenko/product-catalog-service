@@ -280,6 +280,138 @@ class ListOfURLsAttribute(BaseModel):
     ]
 
 
+class ListOfDatesAttribute(BaseModel):
+    type: Literal["list_of_dates"] = "list_of_dates"
+    name: AttributeName
+    values: Annotated[
+        list[DateAttributeValue],
+        Field(
+            ...,
+            description="List of date values",
+        ),
+    ]
+
+
+class ListOfDateTimesAttribute(BaseModel):
+    type: Literal["list_of_datetimes"] = "list_of_datetimes"
+    name: AttributeName
+    values: Annotated[
+        list[DateTimeAttributeValue],
+        Field(
+            ...,
+            description="List of datetime values",
+        ),
+    ]
+
+
+class MapOfStringsAttribute(BaseModel):
+    type: Literal["map_of_strings"] = "map_of_strings"
+    name: AttributeName
+    values: Annotated[
+        dict[str, StringAttributeValue],
+        Field(
+            ...,
+            description="Map of string values",
+        ),
+    ]
+
+
+class MapOfIntegersAttribute(BaseModel):
+    type: Literal["map_of_integers"] = "map_of_integers"
+    name: AttributeName
+    values: Annotated[
+        dict[str, IntegerAttributeValue],
+        Field(
+            ...,
+            description="Map of integer values",
+        ),
+    ]
+
+
+class MapOfFloatsAttribute(BaseModel):
+    type: Literal["map_of_floats"] = "map_of_floats"
+    name: AttributeName
+    values: Annotated[
+        dict[str, FloatAttributeValue],
+        Field(
+            ...,
+            description="Map of float values",
+        ),
+    ]
+
+
+class MapOfDecimalsAttribute(BaseModel):
+    type: Literal["map_of_decimals"] = "map_of_decimals"
+    name: AttributeName
+    values: Annotated[
+        dict[str, DecimalAttributeValue],
+        Field(
+            ...,
+            description="Map of decimal values",
+        ),
+    ]
+
+
+class MapOfUUIDsAttribute(BaseModel):
+    type: Literal["map_of_uuids"] = "map_of_uuids"
+    name: AttributeName
+    values: Annotated[
+        dict[str, UUIDAttributeValue],
+        Field(
+            ...,
+            description="Map of UUID values",
+        ),
+    ]
+
+
+class MapOfObjectIdsAttribute(BaseModel):
+    type: Literal["map_of_object_ids"] = "map_of_object_ids"
+    name: AttributeName
+    values: Annotated[
+        dict[str, ObjectIdValue],
+        Field(
+            ...,
+            description="Map of ObjectId values",
+        ),
+    ]
+
+
+class MapOfURLsAttribute(BaseModel):
+    type: Literal["map_of_urls"] = "map_of_urls"
+    name: AttributeName
+    values: Annotated[
+        dict[str, URLAttributeValue],
+        Field(
+            ...,
+            description="Map of URL values",
+        ),
+    ]
+
+
+class MapOfDatesAttribute(BaseModel):
+    type: Literal["map_of_dates"] = "map_of_dates"
+    name: AttributeName
+    values: Annotated[
+        dict[str, DateAttributeValue],
+        Field(
+            ...,
+            description="Map of date values",
+        ),
+    ]
+
+
+class MapOfDateTimesAttribute(BaseModel):
+    type: Literal["map_of_datetimes"] = "map_of_datetimes"
+    name: AttributeName
+    values: Annotated[
+        dict[str, DateTimeAttributeValue],
+        Field(
+            ...,
+            description="Map of datetime values",
+        ),
+    ]
+
+
 type Attribute = Annotated[
     StringAttribute
     | TextAttribute
@@ -301,7 +433,18 @@ type Attribute = Annotated[
     | ListOfDecimalsAttribute
     | ListOfUUIDsAttribute
     | ListOfObjectIdsAttribute
-    | ListOfURLsAttribute,
+    | ListOfURLsAttribute
+    | ListOfDatesAttribute
+    | ListOfDateTimesAttribute
+    | MapOfStringsAttribute
+    | MapOfIntegersAttribute
+    | MapOfFloatsAttribute
+    | MapOfDecimalsAttribute
+    | MapOfUUIDsAttribute
+    | MapOfObjectIdsAttribute
+    | MapOfURLsAttribute
+    | MapOfDatesAttribute
+    | MapOfDateTimesAttribute,
     Field(
         ...,
         title="Attribute",
