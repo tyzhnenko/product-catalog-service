@@ -74,7 +74,16 @@ By using this project or its source code, for any purpose and in any shape or fo
     - `contributors:` for acknowledging contributors
     - use an `!` after the type (e.g., `feat!:`) or add a `BREAKING CHANGE:` footer for changes that break backward compatibility
 - Keep PRs focused and small; include tests for new behavior.
-- Ensure CI basics pass locally: lint, format, type-check, and tests.
+- Ensure CI basics pass locally: lint, format, type-check, and tests. Run these commands before pushing:
+```bash
+just format
+just lint
+just test
+```
+- Use pre-commit hooks for consistent code quality. Install them with:
+```bash
+uv run prek install
+```
 
 ### Pull Request Checklist
 - [ ] Tests added/updated for changes
