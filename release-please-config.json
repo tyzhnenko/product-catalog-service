@@ -23,6 +23,13 @@
                 { "type": "deps", "section": "Dependencies" },
                 { "type": "security", "section": "Security" },
                 { "type": "contributors", "section": "Contributors" }
+            ],
+            "extra-files": [
+                {
+                    "jsonpath": "$.package[?(@.name.value=='product-catalog-service')].version",
+                    "path": "uv.lock",
+                    "type": "toml"
+                }
             ]
         }
     }
