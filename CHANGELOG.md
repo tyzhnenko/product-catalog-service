@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.2.1...v0.3.0) (2026-02-09)
+
+
+### Features
+
+* add map and data list attribute types ([ab81155](https://github.com/tyzhnenko/product-catalog-service/commit/ab81155d5af3ba34adbab010dc54b40601de64b8))
+
+
+### Chores
+
+* add pre-commit hooks and update CI configuration ([3f68c7a](https://github.com/tyzhnenko/product-catalog-service/commit/3f68c7a1909f231cb3cd3f526fa58dc72b2339a9))
+
+
+### Continuous Integration
+
+* add uv.lock to release-please config ([2fc9e62](https://github.com/tyzhnenko/product-catalog-service/commit/2fc9e62c3bfcab1c828abff6f33c4dd15d2e9839))
+
 ## [0.2.1](https://github.com/tyzhnenko/product-catalog-service/compare/v0.2.0...v0.2.1) (2026-02-02)
 
 
