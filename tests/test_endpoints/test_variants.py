@@ -91,6 +91,109 @@ def minimal_variant_data():
 
 
 @pytest.fixture
+def comprehensive_variant_data():
+    """Comprehensive variant data with all attribute and price types for testing MongoDB conversions."""
+    from uuid import uuid4
+
+    return {
+        "title": "Comprehensive Test Variant",
+        "sku": "COMP-TEST-001",
+        "upc": "999999999999",
+        "options": [{"name": "Test", "value": "Comprehensive"}],
+        "attributes": {
+            # Basic types
+            "string_attr": {"type": "string", "name": "string_attr", "value": "test string"},
+            "text_attr": {"type": "text", "name": "text_attr", "value": "This is a longer text description"},
+            "integer_attr": {"type": "integer", "name": "integer_attr", "value": 42},
+            "bool_attr": {"type": "bool", "name": "bool_attr", "value": True},
+            "float_attr": {"type": "float", "name": "float_attr", "value": 3.14159},
+            "decimal_attr": {"type": "decimal", "name": "decimal_attr", "value": "19.99"},
+            "date_attr": {"type": "date", "name": "date_attr", "value": "2026-03-22"},
+            "datetime_attr": {"type": "datetime", "name": "datetime_attr", "value": "2026-03-22T12:00:00Z"},
+            "uuid_attr": {"type": "uuid", "name": "uuid_attr", "value": str(uuid4())},
+            "url_attr": {"type": "url", "name": "url_attr", "value": "https://example.com"},
+            # Range types
+            "float_range_attr": {
+                "type": "float_range",
+                "name": "float_range_attr",
+                "min_value": 0.0,
+                "max_value": 100.0,
+            },
+            "integer_range_attr": {
+                "type": "integer_range",
+                "name": "integer_range_attr",
+                "min_value": 10,
+                "max_value": 50,
+            },
+            "decimal_range_attr": {
+                "type": "decimal_range",
+                "name": "decimal_range_attr",
+                "min_value": "10.00",
+                "max_value": "99.99",
+            },
+            # List types
+            "list_strings_attr": {
+                "type": "list_of_strings",
+                "name": "list_strings_attr",
+                "values": ["tag1", "tag2", "tag3"],
+            },
+            "list_integers_attr": {
+                "type": "list_of_integers",
+                "name": "list_integers_attr",
+                "values": [1, 2, 3, 4, 5],
+            },
+            "list_floats_attr": {
+                "type": "list_of_floats",
+                "name": "list_floats_attr",
+                "values": [1.1, 2.2, 3.3],
+            },
+            "list_decimals_attr": {
+                "type": "list_of_decimals",
+                "name": "list_decimals_attr",
+                "values": ["10.99", "20.99", "30.99"],
+            },
+            # Map types
+            "map_strings_attr": {
+                "type": "map_of_strings",
+                "name": "map_strings_attr",
+                "values": {"key1": "value1", "key2": "value2"},
+            },
+            "map_integers_attr": {
+                "type": "map_of_integers",
+                "name": "map_integers_attr",
+                "values": {"key1": 10, "key2": 20},
+            },
+            "map_floats_attr": {
+                "type": "map_of_floats",
+                "name": "map_floats_attr",
+                "values": {"key1": 1.5, "key2": 2.5},
+            },
+            "map_decimals_attr": {
+                "type": "map_of_decimals",
+                "name": "map_decimals_attr",
+                "values": {"price1": "15.99", "price2": "25.99"},
+            },
+        },
+        "price": {
+            # All price types
+            "retail": {"type": "decimal", "name": "Retail Price", "value": "29.99"},
+            "subscription_range": {
+                "type": "decimal_range",
+                "name": "Subscription Range",
+                "min_value": "24.99",
+                "max_value": "27.99",
+            },
+            "bulk_discount": {
+                "type": "decimal_quantity",
+                "name": "Bulk Discount",
+                "min_quantity": 10,
+                "value": "22.99",
+            },
+        },
+    }
+
+
+@pytest.fixture
 def sample_location(api_client, sample_store):
     """Create a sample location for testing location-based pricing."""
     location_data = {
@@ -2118,3 +2221,253 @@ class TestVariantImages:
         response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
 
         assert response.status_code == 422
+
+
+class TestVariantAttributeTypesConversion:
+    """Tests for MongoDB conversion of all attribute types (decimal, etc.)."""
+
+    def test_create_and_retrieve_variant_with_all_attribute_types(
+        self, api_client, comprehensive_variant_data, sample_store, sample_product
+    ):
+        """Test that all attribute types survive round-trip to MongoDB correctly.
+
+        This test specifically checks that MongoDB types like Decimal128 are
+        properly converted back to Python types during deserialization.
+        """
+        # Create variant with comprehensive attributes
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=comprehensive_variant_data
+        )
+
+        assert create_response.status_code == 200
+        created_variant = create_response.json()
+        variant_id = created_variant["id"]
+
+        # Verify attributes on creation response
+        assert "attributes" in created_variant
+        assert "decimal_attr" in created_variant["attributes"]
+        assert created_variant["attributes"]["decimal_attr"]["value"] == "19.99"
+
+        # Get variant by ID - this retrieves from MongoDB
+        get_response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}")
+
+        assert get_response.status_code == 200, f"Failed to get variant: {get_response.json()}"
+        retrieved_variant = get_response.json()
+
+        # Verify all basic attribute types
+        attrs = retrieved_variant["attributes"]
+        assert attrs["string_attr"]["type"] == "string"
+        assert attrs["string_attr"]["value"] == "test string"
+
+        assert attrs["text_attr"]["type"] == "text"
+        assert "longer text" in attrs["text_attr"]["value"]
+
+        assert attrs["integer_attr"]["type"] == "integer"
+        assert attrs["integer_attr"]["value"] == 42
+
+        assert attrs["bool_attr"]["type"] == "bool"
+        assert attrs["bool_attr"]["value"] is True
+
+        assert attrs["float_attr"]["type"] == "float"
+        assert abs(attrs["float_attr"]["value"] - 3.14159) < 0.001
+
+        # Critical test: decimal attribute from MongoDB
+        assert attrs["decimal_attr"]["type"] == "decimal"
+        assert attrs["decimal_attr"]["value"] == "19.99"
+
+        assert attrs["date_attr"]["type"] == "date"
+        assert "2026-03-22" in attrs["date_attr"]["value"]
+
+        assert attrs["datetime_attr"]["type"] == "datetime"
+        assert "2026-03-22" in attrs["datetime_attr"]["value"]
+
+        assert attrs["uuid_attr"]["type"] == "uuid"
+        assert attrs["url_attr"]["type"] == "url"
+        assert "example.com" in attrs["url_attr"]["value"]
+
+        # Verify range types
+        assert attrs["float_range_attr"]["type"] == "float_range"
+        assert attrs["float_range_attr"]["min_value"] == 0.0
+        assert attrs["float_range_attr"]["max_value"] == 100.0
+
+        assert attrs["integer_range_attr"]["type"] == "integer_range"
+        assert attrs["integer_range_attr"]["min_value"] == 10
+        assert attrs["integer_range_attr"]["max_value"] == 50
+
+        # Critical test: decimal range from MongoDB
+        assert attrs["decimal_range_attr"]["type"] == "decimal_range"
+        assert attrs["decimal_range_attr"]["min_value"] == "10.00"
+        assert attrs["decimal_range_attr"]["max_value"] == "99.99"
+
+        # Verify list types
+        assert attrs["list_strings_attr"]["type"] == "list_of_strings"
+        assert attrs["list_strings_attr"]["values"] == ["tag1", "tag2", "tag3"]
+
+        assert attrs["list_integers_attr"]["type"] == "list_of_integers"
+        assert attrs["list_integers_attr"]["values"] == [1, 2, 3, 4, 5]
+
+        assert attrs["list_floats_attr"]["type"] == "list_of_floats"
+        assert len(attrs["list_floats_attr"]["values"]) == 3
+
+        # Critical test: list of decimals from MongoDB
+        assert attrs["list_decimals_attr"]["type"] == "list_of_decimals"
+        assert len(attrs["list_decimals_attr"]["values"]) == 3
+        assert "10.99" in attrs["list_decimals_attr"]["values"]
+
+        # Verify map types
+        assert attrs["map_strings_attr"]["type"] == "map_of_strings"
+        assert attrs["map_strings_attr"]["values"]["key1"] == "value1"
+
+        assert attrs["map_integers_attr"]["type"] == "map_of_integers"
+        assert attrs["map_integers_attr"]["values"]["key1"] == 10
+
+        assert attrs["map_floats_attr"]["type"] == "map_of_floats"
+        assert attrs["map_floats_attr"]["values"]["key1"] == 1.5
+
+        # Critical test: map of decimals from MongoDB
+        assert attrs["map_decimals_attr"]["type"] == "map_of_decimals"
+        assert attrs["map_decimals_attr"]["values"]["price1"] == "15.99"
+        assert attrs["map_decimals_attr"]["values"]["price2"] == "25.99"
+
+    def test_list_variants_with_all_attribute_types(
+        self, api_client, comprehensive_variant_data, sample_store, sample_product
+    ):
+        """Test that listing variants correctly handles all attribute types from MongoDB."""
+        # Create variant
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=comprehensive_variant_data
+        )
+        assert create_response.status_code == 200
+
+        # List variants - this retrieves from MongoDB
+        list_response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}")
+
+        assert list_response.status_code == 200, f"Failed to list variants: {list_response.json()}"
+        variants = list_response.json()
+        assert len(variants) >= 1
+
+        # Find our variant
+        variant = next((v for v in variants if v["title"] == "Comprehensive Test Variant"), None)
+        assert variant is not None, "Comprehensive variant not found in list"
+
+        # Verify critical decimal types are deserialized correctly
+        attrs = variant["attributes"]
+        assert attrs["decimal_attr"]["value"] == "19.99"
+        assert attrs["decimal_range_attr"]["min_value"] == "10.00"
+        assert "10.99" in attrs["list_decimals_attr"]["values"]
+        assert attrs["map_decimals_attr"]["values"]["price1"] == "15.99"
+
+    def test_create_and_retrieve_variant_with_all_price_types(
+        self, api_client, comprehensive_variant_data, sample_store, sample_product
+    ):
+        """Test that all price types survive round-trip to MongoDB correctly."""
+        # Create variant with all price types
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=comprehensive_variant_data
+        )
+
+        assert create_response.status_code == 200
+        created_variant = create_response.json()
+        variant_id = created_variant["id"]
+
+        # Get variant by ID - this retrieves from MongoDB
+        get_response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}")
+
+        assert get_response.status_code == 200, f"Failed to get variant: {get_response.json()}"
+        retrieved_variant = get_response.json()
+
+        # Verify all price types
+        prices = retrieved_variant["price"]
+
+        # DecimalPrice
+        assert prices["retail"]["type"] == "decimal"
+        assert prices["retail"]["value"] == "29.99"
+
+        # DecimalRangePrice
+        assert prices["subscription_range"]["type"] == "decimal_range"
+        assert prices["subscription_range"]["min_value"] == "24.99"
+        assert prices["subscription_range"]["max_value"] == "27.99"
+
+        # DecimalQuantityPrice
+        assert prices["bulk_discount"]["type"] == "decimal_quantity"
+        assert prices["bulk_discount"]["min_quantity"] == 10
+        assert prices["bulk_discount"]["value"] == "22.99"
+
+    def test_update_variant_with_decimal_attributes(self, api_client, sample_store, sample_product):
+        """Test updating variant with decimal attributes works correctly."""
+        # Create simple variant
+        variant_data = {"title": "Simple Variant", "options": []}
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        # Update with decimal attributes
+        update_data = {
+            "attributes": {
+                "weight": {"type": "decimal", "name": "weight", "value": "250.50"},
+                "price_range": {
+                    "type": "decimal_range",
+                    "name": "price_range",
+                    "min_value": "10.00",
+                    "max_value": "50.00",
+                },
+                "discounts": {
+                    "type": "list_of_decimals",
+                    "name": "discounts",
+                    "values": ["5.00", "10.00", "15.00"],
+                },
+            }
+        }
+
+        update_response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}", json=update_data
+        )
+
+        assert update_response.status_code == 200
+
+        # Retrieve and verify
+        get_response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}")
+
+        assert get_response.status_code == 200, f"Failed to get updated variant: {get_response.json()}"
+        retrieved_variant = get_response.json()
+
+        attrs = retrieved_variant["attributes"]
+        assert attrs["weight"]["value"] == "250.50"
+        assert attrs["price_range"]["min_value"] == "10.00"
+        assert attrs["price_range"]["max_value"] == "50.00"
+        assert "5.00" in attrs["discounts"]["values"]
+        assert "10.00" in attrs["discounts"]["values"]
+        assert "15.00" in attrs["discounts"]["values"]
+
+    def test_variant_with_zero_decimal_value(self, api_client, sample_store, sample_product):
+        """Test that decimal attributes with zero value work correctly (common edge case)."""
+        variant_data = {
+            "title": "Zero Weight Variant",
+            "options": [],
+            "attributes": {
+                "weight_gr": {"type": "decimal", "name": "weight_gr", "value": "0"},
+                "discount": {"type": "decimal", "name": "discount", "value": "0.00"},
+            },
+            "price": {
+                "free": {"type": "decimal", "name": "Free Price", "value": "0.00"},
+            },
+        }
+
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+
+        assert create_response.status_code == 200
+        variant_id = create_response.json()["id"]
+
+        # Retrieve from MongoDB
+        get_response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}")
+
+        assert get_response.status_code == 200, f"Failed to get variant with zero decimals: {get_response.json()}"
+        retrieved_variant = get_response.json()
+
+        # Verify zero decimal values are handled correctly
+        assert retrieved_variant["attributes"]["weight_gr"]["value"] == "0"
+        assert retrieved_variant["attributes"]["discount"]["value"] == "0.00"
+        assert retrieved_variant["price"]["free"]["value"] == "0.00"

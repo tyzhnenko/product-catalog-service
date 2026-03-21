@@ -2,6 +2,8 @@ from decimal import Decimal
 from typing import Annotated, Literal, Text
 from uuid import UUID
 
+import bson
+import pydantic
 from beanie import PydanticObjectId
 from pydantic import BaseModel, Field
 from pydantic_extra_types.pendulum_dt import Date, DateTime
@@ -50,6 +52,7 @@ type DecimalAttributeValue = Annotated[
         ...,
         description="Decimal value represented as a float in string format",
     ),
+    pydantic.BeforeValidator(lambda v: v.to_decimal() if isinstance(v, bson.Decimal128) else v),
 ]
 
 
