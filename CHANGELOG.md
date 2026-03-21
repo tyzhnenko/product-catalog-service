@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/tyzhnenko/product-catalog-service/compare/v0.3.0...v0.3.1) (2026-03-21)
+
+
+### Chores
+
+* add titles to ID fields for better clarity in bundles, categories, locations, products, stores, and variants ([7725236](https://github.com/tyzhnenko/product-catalog-service/commit/77252364732c29cf63bb868497449df71fca2083))
+
 ## [0.3.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.2.1...v0.3.0) (2026-02-09)
 
 
