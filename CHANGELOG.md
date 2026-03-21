@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.2](https://github.com/tyzhnenko/product-catalog-service/compare/v0.3.1...v0.3.2) (2026-03-21)
+
+
+### Bug Fixes
+
+* add transformation of Decimal128 to Decimal in DecimalAttributeValue and tests for attribute type conversions ([5d497be](https://github.com/tyzhnenko/product-catalog-service/commit/5d497be404427d3e63f768b361d74313bb0af3f0))
+
 ## [0.3.1](https://github.com/tyzhnenko/product-catalog-service/compare/v0.3.0...v0.3.1) (2026-03-21)
 
 
