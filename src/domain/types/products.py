@@ -12,6 +12,7 @@ type ProductID = Annotated[
     PydanticObjectId,
     Field(
         ...,
+        title="Product ID",
         description="Unique identifier for a product",
     ),
 ]

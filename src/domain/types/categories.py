@@ -13,6 +13,7 @@ type CategoryID = Annotated[
     PydanticObjectId,
     Field(
         ...,
+        title="Category ID",
         description="Unique identifier for a category",
     ),
 ]

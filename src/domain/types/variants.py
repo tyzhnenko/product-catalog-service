@@ -12,10 +12,8 @@ type VariantID = Annotated[
     PydanticObjectId,
     Field(
         ...,
+        title="Variant ID",
         description="Unique identifier for a variant",
-        json_schema_extra={
-            "format": "uuid",
-        },
     ),
 ]
 

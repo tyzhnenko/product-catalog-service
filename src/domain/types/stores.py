@@ -9,11 +9,8 @@ type StoreID = Annotated[
     PydanticObjectId,
     Field(
         ...,
-        title="Store UUID",
+        title="Store ID",
         description="Unique identifier for a store",
-        json_schema_extra={
-            "format": "uuid",
-        },
     ),
 ]
 

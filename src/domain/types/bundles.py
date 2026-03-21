@@ -14,6 +14,7 @@ type BundleID = Annotated[
     PydanticObjectId,
     Field(
         ...,
+        title="Bundle ID",
         description="Unique identifier for a bundle",
     ),
 ]

@@ -10,6 +10,7 @@ type LocationID = Annotated[
     PydanticObjectId,
     Field(
         ...,
+        title="Location ID",
         description="Unique identifier for a location",
     ),
 ]
