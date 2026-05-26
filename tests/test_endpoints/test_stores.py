@@ -597,6 +597,20 @@ class TestListStoresPagination:
         assert page2["has_next"] is False
         assert page2["has_prev"] is True
 
+    def test_middle_page_has_next(self, api_client):
+        """after=end_cursor on a middle page returns has_next=True and truncates to limit."""
+        for i in range(5):
+            api_client.post("/api/v1/stores/", json={"name": f"MidStore {i}", "url": f"https://midstore{i}.com/"})
+
+        page1 = api_client.get("/api/v1/stores/", params={"limit": 2}).json()
+        page2_resp = api_client.get("/api/v1/stores/", params={"after": page1["end_cursor"], "limit": 2})
+
+        assert page2_resp.status_code == 200
+        page2 = page2_resp.json()
+        assert len(page2["items"]) == 2
+        assert page2["has_next"] is True
+        assert page2["has_prev"] is True
+
     def test_empty_result(self, api_client):
         """No stores: empty paginated response."""
         response = api_client.get("/api/v1/stores/")

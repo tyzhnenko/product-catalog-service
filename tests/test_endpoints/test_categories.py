@@ -1009,6 +1009,25 @@ class TestListCategoriesPagination:
         assert page2["has_next"] is False
         assert page2["has_prev"] is True
 
+    def test_middle_page_has_next(self, api_client, sample_store):
+        """after=end_cursor on a middle page returns has_next=True and truncates to limit."""
+        for i in range(5):
+            api_client.post(
+                f"/api/v1/categories/{sample_store['id']}",
+                json={"name": f"CatMid {i}", "path": f"/catmid-{i}"},
+            )
+
+        page1 = api_client.get(f"/api/v1/categories/{sample_store['id']}", params={"limit": 2}).json()
+        page2_resp = api_client.get(
+            f"/api/v1/categories/{sample_store['id']}", params={"after": page1["end_cursor"], "limit": 2}
+        )
+
+        assert page2_resp.status_code == 200
+        page2 = page2_resp.json()
+        assert len(page2["items"]) == 2
+        assert page2["has_next"] is True
+        assert page2["has_prev"] is True
+
     def test_empty_result(self, api_client, sample_store):
         """No categories: empty paginated response."""
         response = api_client.get(f"/api/v1/categories/{sample_store['id']}")
