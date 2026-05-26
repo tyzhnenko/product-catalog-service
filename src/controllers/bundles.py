@@ -1,13 +1,16 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Response, Security, status
+from fastapi import Depends, HTTPException, Query, Response, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
+from src.core.types import PaginatedResponse
 from src.domain.bundles import BundlesService
 from src.domain.types.bundles import Bundle, BundleID, NewBundle, UpdateBundle
 from src.domain.types.stores import StoreID
+from src.settings import load_settings
 
+_settings = load_settings()
 router = APIRouter()
 
 
@@ -21,15 +24,18 @@ router = APIRouter()
 async def list_bundles(
     store_id: StoreID,
     service: Annotated[BundlesService, Depends(BundlesService)],
-) -> list[Bundle]:
+    after: str | None = Query(None, description="Cursor for forward pagination"),
+    before: str | None = Query(None, description="Cursor for backward pagination"),
+    limit: int = Query(_settings.pagination.default_limit, ge=1, le=_settings.pagination.max_limit),
+) -> PaginatedResponse[Bundle]:
     """List all bundles for a specific store."""
-    bundles = await service.list_bundles(store_id)
-    if bundles is None:
+    result = await service.list_bundles(store_id, after=after, before=before, limit=limit)
+    if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Store not found",
         )
-    return bundles
+    return result
 
 
 @router.post(

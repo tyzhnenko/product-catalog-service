@@ -156,7 +156,7 @@ class TestListLocations:
         response = api_client.get(f"/api/v1/locations/{sample_store['id']}")
 
         assert response.status_code == 200
-        assert response.json() == []
+        assert response.json()["items"] == []
 
     def test_list_locations_with_one_location(self, api_client, sample_location_data, sample_store):
         """Test listing locations with one location in database."""
@@ -168,7 +168,7 @@ class TestListLocations:
         response = api_client.get(f"/api/v1/locations/{sample_store['id']}")
 
         assert response.status_code == 200
-        locations = response.json()
+        locations = response.json()["items"]
         assert len(locations) == 1
         assert locations[0]["id"] == created_location["id"]
         assert locations[0]["name"] == sample_location_data["name"]
@@ -186,7 +186,7 @@ class TestListLocations:
         response = api_client.get(f"/api/v1/locations/{sample_store['id']}")
 
         assert response.status_code == 200
-        locations = response.json()
+        locations = response.json()["items"]
         assert len(locations) == 2
 
         location_names = {location["name"] for location in locations}
@@ -431,7 +431,7 @@ class TestLocationCRUDIntegration:
         # Read (list)
         list_response = api_client.get(f"/api/v1/locations/{sample_store['id']}")
         assert list_response.status_code == 200
-        assert len(list_response.json()) >= 1
+        assert len(list_response.json()["items"]) >= 1
 
         # Update
         update_data = {
@@ -623,7 +623,7 @@ class TestLocationAttributes:
         response = api_client.get(f"/api/v1/locations/{sample_store['id']}")
 
         assert response.status_code == 200
-        locations = response.json()
+        locations = response.json()["items"]
         assert len(locations) == 2
 
         # Find each location and verify attributes
@@ -632,3 +632,109 @@ class TestLocationAttributes:
 
         assert location_with_attrs["attributes"] == location_with_attributes_data["attributes"]
         assert location_without_attrs["attributes"] == {}
+
+
+class TestListLocationsPagination:
+    """Pagination tests for GET /api/v1/locations/{store_id}."""
+
+    def test_first_page_no_cursor(self, api_client, sample_store):
+        """No cursor: first page, has_next when more items exist."""
+        for i in range(3):
+            api_client.post(
+                f"/api/v1/locations/{sample_store['id']}",
+                json={"name": f"Location {i}", "store_id": sample_store["id"]},
+            )
+
+        response = api_client.get(f"/api/v1/locations/{sample_store['id']}", params={"limit": 2})
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["items"]) == 2
+        assert data["has_next"] is True
+        assert data["has_prev"] is False
+
+    def test_forward_pagination(self, api_client, sample_store):
+        """after=end_cursor fetches the next page."""
+        for i in range(3):
+            api_client.post(
+                f"/api/v1/locations/{sample_store['id']}",
+                json={"name": f"LocFwd {i}", "store_id": sample_store["id"]},
+            )
+
+        page1 = api_client.get(f"/api/v1/locations/{sample_store['id']}", params={"limit": 2}).json()
+        page2_resp = api_client.get(
+            f"/api/v1/locations/{sample_store['id']}", params={"after": page1["end_cursor"], "limit": 2}
+        )
+
+        assert page2_resp.status_code == 200
+        page2 = page2_resp.json()
+        assert len(page2["items"]) == 1
+        assert page2["has_next"] is False
+        assert page2["has_prev"] is True
+
+    def test_middle_page_has_next(self, api_client, sample_store):
+        """after=end_cursor on a middle page returns has_next=True and truncates to limit."""
+        for i in range(5):
+            api_client.post(
+                f"/api/v1/locations/{sample_store['id']}",
+                json={"name": f"LocMid {i}", "store_id": sample_store["id"]},
+            )
+
+        page1 = api_client.get(f"/api/v1/locations/{sample_store['id']}", params={"limit": 2}).json()
+        page2_resp = api_client.get(
+            f"/api/v1/locations/{sample_store['id']}", params={"after": page1["end_cursor"], "limit": 2}
+        )
+
+        assert page2_resp.status_code == 200
+        page2 = page2_resp.json()
+        assert len(page2["items"]) == 2
+        assert page2["has_next"] is True
+        assert page2["has_prev"] is True
+
+    def test_middle_page_has_prev(self, api_client, sample_store):
+        """before=start_cursor on a middle page returns has_prev=True and truncates to limit."""
+        for i in range(5):
+            api_client.post(
+                f"/api/v1/locations/{sample_store['id']}",
+                json={"name": f"LocPrev {i}", "store_id": sample_store["id"]},
+            )
+
+        page1 = api_client.get(f"/api/v1/locations/{sample_store['id']}", params={"limit": 2}).json()
+        page2 = api_client.get(
+            f"/api/v1/locations/{sample_store['id']}", params={"after": page1["end_cursor"], "limit": 2}
+        ).json()
+        page3 = api_client.get(
+            f"/api/v1/locations/{sample_store['id']}", params={"after": page2["end_cursor"], "limit": 2}
+        ).json()
+
+        back_resp = api_client.get(
+            f"/api/v1/locations/{sample_store['id']}", params={"before": page3["start_cursor"], "limit": 2}
+        )
+
+        assert back_resp.status_code == 200
+        back = back_resp.json()
+        assert len(back["items"]) == 2
+        assert back["has_prev"] is True
+        assert back["has_next"] is True
+
+    def test_empty_result(self, api_client, sample_store):
+        """No locations: empty paginated response."""
+        response = api_client.get(f"/api/v1/locations/{sample_store['id']}")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["items"] == []
+        assert data["start_cursor"] is None
+        assert data["end_cursor"] is None
+        assert data["has_next"] is False
+        assert data["has_prev"] is False
+
+    def test_invalid_cursor(self, api_client, sample_store):
+        """Invalid cursor returns 400."""
+        response = api_client.get(f"/api/v1/locations/{sample_store['id']}", params={"after": "not-a-valid-cursor"})
+        assert response.status_code == 400
+
+    def test_limit_max_enforced(self, api_client, sample_store):
+        """Limit > max_limit returns 422."""
+        response = api_client.get(f"/api/v1/locations/{sample_store['id']}", params={"limit": 999})
+        assert response.status_code == 422

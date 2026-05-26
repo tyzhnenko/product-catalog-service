@@ -2,6 +2,8 @@
 
 import pendulum
 
+from src.core.types import PaginatedResponse
+from src.core.utils import paginate
 from src.domain.types.categories import Category, CategoryID, NewCategory, UpdateCategory
 from src.domain.types.stores import StoreID
 from src.models.categories import CategoryModel
@@ -31,14 +33,24 @@ class CategoriesService:
 
         return Category.model_validate(category.model_dump())
 
-    async def list_categories(self, store_id: StoreID) -> list[Category] | None:
-        # Check if store exists
+    async def list_categories(
+        self,
+        store_id: StoreID,
+        after: str | None,
+        before: str | None,
+        limit: int,
+    ) -> PaginatedResponse[Category] | None:
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             return None
 
-        categories = await CategoryModel.find({"store_id": store_id, "deleted_at": None}).to_list()
-        return [Category.model_validate(category.model_dump()) for category in categories]
+        return await paginate(
+            CategoryModel.find({"store_id": store_id, "deleted_at": None}),
+            after,
+            before,
+            limit,
+            transform=Category.model_validate,
+        )
 
     async def get_category(self, store_id: StoreID, category_id: CategoryID) -> Category | None:
         # Check if store exists

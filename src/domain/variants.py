@@ -4,6 +4,8 @@ from typing import cast
 import pendulum
 
 from src.core.logging import logger
+from src.core.types import PaginatedResponse
+from src.core.utils import paginate
 from src.domain.types.locations import LocationID
 from src.domain.types.prices import LocationPriceMap
 from src.domain.types.products import ProductID
@@ -153,18 +155,26 @@ class VariantsService:
 
         return ProductVariant.model_validate(variant)
 
-    async def list_variants(self, store_id: StoreID, product_id: ProductID) -> list[ProductVariant] | None:
-        # Check if product exists and belongs to the store
+    async def list_variants(
+        self,
+        store_id: StoreID,
+        product_id: ProductID,
+        after: str | None,
+        before: str | None,
+        limit: int,
+    ) -> PaginatedResponse[ProductVariant] | None:
         product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
         if not product:
             logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
             return None
 
-        variants = await VariantModel.find(
-            {"product_id": product_id, "store_id": store_id, "deleted_at": None}
-        ).to_list()
-        logger.debug(f"Found {len(variants)} variants for product {product_id}")
-        return [ProductVariant.model_validate(variant) for variant in variants]
+        return await paginate(
+            VariantModel.find({"product_id": product_id, "store_id": store_id, "deleted_at": None}),
+            after,
+            before,
+            limit,
+            transform=ProductVariant.model_validate,
+        )
 
     async def get_variant(
         self, store_id: StoreID, product_id: ProductID, variant_id: VariantID

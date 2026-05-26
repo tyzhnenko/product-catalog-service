@@ -1,9 +1,10 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Response, Security, status
+from fastapi import Depends, HTTPException, Query, Response, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
+from src.core.types import PaginatedResponse
 from src.domain.types.products import ProductID
 from src.domain.types.stores import StoreID
 from src.domain.types.variants import (
@@ -13,7 +14,9 @@ from src.domain.types.variants import (
     VariantID,
 )
 from src.domain.variants import DuplicateVariantOptionsError, VariantsService
+from src.settings import load_settings
 
+_settings = load_settings()
 router = APIRouter()
 
 
@@ -28,15 +31,18 @@ async def list_variants(
     store_id: StoreID,
     product_id: ProductID,
     service: Annotated[VariantsService, Depends(VariantsService)],
-) -> list[ProductVariant]:
+    after: str | None = Query(None, description="Cursor for forward pagination"),
+    before: str | None = Query(None, description="Cursor for backward pagination"),
+    limit: int = Query(_settings.pagination.default_limit, ge=1, le=_settings.pagination.max_limit),
+) -> PaginatedResponse[ProductVariant]:
     """List all variants for a specific product."""
-    variants = await service.list_variants(store_id, product_id)
-    if variants is None:
+    result = await service.list_variants(store_id, product_id, after=after, before=before, limit=limit)
+    if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Product or store not found",
         )
-    return variants
+    return result
 
 
 @router.post(

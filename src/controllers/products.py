@@ -1,13 +1,16 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Response, Security, status
+from fastapi import Depends, HTTPException, Query, Response, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
+from src.core.types import PaginatedResponse
 from src.domain.products import ProductsService
 from src.domain.types.products import NewProduct, Product, ProductID, UpdateProduct
 from src.domain.types.stores import StoreID
+from src.settings import load_settings
 
+_settings = load_settings()
 router = APIRouter()
 
 
@@ -21,15 +24,18 @@ router = APIRouter()
 async def list_products(
     store_id: StoreID,
     service: Annotated[ProductsService, Depends(ProductsService)],
-) -> list[Product]:
+    after: str | None = Query(None, description="Cursor for forward pagination"),
+    before: str | None = Query(None, description="Cursor for backward pagination"),
+    limit: int = Query(_settings.pagination.default_limit, ge=1, le=_settings.pagination.max_limit),
+) -> PaginatedResponse[Product]:
     """List all products for a specific store."""
-    products = await service.list_products(store_id)
-    if products is None:
+    result = await service.list_products(store_id, after=after, before=before, limit=limit)
+    if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Store not found",
         )
-    return products
+    return result
 
 
 @router.post(

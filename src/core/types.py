@@ -1,7 +1,8 @@
 from contextlib import AsyncExitStack, _AsyncGeneratorContextManager, asynccontextmanager
-from typing import Any, Callable
+from typing import Any, Callable, Generic, TypeVar
 
 from fastapi import FastAPI
+from pydantic import BaseModel
 
 
 class FastAPIServices:
@@ -41,3 +42,14 @@ class FastAPIServices:
                 yield
 
         return combined_lifespan
+
+
+T = TypeVar("T")
+
+
+class PaginatedResponse(BaseModel, Generic[T]):
+    items: list[T]
+    start_cursor: str | None
+    end_cursor: str | None
+    has_next: bool
+    has_prev: bool

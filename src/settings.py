@@ -29,6 +29,11 @@ class Database(BaseSettings):
     password: str | None = None
 
 
+class Pagination(BaseSettings):
+    default_limit: int = 20
+    max_limit: int = 100
+
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         extra="ignore",
@@ -43,6 +48,7 @@ class Settings(BaseSettings):
     app: App = App()
     auth: Auth = Auth()
     db: Database = Database()
+    pagination: Pagination = Pagination()
 
     @classmethod
     def settings_customise_sources(

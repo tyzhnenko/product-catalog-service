@@ -401,7 +401,7 @@ class TestListVariants:
         response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}")
 
         assert response.status_code == 200
-        assert response.json() == []
+        assert response.json()["items"] == []
 
     def test_list_variants_with_one_variant(self, api_client, sample_variant_data, sample_store, sample_product):
         """Test listing variants with one variant in database."""
@@ -415,7 +415,7 @@ class TestListVariants:
         response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}")
 
         assert response.status_code == 200
-        variants = response.json()
+        variants = response.json()["items"]
         assert len(variants) == 1
         assert variants[0]["id"] == created_variant["id"]
         assert variants[0]["title"] == sample_variant_data["title"]
@@ -432,7 +432,7 @@ class TestListVariants:
         response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}")
 
         assert response.status_code == 200
-        variants = response.json()
+        variants = response.json()["items"]
         assert len(variants) == 2
 
         variant_titles = {variant["title"] for variant in variants}
@@ -450,7 +450,7 @@ class TestListVariants:
         response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{another_product['id']}")
 
         assert response.status_code == 200
-        variants = response.json()
+        variants = response.json()["items"]
         assert len(variants) == 0
 
     def test_list_variants_nonexistent_product(self, api_client, sample_store):
@@ -781,7 +781,7 @@ class TestVariantCRUDIntegration:
         # Read (list)
         list_response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}")
         assert list_response.status_code == 200
-        assert len(list_response.json()) >= 1
+        assert len(list_response.json()["items"]) >= 1
 
         # Update
         update_data = {
@@ -835,7 +835,7 @@ class TestVariantCRUDIntegration:
         # List variants - should have both
         list_response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}")
         assert list_response.status_code == 200
-        variants = list_response.json()
+        variants = list_response.json()["items"]
         assert len(variants) == 2
 
         variant_ids = {v["id"] for v in variants}
@@ -1195,7 +1195,7 @@ class TestVariantPriceMap:
         response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}")
 
         assert response.status_code == 200
-        variants = response.json()
+        variants = response.json()["items"]
         assert len(variants) == 2
 
         # Both should have price data
@@ -1700,7 +1700,7 @@ class TestVariantRegionPrice:
         response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}")
 
         assert response.status_code == 200
-        variants = response.json()
+        variants = response.json()["items"]
         assert len(variants) >= 1
 
         # Find our variant
@@ -2160,7 +2160,7 @@ class TestVariantImages:
         response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}")
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["items"]
         assert len(data) == 2
 
         # Find variant with images
@@ -2343,7 +2343,7 @@ class TestVariantAttributeTypesConversion:
         list_response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}")
 
         assert list_response.status_code == 200, f"Failed to list variants: {list_response.json()}"
-        variants = list_response.json()
+        variants = list_response.json()["items"]
         assert len(variants) >= 1
 
         # Find our variant
@@ -2471,3 +2471,125 @@ class TestVariantAttributeTypesConversion:
         assert retrieved_variant["attributes"]["weight_gr"]["value"] == "0"
         assert retrieved_variant["attributes"]["discount"]["value"] == "0.00"
         assert retrieved_variant["price"]["free"]["value"] == "0.00"
+
+
+class TestListVariantsPagination:
+    """Pagination tests for GET /api/v1/variants/{store_id}/{product_id}."""
+
+    def test_first_page_no_cursor(self, api_client, sample_store, sample_product):
+        """No cursor: first page, has_next when more items exist."""
+        for i in range(3):
+            api_client.post(
+                f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+                json={"title": f"Variant {i}", "options": [{"name": "size", "value": str(i)}]},
+            )
+
+        response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", params={"limit": 2})
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["items"]) == 2
+        assert data["has_next"] is True
+        assert data["has_prev"] is False
+
+    def test_forward_pagination(self, api_client, sample_store, sample_product):
+        """after=end_cursor fetches the next page."""
+        for i in range(3):
+            api_client.post(
+                f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+                json={"title": f"VarFwd {i}", "options": [{"name": "size", "value": str(i)}]},
+            )
+
+        page1 = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", params={"limit": 2}
+        ).json()
+        page2_resp = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"after": page1["end_cursor"], "limit": 2},
+        )
+
+        assert page2_resp.status_code == 200
+        page2 = page2_resp.json()
+        assert len(page2["items"]) == 1
+        assert page2["has_next"] is False
+        assert page2["has_prev"] is True
+
+    def test_middle_page_has_next(self, api_client, sample_store, sample_product):
+        """after=end_cursor on a middle page returns has_next=True and truncates to limit."""
+        for i in range(5):
+            api_client.post(
+                f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+                json={"title": f"VarMid {i}", "options": [{"name": "size", "value": str(i)}]},
+            )
+
+        page1 = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", params={"limit": 2}
+        ).json()
+        page2_resp = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"after": page1["end_cursor"], "limit": 2},
+        )
+
+        assert page2_resp.status_code == 200
+        page2 = page2_resp.json()
+        assert len(page2["items"]) == 2
+        assert page2["has_next"] is True
+        assert page2["has_prev"] is True
+
+    def test_middle_page_has_prev(self, api_client, sample_store, sample_product):
+        """before=start_cursor on a middle page returns has_prev=True and truncates to limit."""
+        for i in range(5):
+            api_client.post(
+                f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+                json={"title": f"VarPrev {i}", "options": [{"name": "size", "value": str(i)}]},
+            )
+
+        page1 = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", params={"limit": 2}
+        ).json()
+        page2 = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"after": page1["end_cursor"], "limit": 2},
+        ).json()
+        page3 = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"after": page2["end_cursor"], "limit": 2},
+        ).json()
+
+        back_resp = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"before": page3["start_cursor"], "limit": 2},
+        )
+
+        assert back_resp.status_code == 200
+        back = back_resp.json()
+        assert len(back["items"]) == 2
+        assert back["has_prev"] is True
+        assert back["has_next"] is True
+
+    def test_empty_result(self, api_client, sample_store, sample_product):
+        """No variants: empty paginated response."""
+        response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["items"] == []
+        assert data["start_cursor"] is None
+        assert data["end_cursor"] is None
+        assert data["has_next"] is False
+        assert data["has_prev"] is False
+
+    def test_invalid_cursor(self, api_client, sample_store, sample_product):
+        """Invalid cursor returns 400."""
+        response = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"after": "not-a-valid-cursor"},
+        )
+        assert response.status_code == 400
+
+    def test_limit_max_enforced(self, api_client, sample_store, sample_product):
+        """Limit > max_limit returns 422."""
+        response = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", params={"limit": 999}
+        )
+        assert response.status_code == 422

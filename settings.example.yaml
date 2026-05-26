@@ -23,3 +23,7 @@ db:
   password: <PASSWORD>
   port: 27017
   database: ledger
+
+pagination:
+  default_limit: 20
+  max_limit: 100

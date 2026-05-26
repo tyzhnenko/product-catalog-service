@@ -3,6 +3,8 @@
 import pendulum
 
 from src.core.logging import logger
+from src.core.types import PaginatedResponse
+from src.core.utils import paginate
 from src.domain.types.stores import NewStore, Store, StoreID, UpdateStore
 from src.models.bundles import BundleModel
 from src.models.categories import CategoryModel
@@ -22,9 +24,20 @@ class StoresService:
 
         return Store.model_validate(store)
 
-    async def list_stores(self) -> list[Store]:
-        stores = await StoreModel.find({"deleted_at": None}).to_list()
-        return [Store.model_validate(store) for store in stores]
+    async def list_stores(
+        self,
+        after: str | None,
+        before: str | None,
+        limit: int,
+    ) -> PaginatedResponse[Store]:
+        base_filter: dict = {"deleted_at": None}
+        return await paginate(
+            StoreModel.find(base_filter),
+            after,
+            before,
+            limit,
+            transform=Store.model_validate,
+        )
 
     async def get_store(self, store_id: StoreID) -> Store | None:
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()

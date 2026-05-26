@@ -156,6 +156,7 @@ class Category(BaseModel):
 
     model_config = ConfigDict(
         title="Category",
+        from_attributes=True,
         json_schema_extra={
             "description": "Category model",
         },

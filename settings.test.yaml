@@ -20,3 +20,7 @@ db:
   password:
   port: 27018
   database: product_catalog_test
+
+pagination:
+  default_limit: 20
+  max_limit: 100
