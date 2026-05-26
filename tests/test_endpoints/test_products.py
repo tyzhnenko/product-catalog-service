@@ -785,6 +785,29 @@ class TestListProductsPagination:
         assert page2["has_next"] is True
         assert page2["has_prev"] is True
 
+    def test_middle_page_has_prev(self, api_client, sample_store):
+        """before=start_cursor on a middle page returns has_prev=True and truncates to limit."""
+        for i in range(5):
+            api_client.post(f"/api/v1/products/{sample_store['id']}", json={"name": f"ProdPrev {i}", "tags": []})
+
+        page1 = api_client.get(f"/api/v1/products/{sample_store['id']}", params={"limit": 2}).json()
+        page2 = api_client.get(
+            f"/api/v1/products/{sample_store['id']}", params={"after": page1["end_cursor"], "limit": 2}
+        ).json()
+        page3 = api_client.get(
+            f"/api/v1/products/{sample_store['id']}", params={"after": page2["end_cursor"], "limit": 2}
+        ).json()
+
+        back_resp = api_client.get(
+            f"/api/v1/products/{sample_store['id']}", params={"before": page3["start_cursor"], "limit": 2}
+        )
+
+        assert back_resp.status_code == 200
+        back = back_resp.json()
+        assert len(back["items"]) == 2
+        assert back["has_prev"] is True
+        assert back["has_next"] is True
+
     def test_backward_pagination(self, api_client, sample_store):
         """before=start_cursor of page 2 returns page 1."""
         ids = []
