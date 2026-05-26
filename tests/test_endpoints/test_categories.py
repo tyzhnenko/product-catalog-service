@@ -184,7 +184,7 @@ class TestListCategories:
         response = api_client.get(f"/api/v1/categories/{sample_store['id']}")
 
         assert response.status_code == 200
-        assert response.json() == []
+        assert response.json()["items"] == []
 
     def test_list_categories_with_one_category(self, api_client, sample_category_data, sample_store):
         """Test listing categories with one category in database."""
@@ -196,7 +196,7 @@ class TestListCategories:
         response = api_client.get(f"/api/v1/categories/{sample_store['id']}")
 
         assert response.status_code == 200
-        categories = response.json()
+        categories = response.json()["items"]
         assert len(categories) == 1
         assert categories[0]["id"] == created_category["id"]
         assert categories[0]["name"] == sample_category_data["name"]
@@ -213,7 +213,7 @@ class TestListCategories:
         response = api_client.get(f"/api/v1/categories/{sample_store['id']}")
 
         assert response.status_code == 200
-        categories = response.json()
+        categories = response.json()["items"]
         assert len(categories) == 2
 
         category_names = {category["name"] for category in categories}
@@ -234,7 +234,7 @@ class TestListCategories:
         response = api_client.get(f"/api/v1/categories/{sample_store['id']}")
 
         assert response.status_code == 200
-        categories = response.json()
+        categories = response.json()["items"]
         assert len(categories) == 0
 
 
@@ -526,7 +526,7 @@ class TestCategoryCRUDIntegration:
         # Read (list)
         list_response = api_client.get(f"/api/v1/categories/{sample_store['id']}")
         assert list_response.status_code == 200
-        assert len(list_response.json()) >= 1
+        assert len(list_response.json()["items"]) >= 1
 
         # Update
         update_data = {
@@ -601,13 +601,13 @@ class TestCategoryCRUDIntegration:
 
         # List categories for store 1
         list_store1 = api_client.get(f"/api/v1/categories/{sample_store['id']}")
-        assert len(list_store1.json()) == 1
-        assert list_store1.json()[0]["id"] == cat1["id"]
+        assert len(list_store1.json()["items"]) == 1
+        assert list_store1.json()["items"][0]["id"] == cat1["id"]
 
         # List categories for store 2
         list_store2 = api_client.get(f"/api/v1/categories/{another_store['id']}")
-        assert len(list_store2.json()) == 1
-        assert list_store2.json()[0]["id"] == cat2["id"]
+        assert len(list_store2.json()["items"]) == 1
+        assert list_store2.json()["items"][0]["id"] == cat2["id"]
 
     def test_hierarchical_categories(self, api_client, sample_store):
         """Test creating hierarchical category structure."""
@@ -908,7 +908,7 @@ class TestCategoryImages:
         response = api_client.get(f"/api/v1/categories/{sample_store['id']}")
 
         assert response.status_code == 200
-        data = response.json()
+        data = response.json()["items"]
         assert len(data) == 2
 
         # Find categories
@@ -968,4 +968,65 @@ class TestCategoryImages:
 
         response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=category_data)
 
+        assert response.status_code == 422
+
+
+class TestListCategoriesPagination:
+    """Pagination tests for GET /api/v1/categories/{store_id}."""
+
+    def test_first_page_no_cursor(self, api_client, sample_store):
+        """No cursor: first page, has_next when more items exist."""
+        for i in range(3):
+            api_client.post(
+                f"/api/v1/categories/{sample_store['id']}",
+                json={"name": f"Category {i}", "path": f"/cat-{i}"},
+            )
+
+        response = api_client.get(f"/api/v1/categories/{sample_store['id']}", params={"limit": 2})
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["items"]) == 2
+        assert data["has_next"] is True
+        assert data["has_prev"] is False
+
+    def test_forward_pagination(self, api_client, sample_store):
+        """after=end_cursor fetches the next page."""
+        for i in range(3):
+            api_client.post(
+                f"/api/v1/categories/{sample_store['id']}",
+                json={"name": f"CatFwd {i}", "path": f"/catfwd-{i}"},
+            )
+
+        page1 = api_client.get(f"/api/v1/categories/{sample_store['id']}", params={"limit": 2}).json()
+        page2_resp = api_client.get(
+            f"/api/v1/categories/{sample_store['id']}", params={"after": page1["end_cursor"], "limit": 2}
+        )
+
+        assert page2_resp.status_code == 200
+        page2 = page2_resp.json()
+        assert len(page2["items"]) == 1
+        assert page2["has_next"] is False
+        assert page2["has_prev"] is True
+
+    def test_empty_result(self, api_client, sample_store):
+        """No categories: empty paginated response."""
+        response = api_client.get(f"/api/v1/categories/{sample_store['id']}")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["items"] == []
+        assert data["start_cursor"] is None
+        assert data["end_cursor"] is None
+        assert data["has_next"] is False
+        assert data["has_prev"] is False
+
+    def test_invalid_cursor(self, api_client, sample_store):
+        """Invalid cursor returns 400."""
+        response = api_client.get(f"/api/v1/categories/{sample_store['id']}", params={"after": "not-a-valid-cursor"})
+        assert response.status_code == 400
+
+    def test_limit_max_enforced(self, api_client, sample_store):
+        """Limit > max_limit returns 422."""
+        response = api_client.get(f"/api/v1/categories/{sample_store['id']}", params={"limit": 999})
         assert response.status_code == 422

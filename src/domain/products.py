@@ -3,6 +3,8 @@
 import pendulum
 
 from src.core.logging import logger
+from src.core.types import PaginatedResponse
+from src.core.utils import paginate
 from src.domain.types.categories import CategoryID
 from src.domain.types.products import (
     NewProduct,
@@ -71,16 +73,25 @@ class ProductsService:
 
         return Product.model_validate(product)
 
-    async def list_products(self, store_id: StoreID) -> list[Product] | None:
-        # Check if store exists
+    async def list_products(
+        self,
+        store_id: StoreID,
+        after: str | None,
+        before: str | None,
+        limit: int,
+    ) -> PaginatedResponse[Product] | None:
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
 
-        products = await ProductModel.find({"store_id": store_id, "deleted_at": None}).to_list()
-        logger.debug(f"Found {len(products)} products for store {store_id}")
-        return [Product.model_validate(product) for product in products]
+        return await paginate(
+            ProductModel.find({"store_id": store_id, "deleted_at": None}),
+            after,
+            before,
+            limit,
+            transform=Product.model_validate,
+        )
 
     async def get_product(self, store_id: StoreID, product_id: ProductID) -> Product | None:
         # Check if store exists

@@ -15,37 +15,37 @@ By using this project or its source code, for any purpose and in any shape or fo
 - [x] Product management
     - [x] Dynamic attributes
     - [x] Categories assignment
+    - [x] Paginated listing
     - [ ] Search by attributes (coming soon)
     - [ ] Batch create/update (coming soon)
-    - [ ] Paginated listing (coming soon)
 - [x] Variant management with option combinations
     - [x] Dynamic attributes
     - [x] Default price management
     - [x] Location specific price management
     - [x] Region specific price management
+    - [x] Paginated listing
     - [ ] Search by attributes (coming soon)
     - [ ] Search by prices (coming soon)
     - [ ] Batch create/update (coming soon)
-    - [ ] Paginated listing (coming soon)
 - [x] Categories management
     - [x] Attributes management
+    - [x] Paginated listing
     - [ ] Search by attributes (coming soon)
     - [ ] Batch create/update (coming soon)
-    - [ ] Paginated listing (coming soon)
 - [x] Locations management
     - [x] Attributes management
+    - [x] Paginated listing
     - [ ] Search by attributes (coming soon)
     - [ ] Batch create/update (coming soon)
-    - [ ] Paginated listing (coming soon)
 - [x] Bundles management
     - [x] Dynamic attributes
     - [x] Default price management
     - [x] Location specific price management
     - [x] Region specific price management
+    - [x] Paginated listing
     - [ ] Search by attributes (coming soon)
     - [ ] Search by prices (coming soon)
     - [ ] Batch create/update (coming soon)
-    - [ ] Paginated listing (coming soon)
 
 ## Start with Docker
 

@@ -1,13 +1,16 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Security, status
+from fastapi import Depends, HTTPException, Query, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
+from src.core.types import PaginatedResponse
 from src.domain.categories import CategoriesService
 from src.domain.types.categories import Category, CategoryID, NewCategory, UpdateCategory
 from src.domain.types.stores import StoreID
+from src.settings import load_settings
 
+_settings = load_settings()
 router = APIRouter()
 
 
@@ -21,14 +24,17 @@ router = APIRouter()
 async def list_categories(
     store_id: StoreID,
     service: Annotated[CategoriesService, Depends(CategoriesService)],
-) -> list[Category]:
-    categories = await service.list_categories(store_id)
-    if categories is None:
+    after: str | None = Query(None, description="Cursor for forward pagination"),
+    before: str | None = Query(None, description="Cursor for backward pagination"),
+    limit: int = Query(_settings.pagination.default_limit, ge=1, le=_settings.pagination.max_limit),
+) -> PaginatedResponse[Category]:
+    result = await service.list_categories(store_id, after=after, before=before, limit=limit)
+    if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Store not found",
         )
-    return categories
+    return result
 
 
 @router.post(

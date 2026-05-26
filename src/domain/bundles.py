@@ -4,6 +4,8 @@ from typing import cast
 import pendulum
 
 from src.core.logging import logger
+from src.core.types import PaginatedResponse
+from src.core.utils import paginate
 from src.domain.types.bundles import Bundle, BundleID, NewBundle, UpdateBundle
 from src.domain.types.categories import CategoryID
 from src.domain.types.locations import LocationID
@@ -149,25 +151,26 @@ class BundlesService:
 
         return Bundle.model_validate(bundle.model_dump())
 
-    async def list_bundles(self, store_id: StoreID) -> list[Bundle] | None:
-        """List all non-deleted bundles for a specific store.
-
-        Args:
-            store_id: The UUID of the store.
-
-        Returns:
-            A list of Bundle objects, or None if the store doesn't exist.
-
-        """
-        # Check if store exists
+    async def list_bundles(
+        self,
+        store_id: StoreID,
+        after: str | None,
+        before: str | None,
+        limit: int,
+    ) -> PaginatedResponse[Bundle] | None:
+        """List all non-deleted bundles for a specific store."""
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
 
-        bundles = await BundleModel.find({"store_id": store_id, "deleted_at": None}).to_list()
-        logger.debug(f"Found {len(bundles)} bundles for store {store_id}")
-        return [Bundle.model_validate(bundle.model_dump()) for bundle in bundles]
+        return await paginate(
+            BundleModel.find({"store_id": store_id, "deleted_at": None}),
+            after,
+            before,
+            limit,
+            transform=Bundle.model_validate,
+        )
 
     async def get_bundle(self, store_id: StoreID, bundle_id: BundleID) -> Bundle | None:
         """Get a specific bundle by ID from a store.

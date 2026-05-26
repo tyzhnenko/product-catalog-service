@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic_extra_types.pendulum_dt import DateTime
 
 from src.domain.types.attributes import AttributesMap
@@ -93,6 +93,8 @@ class NewBundle(BaseModel):
 
 
 class Bundle(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: BundleID
     name: BundleName
     description: BundleDescription | None = None

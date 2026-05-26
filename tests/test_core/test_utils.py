@@ -1,7 +1,13 @@
 # ruff: noqa: S101, D100, D101, D102, D103
 """Tests for core.utils module."""
 
-from src.core.utils import split_path
+import base64
+
+import pytest
+from beanie import PydanticObjectId
+from fastapi import HTTPException
+
+from src.core.utils import decode_cursor, encode_cursor, split_path
 
 
 class TestSplitPath:
@@ -74,3 +80,40 @@ class TestSplitPath:
             "/products/coffee-beans",
             "/products/coffee-beans/premium_blend",
         ]
+
+
+class TestEncodeCursor:
+    def test_returns_string(self):
+        assert isinstance(encode_cursor(PydanticObjectId()), str)
+
+    def test_urlsafe_characters(self):
+        for _ in range(20):
+            result = encode_cursor(PydanticObjectId())
+            assert "+" not in result
+            assert "/" not in result
+
+    def test_roundtrip(self):
+        oid = PydanticObjectId()
+        assert decode_cursor(encode_cursor(oid)) == oid
+
+    def test_different_ids_produce_different_cursors(self):
+        assert encode_cursor(PydanticObjectId()) != encode_cursor(PydanticObjectId())
+
+
+class TestDecodeCursor:
+    def test_valid_cursor(self):
+        oid = PydanticObjectId()
+        assert decode_cursor(encode_cursor(oid)) == oid
+
+    def test_invalid_cursor_raises_400(self):
+        with pytest.raises(HTTPException) as exc:
+            decode_cursor("!!!not-valid-base64!!!")
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "Invalid cursor"
+
+    def test_valid_base64_but_not_objectid_raises_400(self):
+        garbage = base64.urlsafe_b64encode(b"not-an-objectid").decode()
+        with pytest.raises(HTTPException) as exc:
+            decode_cursor(garbage)
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "Invalid cursor"

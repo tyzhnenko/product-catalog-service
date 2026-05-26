@@ -278,7 +278,7 @@ class TestListProducts:
         response = api_client.get(f"/api/v1/products/{sample_store['id']}")
 
         assert response.status_code == 200
-        assert response.json() == []
+        assert response.json()["items"] == []
 
     def test_list_products_with_one_product(self, api_client, sample_product_data, sample_store):
         """Test listing products with one product in database."""
@@ -290,7 +290,7 @@ class TestListProducts:
         response = api_client.get(f"/api/v1/products/{sample_store['id']}")
 
         assert response.status_code == 200
-        products = response.json()
+        products = response.json()["items"]
         assert len(products) == 1
         assert products[0]["id"] == created_product["id"]
         assert products[0]["name"] == sample_product_data["name"]
@@ -307,7 +307,7 @@ class TestListProducts:
         response = api_client.get(f"/api/v1/products/{sample_store['id']}")
 
         assert response.status_code == 200
-        products = response.json()
+        products = response.json()["items"]
         assert len(products) == 2
 
         product_names = {product["name"] for product in products}
@@ -323,7 +323,7 @@ class TestListProducts:
         response = api_client.get(f"/api/v1/products/{another_store['id']}")
 
         assert response.status_code == 200
-        products = response.json()
+        products = response.json()["items"]
         assert len(products) == 0
 
     def test_list_products_nonexistent_store(self, api_client):
@@ -615,7 +615,7 @@ class TestProductCRUDIntegration:
         # Read (list)
         list_response = api_client.get(f"/api/v1/products/{sample_store['id']}")
         assert list_response.status_code == 200
-        assert len(list_response.json()) >= 1
+        assert len(list_response.json()["items"]) >= 1
 
         # Update
         update_data = {
@@ -667,7 +667,7 @@ class TestProductRecursiveDelete:
         # Verify variants exist before deletion
         variants_list = api_client.get(f"/api/v1/variants/{sample_store['id']}/{product_id}")
         assert variants_list.status_code == 200
-        assert len(variants_list.json()) == 3
+        assert len(variants_list.json()["items"]) == 3
 
         # Delete the product
         delete_response = api_client.delete(f"/api/v1/products/{sample_store['id']}/{product_id}")
@@ -686,7 +686,7 @@ class TestProductRecursiveDelete:
         variants_list_after = api_client.get(f"/api/v1/variants/{sample_store['id']}/{product_id}")
         assert variants_list_after.status_code in [404, 200]
         if variants_list_after.status_code == 200:
-            assert len(variants_list_after.json()) == 0
+            assert len(variants_list_after.json()["items"]) == 0
 
     def test_delete_product_with_no_variants(self, api_client, sample_store):
         """Test that deleting a product with no variants works correctly."""
@@ -735,3 +735,88 @@ class TestProductRecursiveDelete:
 
         variant2_get = api_client.get(f"/api/v1/variants/{sample_store['id']}/{product2_id}/{variant2_id}")
         assert variant2_get.status_code == 200
+
+
+class TestListProductsPagination:
+    """Pagination tests for GET /api/v1/products/{store_id}."""
+
+    def test_first_page_no_cursor(self, api_client, sample_store):
+        """No cursor: first page, has_next when more items exist."""
+        for i in range(3):
+            api_client.post(f"/api/v1/products/{sample_store['id']}", json={"name": f"Product {i}", "tags": []})
+
+        response = api_client.get(f"/api/v1/products/{sample_store['id']}", params={"limit": 2})
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["items"]) == 2
+        assert data["has_next"] is True
+        assert data["has_prev"] is False
+        assert data["end_cursor"] is not None
+
+    def test_forward_pagination(self, api_client, sample_store):
+        """after=end_cursor fetches the next page."""
+        for i in range(3):
+            api_client.post(f"/api/v1/products/{sample_store['id']}", json={"name": f"Product {i}", "tags": []})
+
+        page1 = api_client.get(f"/api/v1/products/{sample_store['id']}", params={"limit": 2}).json()
+        end_cursor = page1["end_cursor"]
+
+        page2_resp = api_client.get(f"/api/v1/products/{sample_store['id']}", params={"after": end_cursor, "limit": 2})
+        assert page2_resp.status_code == 200
+        page2 = page2_resp.json()
+        assert len(page2["items"]) == 1
+        assert page2["has_next"] is False
+        assert page2["has_prev"] is True
+
+    def test_backward_pagination(self, api_client, sample_store):
+        """before=start_cursor of page 2 returns page 1."""
+        ids = []
+        for i in range(3):
+            r = api_client.post(f"/api/v1/products/{sample_store['id']}", json={"name": f"Product {i}", "tags": []})
+            ids.append(r.json()["id"])
+
+        page1 = api_client.get(f"/api/v1/products/{sample_store['id']}", params={"limit": 2}).json()
+        page2 = api_client.get(
+            f"/api/v1/products/{sample_store['id']}",
+            params={"after": page1["end_cursor"], "limit": 2},
+        ).json()
+
+        back = api_client.get(
+            f"/api/v1/products/{sample_store['id']}",
+            params={"before": page2["start_cursor"], "limit": 2},
+        ).json()
+        assert [item["id"] for item in back["items"]] == [item["id"] for item in page1["items"]]
+
+    def test_empty_result(self, api_client, sample_store):
+        """No products: empty paginated response."""
+        response = api_client.get(f"/api/v1/products/{sample_store['id']}")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["items"] == []
+        assert data["start_cursor"] is None
+        assert data["end_cursor"] is None
+        assert data["has_next"] is False
+        assert data["has_prev"] is False
+
+    def test_invalid_cursor(self, api_client, sample_store):
+        """Invalid cursor returns 400."""
+        response = api_client.get(f"/api/v1/products/{sample_store['id']}", params={"after": "not-a-valid-cursor"})
+        assert response.status_code == 400
+
+    def test_custom_limit(self, api_client, sample_store):
+        """Limit query param is respected."""
+        for i in range(5):
+            api_client.post(f"/api/v1/products/{sample_store['id']}", json={"name": f"Product {i}", "tags": []})
+
+        response = api_client.get(f"/api/v1/products/{sample_store['id']}", params={"limit": 2})
+
+        assert response.status_code == 200
+        assert len(response.json()["items"]) == 2
+        assert response.json()["has_next"] is True
+
+    def test_limit_max_enforced(self, api_client, sample_store):
+        """Limit > max_limit returns 422."""
+        response = api_client.get(f"/api/v1/products/{sample_store['id']}", params={"limit": 999})
+        assert response.status_code == 422
