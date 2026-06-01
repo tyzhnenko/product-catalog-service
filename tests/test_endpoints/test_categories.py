@@ -1075,3 +1075,62 @@ class TestListCategoriesPagination:
         """Limit > max_limit returns 422."""
         response = api_client.get(f"/api/v1/categories/{sample_store['id']}", params={"limit": 999})
         assert response.status_code == 422
+
+
+class TestListCategoriesByAttributes:
+    """Tests for GET /api/v1/categories/{store_id}?attrs= filtering."""
+
+    def test_filter_by_attribute_match(self, api_client, sample_category_data, another_category_data, sample_store):
+        """Filter returns only categories matching the attribute value."""
+        # another_category_data has no attributes, add one
+        another_category_data["attributes"] = {"brand": {"type": "string", "name": "brand", "value": "Premium"}}
+        api_client.post(f"/api/v1/categories/{sample_store['id']}", json=sample_category_data)
+        api_client.post(f"/api/v1/categories/{sample_store['id']}", json=another_category_data)
+
+        response = api_client.get(
+            f"/api/v1/categories/{sample_store['id']}",
+            params={"attrs": "brand:Generic"},
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["attributes"]["brand"]["value"] == "Generic"
+
+    def test_filter_by_attribute_no_match(self, api_client, sample_category_data, sample_store):
+        """Filter returns empty list when no categories match."""
+        api_client.post(f"/api/v1/categories/{sample_store['id']}", json=sample_category_data)
+
+        response = api_client.get(
+            f"/api/v1/categories/{sample_store['id']}",
+            params={"attrs": "brand:Unknown"},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["items"] == []
+
+    def test_filter_by_same_key_multiple_values_or(
+        self, api_client, sample_category_data, another_category_data, sample_store
+    ):
+        """Same-key attrs with multiple values are ORed."""
+        another_category_data["attributes"] = {"brand": {"type": "string", "name": "brand", "value": "Premium"}}
+        api_client.post(f"/api/v1/categories/{sample_store['id']}", json=sample_category_data)
+        api_client.post(f"/api/v1/categories/{sample_store['id']}", json=another_category_data)
+
+        response = api_client.get(
+            f"/api/v1/categories/{sample_store['id']}",
+            params=[("attrs", "brand:Generic"), ("attrs", "brand:Premium")],
+        )
+
+        assert response.status_code == 200
+        assert len(response.json()["items"]) == 2
+
+    def test_empty_attrs_returns_all(self, api_client, sample_category_data, another_category_data, sample_store):
+        """Empty attrs list applies no filter."""
+        api_client.post(f"/api/v1/categories/{sample_store['id']}", json=sample_category_data)
+        api_client.post(f"/api/v1/categories/{sample_store['id']}", json=another_category_data)
+
+        response = api_client.get(f"/api/v1/categories/{sample_store['id']}")
+
+        assert response.status_code == 200
+        assert len(response.json()["items"]) == 2

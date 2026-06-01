@@ -1359,3 +1359,128 @@ class TestListBundlesPagination:
         """Limit > max_limit returns 422."""
         response = api_client.get(f"/api/v1/bundles/{sample_store['id']}", params={"limit": 999})
         assert response.status_code == 422
+
+
+class TestListBundlesByAttributes:
+    """Tests for GET /api/v1/bundles/{store_id}?attrs= filtering."""
+
+    def test_filter_by_attribute_match(self, api_client, sample_bundle_data, another_bundle_data, sample_store):
+        """Filter returns only bundles matching the attribute value."""
+        api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=sample_bundle_data)
+        api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=another_bundle_data)
+
+        response = api_client.get(
+            f"/api/v1/bundles/{sample_store['id']}",
+            params={"attrs": "discount:20%"},
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["attributes"]["discount"]["value"] == "20%"
+
+    def test_filter_by_attribute_no_match(self, api_client, sample_bundle_data, sample_store):
+        """Filter returns empty list when no bundles match."""
+        api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=sample_bundle_data)
+
+        response = api_client.get(
+            f"/api/v1/bundles/{sample_store['id']}",
+            params={"attrs": "discount:50%"},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["items"] == []
+
+    def test_filter_by_same_key_multiple_values_or(
+        self, api_client, sample_bundle_data, another_bundle_data, sample_store
+    ):
+        """Same-key attrs with multiple values are ORed."""
+        another_bundle_data["attributes"] = {"discount": {"type": "string", "name": "discount", "value": "10%"}}
+        api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=sample_bundle_data)
+        api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=another_bundle_data)
+
+        response = api_client.get(
+            f"/api/v1/bundles/{sample_store['id']}",
+            params=[("attrs", "discount:20%"), ("attrs", "discount:10%")],
+        )
+
+        assert response.status_code == 200
+        assert len(response.json()["items"]) == 2
+
+    def test_empty_attrs_returns_all(self, api_client, sample_bundle_data, another_bundle_data, sample_store):
+        """Empty attrs list applies no filter."""
+        api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=sample_bundle_data)
+        api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=another_bundle_data)
+
+        response = api_client.get(f"/api/v1/bundles/{sample_store['id']}")
+
+        assert response.status_code == 200
+        assert len(response.json()["items"]) == 2
+
+
+class TestListBundlesByPrice:
+    """Tests for price/location_price/region_price filtering on list bundles."""
+
+    @pytest.fixture
+    def bundle_with_price(self, api_client, sample_store):
+        data = {
+            "name": "Affordable Bundle",
+            "price": {"USD": {"type": "decimal", "name": "USD Price", "value": "25.00"}},
+        }
+        return api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=data).json()
+
+    @pytest.fixture
+    def bundle_with_high_price(self, api_client, sample_store):
+        data = {
+            "name": "Premium Bundle",
+            "price": {"USD": {"type": "decimal", "name": "USD Price", "value": "99.00"}},
+        }
+        return api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=data).json()
+
+    def test_filter_by_price_min(self, api_client, sample_store, bundle_with_price, bundle_with_high_price):
+        """price_min filters out bundles below the minimum."""
+        response = api_client.get(
+            f"/api/v1/bundles/{sample_store['id']}",
+            params={"price_key": "USD", "price_min": "50.00"},
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["id"] == bundle_with_high_price["id"]
+
+    def test_filter_by_price_max(self, api_client, sample_store, bundle_with_price, bundle_with_high_price):
+        """price_max filters out bundles above the maximum."""
+        response = api_client.get(
+            f"/api/v1/bundles/{sample_store['id']}",
+            params={"price_key": "USD", "price_max": "50.00"},
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["id"] == bundle_with_price["id"]
+
+    def test_filter_by_price_range(self, api_client, sample_store, bundle_with_price, bundle_with_high_price):
+        """price_min + price_max together define an inclusive range."""
+        response = api_client.get(
+            f"/api/v1/bundles/{sample_store['id']}",
+            params={"price_key": "USD", "price_min": "10.00", "price_max": "50.00"},
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["id"] == bundle_with_price["id"]
+
+    def test_price_key_without_min_max_returns_all(
+        self, api_client, sample_store, bundle_with_price, bundle_with_high_price
+    ):
+        """price_key alone without min/max applies no filter."""
+        response = api_client.get(
+            f"/api/v1/bundles/{sample_store['id']}",
+            params={"price_key": "USD"},
+        )
+
+        assert response.status_code == 200
+        assert len(response.json()["items"]) == 2

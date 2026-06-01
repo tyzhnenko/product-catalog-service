@@ -162,14 +162,16 @@ class VariantsService:
         after: str | None,
         before: str | None,
         limit: int,
+        filters: dict | None = None,
     ) -> PaginatedResponse[ProductVariant] | None:
         product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
         if not product:
             logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
             return None
 
+        query_filter = {"product_id": product_id, "store_id": store_id, "deleted_at": None, **(filters or {})}
         return await paginate(
-            VariantModel.find({"product_id": product_id, "store_id": store_id, "deleted_at": None}),
+            VariantModel.find(query_filter),
             after,
             before,
             limit,

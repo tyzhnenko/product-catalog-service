@@ -2593,3 +2593,159 @@ class TestListVariantsPagination:
             f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", params={"limit": 999}
         )
         assert response.status_code == 422
+
+
+class TestListVariantsByAttributes:
+    """Tests for GET /api/v1/variants/{store_id}/{product_id}?attrs= filtering."""
+
+    def test_filter_by_attribute_match(
+        self, api_client, sample_variant_data, another_variant_data, sample_store, sample_product
+    ):
+        """Filter returns only variants matching the attribute value."""
+        another_variant_data["attributes"] = {"origin": {"type": "string", "name": "origin", "value": "Huila"}}
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data)
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=another_variant_data)
+
+        response = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"attrs": "origin:Yirgacheffe"},
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["attributes"]["origin"]["value"] == "Yirgacheffe"
+
+    def test_filter_by_attribute_no_match(self, api_client, sample_variant_data, sample_store, sample_product):
+        """Filter returns empty list when no variants match."""
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data)
+
+        response = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"attrs": "origin:Unknown"},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["items"] == []
+
+    def test_filter_by_integer_attribute(
+        self, api_client, sample_variant_data, another_variant_data, sample_store, sample_product
+    ):
+        """Integer attribute values are coerced and matched correctly."""
+        another_variant_data["attributes"] = {"altitude": {"type": "integer", "name": "altitude", "value": 2000}}
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data)
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=another_variant_data)
+
+        response = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"attrs": "altitude:1800"},
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["attributes"]["altitude"]["value"] == 1800
+
+    def test_filter_by_same_key_multiple_values_or(
+        self, api_client, sample_variant_data, another_variant_data, sample_store, sample_product
+    ):
+        """Same-key attrs with multiple values are ORed."""
+        another_variant_data["attributes"] = {"origin": {"type": "string", "name": "origin", "value": "Huila"}}
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data)
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=another_variant_data)
+
+        response = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params=[("attrs", "origin:Yirgacheffe"), ("attrs", "origin:Huila")],
+        )
+
+        assert response.status_code == 200
+        assert len(response.json()["items"]) == 2
+
+    def test_empty_attrs_returns_all(
+        self, api_client, sample_variant_data, another_variant_data, sample_store, sample_product
+    ):
+        """Empty attrs list applies no filter."""
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data)
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=another_variant_data)
+
+        response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}")
+
+        assert response.status_code == 200
+        assert len(response.json()["items"]) == 2
+
+
+class TestListVariantsByPrice:
+    """Tests for price/location_price/region_price filtering on list variants."""
+
+    @pytest.fixture
+    def variant_with_price(self, api_client, sample_store, sample_product):
+        data = {
+            "title": "Priced Variant",
+            "options": [{"name": "Size", "value": "250g"}],
+            "price": {"USD": {"type": "decimal", "name": "USD Price", "value": "29.99"}},
+        }
+        return api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=data).json()
+
+    @pytest.fixture
+    def variant_with_high_price(self, api_client, sample_store, sample_product):
+        data = {
+            "title": "Expensive Variant",
+            "options": [{"name": "Size", "value": "1kg"}],
+            "price": {"USD": {"type": "decimal", "name": "USD Price", "value": "89.99"}},
+        }
+        return api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=data).json()
+
+    def test_filter_by_price_min(
+        self, api_client, sample_store, sample_product, variant_with_price, variant_with_high_price
+    ):
+        """price_min filters out variants below the minimum."""
+        response = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"price_key": "USD", "price_min": "50.00"},
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["id"] == variant_with_high_price["id"]
+
+    def test_filter_by_price_max(
+        self, api_client, sample_store, sample_product, variant_with_price, variant_with_high_price
+    ):
+        """price_max filters out variants above the maximum."""
+        response = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"price_key": "USD", "price_max": "50.00"},
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["id"] == variant_with_price["id"]
+
+    def test_filter_by_price_range(
+        self, api_client, sample_store, sample_product, variant_with_price, variant_with_high_price
+    ):
+        """price_min + price_max together define an inclusive range."""
+        response = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"price_key": "USD", "price_min": "20.00", "price_max": "50.00"},
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["id"] == variant_with_price["id"]
+
+    def test_price_key_without_min_max_returns_all(
+        self, api_client, sample_store, sample_product, variant_with_price, variant_with_high_price
+    ):
+        """price_key alone without min/max applies no filter."""
+        response = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"price_key": "USD"},
+        )
+
+        assert response.status_code == 200
+        assert len(response.json()["items"]) == 2

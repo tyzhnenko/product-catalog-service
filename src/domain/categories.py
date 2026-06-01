@@ -39,13 +39,15 @@ class CategoriesService:
         after: str | None,
         before: str | None,
         limit: int,
+        filters: dict | None = None,
     ) -> PaginatedResponse[Category] | None:
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             return None
 
+        query_filter = {"store_id": store_id, "deleted_at": None, **(filters or {})}
         return await paginate(
-            CategoryModel.find({"store_id": store_id, "deleted_at": None}),
+            CategoryModel.find(query_filter),
             after,
             before,
             limit,
