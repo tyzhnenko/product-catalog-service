@@ -859,3 +859,105 @@ class TestListProductsPagination:
         """Limit > max_limit returns 422."""
         response = api_client.get(f"/api/v1/products/{sample_store['id']}", params={"limit": 999})
         assert response.status_code == 422
+
+
+class TestListProductsByAttributes:
+    """Tests for GET /api/v1/products/{store_id}?attrs= filtering."""
+
+    def test_filter_by_attribute_match(self, api_client, sample_product_data, another_product_data, sample_store):
+        """Filter returns only products matching the attribute value."""
+        api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        api_client.post(f"/api/v1/products/{sample_store['id']}", json=another_product_data)
+
+        response = api_client.get(
+            f"/api/v1/products/{sample_store['id']}",
+            params={"attrs": "roast_level:light"},
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["attributes"]["roast_level"]["value"] == "light"
+
+    def test_filter_by_attribute_no_match(self, api_client, sample_product_data, sample_store):
+        """Filter returns empty list when no products match."""
+        api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+
+        response = api_client.get(
+            f"/api/v1/products/{sample_store['id']}",
+            params={"attrs": "roast_level:dark"},
+        )
+
+        assert response.status_code == 200
+        assert response.json()["items"] == []
+
+    def test_filter_by_multiple_attributes_and(
+        self, api_client, sample_product_data, another_product_data, sample_store
+    ):
+        """Multiple different-key attrs are ANDed together."""
+        api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        api_client.post(f"/api/v1/products/{sample_store['id']}", json=another_product_data)
+
+        # another_product_data has roast_level=medium AND organic=True
+        response = api_client.get(
+            f"/api/v1/products/{sample_store['id']}",
+            params=[("attrs", "roast_level:medium"), ("attrs", "organic:true")],
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["attributes"]["roast_level"]["value"] == "medium"
+
+    def test_filter_by_same_key_multiple_values_or(
+        self, api_client, sample_product_data, another_product_data, sample_store
+    ):
+        """Same-key attrs with multiple values are ORed via $in."""
+        api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        api_client.post(f"/api/v1/products/{sample_store['id']}", json=another_product_data)
+
+        response = api_client.get(
+            f"/api/v1/products/{sample_store['id']}",
+            params=[("attrs", "roast_level:light"), ("attrs", "roast_level:medium")],
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 2
+
+    def test_filter_by_integer_attribute(self, api_client, sample_product_data, another_product_data, sample_store):
+        """Integer attribute values are coerced and matched correctly."""
+        api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        api_client.post(f"/api/v1/products/{sample_store['id']}", json=another_product_data)
+
+        response = api_client.get(
+            f"/api/v1/products/{sample_store['id']}",
+            params={"attrs": "weight_grams:250"},
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["attributes"]["weight_grams"]["value"] == 250
+
+    def test_filter_malformed_attrs_ignored(self, api_client, sample_product_data, sample_store):
+        """Attrs entries without a colon are silently ignored (no filter applied)."""
+        api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+
+        response = api_client.get(
+            f"/api/v1/products/{sample_store['id']}",
+            params={"attrs": "no-colon-here"},
+        )
+
+        assert response.status_code == 200
+        assert len(response.json()["items"]) == 1
+
+    def test_empty_attrs_returns_all(self, api_client, sample_product_data, another_product_data, sample_store):
+        """Empty attrs list applies no filter and returns all products."""
+        api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        api_client.post(f"/api/v1/products/{sample_store['id']}", json=another_product_data)
+
+        response = api_client.get(f"/api/v1/products/{sample_store['id']}")
+
+        assert response.status_code == 200
+        assert len(response.json()["items"]) == 2

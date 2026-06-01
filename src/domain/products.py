@@ -79,14 +79,16 @@ class ProductsService:
         after: str | None,
         before: str | None,
         limit: int,
+        filters: dict | None = None,
     ) -> PaginatedResponse[Product] | None:
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
 
+        query_filter = {"store_id": store_id, "deleted_at": None, **(filters or {})}
         return await paginate(
-            ProductModel.find({"store_id": store_id, "deleted_at": None}),
+            ProductModel.find(query_filter),
             after,
             before,
             limit,

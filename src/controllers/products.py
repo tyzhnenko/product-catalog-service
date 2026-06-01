@@ -5,6 +5,7 @@ from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.core.types import PaginatedResponse
+from src.core.utils import build_attribute_filter
 from src.domain.products import ProductsService
 from src.domain.types.products import NewProduct, Product, ProductID, UpdateProduct
 from src.domain.types.stores import StoreID
@@ -27,9 +28,16 @@ async def list_products(
     after: str | None = Query(None, description="Cursor for forward pagination"),
     before: str | None = Query(None, description="Cursor for backward pagination"),
     limit: int = Query(_settings.pagination.default_limit, ge=1, le=_settings.pagination.max_limit),
+    attrs: list[str] = Query(
+        default=[],
+        description=(
+            "Attribute filters in 'key:value' format. Repeat for multiple values. Same key = OR, different keys = AND."
+        ),
+    ),
 ) -> PaginatedResponse[Product]:
     """List all products for a specific store."""
-    result = await service.list_products(store_id, after=after, before=before, limit=limit)
+    filters = build_attribute_filter(attrs)
+    result = await service.list_products(store_id, after=after, before=before, limit=limit, filters=filters or None)
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

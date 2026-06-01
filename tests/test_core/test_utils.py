@@ -2,12 +2,20 @@
 """Tests for core.utils module."""
 
 import base64
+from decimal import Decimal
 
 import pytest
 from beanie import PydanticObjectId
 from fastapi import HTTPException
 
-from src.core.utils import decode_cursor, encode_cursor, split_path
+from src.core.utils import (
+    build_attribute_filter,
+    build_location_price_filter,
+    build_region_price_filter,
+    decode_cursor,
+    encode_cursor,
+    split_path,
+)
 
 
 class TestSplitPath:
@@ -117,3 +125,146 @@ class TestDecodeCursor:
             decode_cursor(garbage)
         assert exc.value.status_code == 400
         assert exc.value.detail == "Invalid cursor"
+
+
+class TestBuildAttributeFilter:
+    @pytest.mark.parametrize(
+        ("attrs", "expected"),
+        [
+            (
+                ["is_featured:true"],
+                {"attributes.is_featured.value": True},
+            ),
+            (
+                ["is_featured:false"],
+                {"attributes.is_featured.value": False},
+            ),
+            (
+                ["stock:12"],
+                {"attributes.stock.value": 12},
+            ),
+            (
+                ["weight:1.5"],
+                {"attributes.weight.value": 1.5},
+            ),
+            (
+                ["label:premium"],
+                {"attributes.label.value": "premium"},
+            ),
+            (
+                ["invalid-entry", "label:premium"],
+                {"attributes.label.value": "premium"},
+            ),
+            (
+                ["color:red", "color:blue"],
+                {"attributes.color.value": {"$in": ["red", "blue"]}},
+            ),
+            (
+                ["in_stock:true", "in_stock:false", "size:42"],
+                {
+                    "attributes.in_stock.value": {"$in": [True, False]},
+                    "attributes.size.value": 42,
+                },
+            ),
+        ],
+    )
+    def test_builds_expected_filter(self, attrs, expected):
+        assert build_attribute_filter(attrs) == expected
+
+
+class TestBuildLocationPriceFilter:
+    @pytest.mark.parametrize(
+        ("location_price_id", "location_price_key", "location_price_min", "location_price_max", "expected"),
+        [
+            (None, "retail", Decimal("10"), Decimal("20"), {}),
+            ("loc-1", None, Decimal("10"), Decimal("20"), {}),
+            ("loc-1", "retail", None, None, {}),
+            (
+                "loc-1",
+                "retail",
+                Decimal("10"),
+                None,
+                {"location_price.loc-1.retail.value": {"$gte": Decimal("10")}},
+            ),
+            (
+                "loc-1",
+                "retail",
+                None,
+                Decimal("20"),
+                {"location_price.loc-1.retail.value": {"$lte": Decimal("20")}},
+            ),
+            (
+                "loc-1",
+                "retail",
+                Decimal("10"),
+                Decimal("20"),
+                {"location_price.loc-1.retail.value": {"$gte": Decimal("10"), "$lte": Decimal("20")}},
+            ),
+        ],
+    )
+    def test_builds_expected_filter(
+        self,
+        location_price_id,
+        location_price_key,
+        location_price_min,
+        location_price_max,
+        expected,
+    ):
+        assert (
+            build_location_price_filter(
+                location_price_id,
+                location_price_key,
+                location_price_min,
+                location_price_max,
+            )
+            == expected
+        )
+
+
+class TestBuildRegionPriceFilter:
+    @pytest.mark.parametrize(
+        ("region_price_code", "region_price_key", "region_price_min", "region_price_max", "expected"),
+        [
+            (None, "retail", Decimal("10"), Decimal("20"), {}),
+            ("us-east", None, Decimal("10"), Decimal("20"), {}),
+            ("us-east", "retail", None, None, {}),
+            (
+                "us-east",
+                "retail",
+                Decimal("10"),
+                None,
+                {"region_price.us-east.retail.value": {"$gte": Decimal("10")}},
+            ),
+            (
+                "us-east",
+                "retail",
+                None,
+                Decimal("20"),
+                {"region_price.us-east.retail.value": {"$lte": Decimal("20")}},
+            ),
+            (
+                "us-east",
+                "retail",
+                Decimal("10"),
+                Decimal("20"),
+                {"region_price.us-east.retail.value": {"$gte": Decimal("10"), "$lte": Decimal("20")}},
+            ),
+        ],
+    )
+    def test_builds_expected_filter(
+        self,
+        region_price_code,
+        region_price_key,
+        region_price_min,
+        region_price_max,
+        expected,
+    ):
+        assert (
+            build_region_price_filter(
+                region_price_code,
+                region_price_key,
+                region_price_min,
+                region_price_max,
+            )
+            == expected
+        )

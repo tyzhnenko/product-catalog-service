@@ -5,6 +5,7 @@ from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.core.types import PaginatedResponse
+from src.core.utils import build_attribute_filter
 from src.domain.categories import CategoriesService
 from src.domain.types.categories import Category, CategoryID, NewCategory, UpdateCategory
 from src.domain.types.stores import StoreID
@@ -27,8 +28,15 @@ async def list_categories(
     after: str | None = Query(None, description="Cursor for forward pagination"),
     before: str | None = Query(None, description="Cursor for backward pagination"),
     limit: int = Query(_settings.pagination.default_limit, ge=1, le=_settings.pagination.max_limit),
+    attrs: list[str] = Query(
+        default=[],
+        description=(
+            "Attribute filters in 'key:value' format. Repeat for multiple values. Same key = OR, different keys = AND."
+        ),
+    ),
 ) -> PaginatedResponse[Category]:
-    result = await service.list_categories(store_id, after=after, before=before, limit=limit)
+    filters = build_attribute_filter(attrs)
+    result = await service.list_categories(store_id, after=after, before=before, limit=limit, filters=filters or None)
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

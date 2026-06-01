@@ -157,6 +157,7 @@ class BundlesService:
         after: str | None,
         before: str | None,
         limit: int,
+        filters: dict | None = None,
     ) -> PaginatedResponse[Bundle] | None:
         """List all non-deleted bundles for a specific store."""
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
@@ -164,8 +165,9 @@ class BundlesService:
             logger.warning(f"Store not found: {store_id}")
             return None
 
+        query_filter = {"store_id": store_id, "deleted_at": None, **(filters or {})}
         return await paginate(
-            BundleModel.find({"store_id": store_id, "deleted_at": None}),
+            BundleModel.find(query_filter),
             after,
             before,
             limit,
