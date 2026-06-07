@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.4.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.3.2...v0.4.0) (2026-06-01)
+
+
+### Features
+
+* add pagination for bundles, categories, locations, products, stores and variants ([#34](https://github.com/tyzhnenko/product-catalog-service/issues/34)) ([45dba6b](https://github.com/tyzhnenko/product-catalog-service/commit/45dba6b4175b80b5e6eeeb251189c066aa752333))
+* implement attribute and price filtering for bundles, categories, products, and variants ([#35](https://github.com/tyzhnenko/product-catalog-service/issues/35)) ([a732211](https://github.com/tyzhnenko/product-catalog-service/commit/a732211d9e58c72bc2a9f511937fb24f4d3b70ce))
+
+
+### Chores
+
+* **deps-dev:** bump pytest from 9.0.2 to 9.0.3 ([#29](https://github.com/tyzhnenko/product-catalog-service/issues/29)) ([3efd6d2](https://github.com/tyzhnenko/product-catalog-service/commit/3efd6d298dbec98879058efab3b5fbb7505cbf89))
+* **deps:** bump idna from 3.11 to 3.15 ([#31](https://github.com/tyzhnenko/product-catalog-service/issues/31)) ([3c8c51d](https://github.com/tyzhnenko/product-catalog-service/commit/3c8c51d364b599d5c1d94a712d4fcedff33b63d9))
+* **deps:** bump pygments from 2.19.2 to 2.20.0 ([#28](https://github.com/tyzhnenko/product-catalog-service/issues/28)) ([84ad25c](https://github.com/tyzhnenko/product-catalog-service/commit/84ad25c2195ddbd76d3d6659641fa0ce51942f64))
+* **deps:** bump python-dotenv from 1.2.1 to 1.2.2 ([#30](https://github.com/tyzhnenko/product-catalog-service/issues/30)) ([aceeb43](https://github.com/tyzhnenko/product-catalog-service/commit/aceeb438fdf0f5d421ac913de37b51bb48e33a4a))
+
+
+### Documentation
+
+* add batch create/update and paginated listing features to various management sections in README ([#33](https://github.com/tyzhnenko/product-catalog-service/issues/33)) ([adedd85](https://github.com/tyzhnenko/product-catalog-service/commit/adedd85c777466d148c70d94d315d71e2adaedfe))
+
 ## [0.3.2](https://github.com/tyzhnenko/product-catalog-service/compare/v0.3.1...v0.3.2) (2026-03-21)
 
 
