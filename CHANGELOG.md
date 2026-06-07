@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/tyzhnenko/product-catalog-service/compare/v0.4.0...v0.4.1) (2026-06-07)
+
+
+### Chores
+
+* **deps:** bump starlette from 0.50.0 to 1.0.1 ([#36](https://github.com/tyzhnenko/product-catalog-service/issues/36)) ([b40b626](https://github.com/tyzhnenko/product-catalog-service/commit/b40b6262f78f3dfe4e715e6ad0b70cb8126da999))
+
 ## [0.4.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.3.2...v0.4.0) (2026-06-01)
 
 
