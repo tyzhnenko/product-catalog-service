@@ -168,3 +168,5 @@ fabric.properties
 
 # Local settings file
 settings.local.yaml
+
+openapi.json
