@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.2](https://github.com/tyzhnenko/product-catalog-service/compare/v0.4.1...v0.4.2) (2026-06-11)
+
+
+### Chores
+
+* add python client ([#38](https://github.com/tyzhnenko/product-catalog-service/issues/38)) ([724ccc9](https://github.com/tyzhnenko/product-catalog-service/commit/724ccc958ba744e60867a5fd543b855cd7a93756))
+
 ## [0.4.1](https://github.com/tyzhnenko/product-catalog-service/compare/v0.4.0...v0.4.1) (2026-06-07)
 
 
