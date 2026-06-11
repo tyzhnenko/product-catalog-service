@@ -10,6 +10,7 @@ license = "MIT"
 dependencies = [
     "beanie>=2.0.1",
     "fastapi>=0.127.0",
+    "mypy>=2.1.0",
     "pendulum>=3.1.0",
     "pycountry>=24.6.1",
     "pydantic>=2.12.5",
@@ -31,6 +32,8 @@ dev = [
     "pytest-env>=1.2.0",
     "pytest-mongo>=3.2.1",
     "openapi-python-client>=0.28.0",
+    "python-dateutil>=2.8.0",
+    "types-python-dateutil>=2.8.0",
 ]
 
 [build-system]
@@ -104,3 +107,6 @@ ignore = [
     "D213",
     "D203",
 ]
+
+[tool.mypy]
+python_version = "3.14"

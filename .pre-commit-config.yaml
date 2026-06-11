@@ -21,12 +21,15 @@ repos:
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.19.1
+    rev: v2.1.0
     hooks:
       - id: mypy
-        additional_dependencies:
-          - types-pycountry
-        args: [--ignore-missing-imports, --no-strict-optional]
+        args:
+          [
+            --ignore-missing-imports,
+            --no-strict-optional,
+            --python-executable=.venv/bin/python,
+          ]
 
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v4.10.0 # Use the latest version or a specific version
