@@ -30,6 +30,7 @@ def _get_kwargs(
     region_price_min: float | None | str | Unset = UNSET,
     region_price_max: float | None | str | Unset = UNSET,
 ) -> dict[str, Any]:
+
     params: dict[str, Any] = {}
 
     json_after: None | str | Unset

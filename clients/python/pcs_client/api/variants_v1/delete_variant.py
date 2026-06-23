@@ -15,6 +15,7 @@ def _get_kwargs(
     product_id: str,
     variant_id: str,
 ) -> dict[str, Any]:
+
     _kwargs: dict[str, Any] = {
         "method": "delete",
         "url": "/api/v1/variants/{store_id}/{product_id}/{variant_id}".format(

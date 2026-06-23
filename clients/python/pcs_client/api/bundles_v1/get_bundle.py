@@ -15,6 +15,7 @@ def _get_kwargs(
     store_id: str,
     bundle_id: str,
 ) -> dict[str, Any]:
+
     _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/api/v1/bundles/{store_id}/{bundle_id}".format(
