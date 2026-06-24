@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.3](https://github.com/tyzhnenko/product-catalog-service/compare/v0.4.2...v0.4.3) (2026-06-24)
+
+
+### Chores
+
+* **deps:** bump pydantic-settings from 2.14.1 to 2.14.2 ([#41](https://github.com/tyzhnenko/product-catalog-service/issues/41)) ([add2d53](https://github.com/tyzhnenko/product-catalog-service/commit/add2d5373293053b2352643d0d86a913d3570015))
+* **deps:** bump starlette from 1.3.0 to 1.3.1 ([#40](https://github.com/tyzhnenko/product-catalog-service/issues/40)) ([ed89464](https://github.com/tyzhnenko/product-catalog-service/commit/ed89464cade2a9fe840031149015ef2e6d44527d))
+* update python client ([#42](https://github.com/tyzhnenko/product-catalog-service/issues/42)) ([a21c4e0](https://github.com/tyzhnenko/product-catalog-service/commit/a21c4e0506e2972c9e34dafcb5ecec9be682ce7f))
+
 ## [0.4.2](https://github.com/tyzhnenko/product-catalog-service/compare/v0.4.1...v0.4.2) (2026-06-11)
 
 
