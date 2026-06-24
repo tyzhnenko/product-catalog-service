@@ -19,6 +19,7 @@ def _get_kwargs(
     limit: int | Unset = 20,
     attrs: list[str] | Unset = UNSET,
 ) -> dict[str, Any]:
+
     params: dict[str, Any] = {}
 
     json_after: None | str | Unset

@@ -6,7 +6,6 @@ from typing import Any, Literal, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
 
@@ -58,7 +57,7 @@ class ListOfDatesAttribute:
         values = []
         _values = d.pop("values")
         for values_item_data in _values:
-            values_item = isoparse(values_item_data).date()
+            values_item = datetime.date.fromisoformat(values_item_data)
 
             values.append(values_item)
 

@@ -91,7 +91,7 @@ async def update_location(
     location_id: LocationID,
     update_data: UpdateLocation,
     service: Annotated[LocationsService, Depends(LocationsService)],
-):
+) -> Location:
     updated_location = await service.update_location(store_id, location_id, update_data)
     if not updated_location:
         raise HTTPException(

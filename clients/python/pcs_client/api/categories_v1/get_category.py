@@ -15,6 +15,7 @@ def _get_kwargs(
     store_id: str,
     category_id: str,
 ) -> dict[str, Any]:
+
     _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/api/v1/categories/{store_id}/{category_id}".format(

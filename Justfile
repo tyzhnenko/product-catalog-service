@@ -25,10 +25,10 @@ pre-commit-run:
 
 fetch-openapi:
     echo "Fetching OpenAPI specification..."
-    uv run python fetch_openapi.py
+    uv run python get_openapi.py
 
 generate-client: fetch-openapi
     echo "Generating client code from OpenAPI specification..."
-    uv run openapi-python-client generate --overwrite --path openapi.json --config openapi-python-client-config.yaml --output-path clients/python
+    uv run openapi-python-client generate --meta uv --overwrite --path openapi.json --config openapi-python-client-config.yaml --output-path clients/python
 
 default: run

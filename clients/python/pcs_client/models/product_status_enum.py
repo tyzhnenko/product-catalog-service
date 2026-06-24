@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class ProductStatusEnum(str, Enum):
+class ProductStatusEnum(StrEnum):
     ACTIVE = "active"
     ARCHIVED = "archived"
     DRAFT = "draft"

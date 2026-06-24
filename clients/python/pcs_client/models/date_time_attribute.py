@@ -6,7 +6,6 @@ from typing import Any, Literal, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
 from ..types import UNSET, Unset
 
@@ -52,7 +51,7 @@ class DateTimeAttribute:
         d = dict(src_dict)
         name = d.pop("name")
 
-        value = isoparse(d.pop("value"))
+        value = datetime.datetime.fromisoformat(d.pop("value"))
 
         type_ = cast(Literal["datetime"] | Unset, d.pop("type", UNSET))
         if type_ != "datetime" and not isinstance(type_, Unset):
