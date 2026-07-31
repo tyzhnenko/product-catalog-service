@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.4](https://github.com/tyzhnenko/product-catalog-service/compare/v0.4.3...v0.4.4) (2026-07-31)
+
+
+### Continuous Integration
+
+* add building arm64 images natively ([#44](https://github.com/tyzhnenko/product-catalog-service/issues/44)) ([05866f4](https://github.com/tyzhnenko/product-catalog-service/commit/05866f454c690d642bf9e9c2e6cf08ddacb56418))
+
 ## [0.4.3](https://github.com/tyzhnenko/product-catalog-service/compare/v0.4.2...v0.4.3) (2026-06-24)
 
 
