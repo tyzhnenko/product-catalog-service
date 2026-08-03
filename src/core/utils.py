@@ -1,6 +1,6 @@
 import base64
 import os
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from itertools import accumulate
 from pathlib import Path
 from typing import Any, Callable, TypeVar, overload
@@ -160,71 +160,58 @@ def build_attribute_filter(attrs: list[str]) -> dict:
     return result
 
 
-def build_price_filter(
-    price_key: str | None,
-    price_min: Decimal | None,
-    price_max: Decimal | None,
-) -> dict:
-    """Build a MongoDB filter dict for the top-level price map."""
-    if not price_key:
-        return {}
-    conditions: dict = {}
-    if price_min is not None:
-        conditions["$gte"] = price_min
-    if price_max is not None:
-        conditions["$lte"] = price_max
-    if not conditions:
-        return {}
-    return {f"price.{price_key}.value": conditions}
+_PRICE_OPS = (">=", "<=")
 
 
-def build_location_price_filter(
-    location_price_id: str | None,
-    location_price_key: str | None,
-    location_price_min: Decimal | None,
-    location_price_max: Decimal | None,
-) -> dict:
-    """Build a MongoDB filter dict for the location_price map."""
-    if not location_price_id:
-        return {}
-    if not location_price_key:
-        if location_price_min is not None or location_price_max is not None:
-            raise HTTPException(
-                status_code=400,
-                detail="location_price_key is required when location_price_min or location_price_max is set",
-            )
-        return {f"location_price.{location_price_id}": {"$exists": True, "$ne": {}}}
-    conditions: dict = {}
-    if location_price_min is not None:
-        conditions["$gte"] = location_price_min
-    if location_price_max is not None:
-        conditions["$lte"] = location_price_max
-    if not conditions:
-        return {f"location_price.{location_price_id}.{location_price_key}": {"$exists": True}}
-    return {f"location_price.{location_price_id}.{location_price_key}.value": conditions}
+def _split_price_op(token: str) -> tuple[str, str | None, Decimal | None]:
+    """Split a '<key><op><value>' token into (key, op, value), or (token, None, None) if no op is present."""
+    for op in _PRICE_OPS:
+        if op in token:
+            key, _, raw_value = token.partition(op)
+            try:
+                return key, op, Decimal(raw_value)
+            except InvalidOperation as ex:
+                raise HTTPException(status_code=400, detail=f"Invalid price value in '{token}'") from ex
+    return token, None, None
 
 
-def build_region_price_filter(
-    region_price_code: str | None,
-    region_price_key: str | None,
-    region_price_min: Decimal | None,
-    region_price_max: Decimal | None,
-) -> dict:
-    """Build a MongoDB filter dict for the region_price map."""
-    if not region_price_code:
-        return {}
-    if not region_price_key:
-        if region_price_min is not None or region_price_max is not None:
-            raise HTTPException(
-                status_code=400,
-                detail="region_price_key is required when region_price_min or region_price_max is set",
-            )
-        return {f"region_price.{region_price_code}": {"$exists": True, "$ne": {}}}
-    conditions: dict = {}
-    if region_price_min is not None:
-        conditions["$gte"] = region_price_min
-    if region_price_max is not None:
-        conditions["$lte"] = region_price_max
-    if not conditions:
-        return {f"region_price.{region_price_code}.{region_price_key}": {"$exists": True}}
-    return {f"region_price.{region_price_code}.{region_price_key}.value": conditions}
+def build_price_search_filter(tokens: list[str]) -> dict:
+    """Build a MongoDB filter dict from a list of price search tokens.
+
+    Tokens:
+    - '<key>>=<value>' / '<key><=<value>': top-level price.<key>.value range.
+    - 'loc:<id>': variant priced at that location (any key).
+    - 'loc:<id>:<key>': that key present for the location.
+    - 'loc:<id>:<key>>=<value>' / '<=': ranged location price.
+    - 'region:<code>[:<key>[<op><value>]]': same as 'loc:', scoped to region_price.
+
+    A bare key with no operator is a no-op. >= and <= tokens targeting the same path merge
+    into one $gte/$lte condition.
+    """
+    existence: dict[str, dict] = {}
+    conditions: dict[str, dict] = {}
+
+    for token in tokens:
+        scope, sep, rest = token.partition(":")
+        if sep and scope in ("loc", "region"):
+            prefix = "location_price" if scope == "loc" else "region_price"
+            scope_id, _, remainder = rest.partition(":")
+            if not scope_id:
+                continue
+            if not remainder:
+                existence[f"{prefix}.{scope_id}"] = {"$exists": True, "$ne": {}}
+                continue
+            key, op, value = _split_price_op(remainder)
+            if op is None:
+                existence[f"{prefix}.{scope_id}.{key}"] = {"$exists": True}
+                continue
+            path = f"{prefix}.{scope_id}.{key}.value"
+        else:
+            key, op, value = _split_price_op(token)
+            if op is None:
+                continue
+            path = f"price.{key}.value"
+
+        conditions.setdefault(path, {})["$gte" if op == ">=" else "$lte"] = value
+
+    return {**existence, **conditions}

@@ -19,17 +19,7 @@ def _get_kwargs(
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
     attrs: list[str] | Unset = UNSET,
-    price_key: None | str | Unset = UNSET,
-    price_min: float | None | str | Unset = UNSET,
-    price_max: float | None | str | Unset = UNSET,
-    location_price_id: None | str | Unset = UNSET,
-    location_price_key: None | str | Unset = UNSET,
-    location_price_min: float | None | str | Unset = UNSET,
-    location_price_max: float | None | str | Unset = UNSET,
-    region_price_code: None | str | Unset = UNSET,
-    region_price_key: None | str | Unset = UNSET,
-    region_price_min: float | None | str | Unset = UNSET,
-    region_price_max: float | None | str | Unset = UNSET,
+    price: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -56,82 +46,12 @@ def _get_kwargs(
 
     params["attrs"] = json_attrs
 
-    json_price_key: None | str | Unset
-    if isinstance(price_key, Unset):
-        json_price_key = UNSET
+    json_price: None | str | Unset
+    if isinstance(price, Unset):
+        json_price = UNSET
     else:
-        json_price_key = price_key
-    params["price_key"] = json_price_key
-
-    json_price_min: float | None | str | Unset
-    if isinstance(price_min, Unset):
-        json_price_min = UNSET
-    else:
-        json_price_min = price_min
-    params["price_min"] = json_price_min
-
-    json_price_max: float | None | str | Unset
-    if isinstance(price_max, Unset):
-        json_price_max = UNSET
-    else:
-        json_price_max = price_max
-    params["price_max"] = json_price_max
-
-    json_location_price_id: None | str | Unset
-    if isinstance(location_price_id, Unset):
-        json_location_price_id = UNSET
-    else:
-        json_location_price_id = location_price_id
-    params["location_price_id"] = json_location_price_id
-
-    json_location_price_key: None | str | Unset
-    if isinstance(location_price_key, Unset):
-        json_location_price_key = UNSET
-    else:
-        json_location_price_key = location_price_key
-    params["location_price_key"] = json_location_price_key
-
-    json_location_price_min: float | None | str | Unset
-    if isinstance(location_price_min, Unset):
-        json_location_price_min = UNSET
-    else:
-        json_location_price_min = location_price_min
-    params["location_price_min"] = json_location_price_min
-
-    json_location_price_max: float | None | str | Unset
-    if isinstance(location_price_max, Unset):
-        json_location_price_max = UNSET
-    else:
-        json_location_price_max = location_price_max
-    params["location_price_max"] = json_location_price_max
-
-    json_region_price_code: None | str | Unset
-    if isinstance(region_price_code, Unset):
-        json_region_price_code = UNSET
-    else:
-        json_region_price_code = region_price_code
-    params["region_price_code"] = json_region_price_code
-
-    json_region_price_key: None | str | Unset
-    if isinstance(region_price_key, Unset):
-        json_region_price_key = UNSET
-    else:
-        json_region_price_key = region_price_key
-    params["region_price_key"] = json_region_price_key
-
-    json_region_price_min: float | None | str | Unset
-    if isinstance(region_price_min, Unset):
-        json_region_price_min = UNSET
-    else:
-        json_region_price_min = region_price_min
-    params["region_price_min"] = json_region_price_min
-
-    json_region_price_max: float | None | str | Unset
-    if isinstance(region_price_max, Unset):
-        json_region_price_max = UNSET
-    else:
-        json_region_price_max = region_price_max
-    params["region_price_max"] = json_region_price_max
+        json_price = price
+    params["price"] = json_price
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -186,17 +106,7 @@ def sync_detailed(
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
     attrs: list[str] | Unset = UNSET,
-    price_key: None | str | Unset = UNSET,
-    price_min: float | None | str | Unset = UNSET,
-    price_max: float | None | str | Unset = UNSET,
-    location_price_id: None | str | Unset = UNSET,
-    location_price_key: None | str | Unset = UNSET,
-    location_price_min: float | None | str | Unset = UNSET,
-    location_price_max: float | None | str | Unset = UNSET,
-    region_price_code: None | str | Unset = UNSET,
-    region_price_key: None | str | Unset = UNSET,
-    region_price_min: float | None | str | Unset = UNSET,
-    region_price_max: float | None | str | Unset = UNSET,
+    price: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | PaginatedResponseProductVariant]:
     """List Variants
 
@@ -210,18 +120,12 @@ def sync_detailed(
         limit (int | Unset):  Default: 20.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
             values. Same key = OR, different keys = AND.
-        price_key (None | str | Unset): Price map key to filter on (e.g. 'USD')
-        price_min (float | None | str | Unset): Minimum price value (inclusive)
-        price_max (float | None | str | Unset): Maximum price value (inclusive)
-        location_price_id (None | str | Unset): Location ID for location price filtering
-        location_price_key (None | str | Unset): Price key within the location price map
-        location_price_min (float | None | str | Unset): Minimum location price value (inclusive)
-        location_price_max (float | None | str | Unset): Maximum location price value (inclusive)
-        region_price_code (None | str | Unset): Region/country code for region price filtering
-            (ISO 3166-1 alpha-2)
-        region_price_key (None | str | Unset): Price key within the region price map
-        region_price_min (float | None | str | Unset): Minimum region price value (inclusive)
-        region_price_max (float | None | str | Unset): Maximum region price value (inclusive)
+        price (None | str | Unset): Whitespace-separated price search tokens (shlex-quoted for
+            values containing spaces). '<key>>=<value>' / '<key><=<value>' filter the top-level price
+            map. 'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-
+            only checks any key is set; id+key checks that key is set; +op adds a range).
+            'region:<code>[:<key>[<op><value>]]' does the same for region_price. Example: 'USD>=10
+            USD<=50 loc:LOC1:retail>=5 region:US:retail'
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -238,17 +142,7 @@ def sync_detailed(
         before=before,
         limit=limit,
         attrs=attrs,
-        price_key=price_key,
-        price_min=price_min,
-        price_max=price_max,
-        location_price_id=location_price_id,
-        location_price_key=location_price_key,
-        location_price_min=location_price_min,
-        location_price_max=location_price_max,
-        region_price_code=region_price_code,
-        region_price_key=region_price_key,
-        region_price_min=region_price_min,
-        region_price_max=region_price_max,
+        price=price,
     )
 
     response = client.get_httpx_client().request(
@@ -267,17 +161,7 @@ def sync(
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
     attrs: list[str] | Unset = UNSET,
-    price_key: None | str | Unset = UNSET,
-    price_min: float | None | str | Unset = UNSET,
-    price_max: float | None | str | Unset = UNSET,
-    location_price_id: None | str | Unset = UNSET,
-    location_price_key: None | str | Unset = UNSET,
-    location_price_min: float | None | str | Unset = UNSET,
-    location_price_max: float | None | str | Unset = UNSET,
-    region_price_code: None | str | Unset = UNSET,
-    region_price_key: None | str | Unset = UNSET,
-    region_price_min: float | None | str | Unset = UNSET,
-    region_price_max: float | None | str | Unset = UNSET,
+    price: None | str | Unset = UNSET,
 ) -> HTTPValidationError | PaginatedResponseProductVariant | None:
     """List Variants
 
@@ -291,18 +175,12 @@ def sync(
         limit (int | Unset):  Default: 20.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
             values. Same key = OR, different keys = AND.
-        price_key (None | str | Unset): Price map key to filter on (e.g. 'USD')
-        price_min (float | None | str | Unset): Minimum price value (inclusive)
-        price_max (float | None | str | Unset): Maximum price value (inclusive)
-        location_price_id (None | str | Unset): Location ID for location price filtering
-        location_price_key (None | str | Unset): Price key within the location price map
-        location_price_min (float | None | str | Unset): Minimum location price value (inclusive)
-        location_price_max (float | None | str | Unset): Maximum location price value (inclusive)
-        region_price_code (None | str | Unset): Region/country code for region price filtering
-            (ISO 3166-1 alpha-2)
-        region_price_key (None | str | Unset): Price key within the region price map
-        region_price_min (float | None | str | Unset): Minimum region price value (inclusive)
-        region_price_max (float | None | str | Unset): Maximum region price value (inclusive)
+        price (None | str | Unset): Whitespace-separated price search tokens (shlex-quoted for
+            values containing spaces). '<key>>=<value>' / '<key><=<value>' filter the top-level price
+            map. 'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-
+            only checks any key is set; id+key checks that key is set; +op adds a range).
+            'region:<code>[:<key>[<op><value>]]' does the same for region_price. Example: 'USD>=10
+            USD<=50 loc:LOC1:retail>=5 region:US:retail'
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -320,17 +198,7 @@ def sync(
         before=before,
         limit=limit,
         attrs=attrs,
-        price_key=price_key,
-        price_min=price_min,
-        price_max=price_max,
-        location_price_id=location_price_id,
-        location_price_key=location_price_key,
-        location_price_min=location_price_min,
-        location_price_max=location_price_max,
-        region_price_code=region_price_code,
-        region_price_key=region_price_key,
-        region_price_min=region_price_min,
-        region_price_max=region_price_max,
+        price=price,
     ).parsed
 
 
@@ -343,17 +211,7 @@ async def asyncio_detailed(
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
     attrs: list[str] | Unset = UNSET,
-    price_key: None | str | Unset = UNSET,
-    price_min: float | None | str | Unset = UNSET,
-    price_max: float | None | str | Unset = UNSET,
-    location_price_id: None | str | Unset = UNSET,
-    location_price_key: None | str | Unset = UNSET,
-    location_price_min: float | None | str | Unset = UNSET,
-    location_price_max: float | None | str | Unset = UNSET,
-    region_price_code: None | str | Unset = UNSET,
-    region_price_key: None | str | Unset = UNSET,
-    region_price_min: float | None | str | Unset = UNSET,
-    region_price_max: float | None | str | Unset = UNSET,
+    price: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | PaginatedResponseProductVariant]:
     """List Variants
 
@@ -367,18 +225,12 @@ async def asyncio_detailed(
         limit (int | Unset):  Default: 20.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
             values. Same key = OR, different keys = AND.
-        price_key (None | str | Unset): Price map key to filter on (e.g. 'USD')
-        price_min (float | None | str | Unset): Minimum price value (inclusive)
-        price_max (float | None | str | Unset): Maximum price value (inclusive)
-        location_price_id (None | str | Unset): Location ID for location price filtering
-        location_price_key (None | str | Unset): Price key within the location price map
-        location_price_min (float | None | str | Unset): Minimum location price value (inclusive)
-        location_price_max (float | None | str | Unset): Maximum location price value (inclusive)
-        region_price_code (None | str | Unset): Region/country code for region price filtering
-            (ISO 3166-1 alpha-2)
-        region_price_key (None | str | Unset): Price key within the region price map
-        region_price_min (float | None | str | Unset): Minimum region price value (inclusive)
-        region_price_max (float | None | str | Unset): Maximum region price value (inclusive)
+        price (None | str | Unset): Whitespace-separated price search tokens (shlex-quoted for
+            values containing spaces). '<key>>=<value>' / '<key><=<value>' filter the top-level price
+            map. 'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-
+            only checks any key is set; id+key checks that key is set; +op adds a range).
+            'region:<code>[:<key>[<op><value>]]' does the same for region_price. Example: 'USD>=10
+            USD<=50 loc:LOC1:retail>=5 region:US:retail'
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -395,17 +247,7 @@ async def asyncio_detailed(
         before=before,
         limit=limit,
         attrs=attrs,
-        price_key=price_key,
-        price_min=price_min,
-        price_max=price_max,
-        location_price_id=location_price_id,
-        location_price_key=location_price_key,
-        location_price_min=location_price_min,
-        location_price_max=location_price_max,
-        region_price_code=region_price_code,
-        region_price_key=region_price_key,
-        region_price_min=region_price_min,
-        region_price_max=region_price_max,
+        price=price,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -422,17 +264,7 @@ async def asyncio(
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
     attrs: list[str] | Unset = UNSET,
-    price_key: None | str | Unset = UNSET,
-    price_min: float | None | str | Unset = UNSET,
-    price_max: float | None | str | Unset = UNSET,
-    location_price_id: None | str | Unset = UNSET,
-    location_price_key: None | str | Unset = UNSET,
-    location_price_min: float | None | str | Unset = UNSET,
-    location_price_max: float | None | str | Unset = UNSET,
-    region_price_code: None | str | Unset = UNSET,
-    region_price_key: None | str | Unset = UNSET,
-    region_price_min: float | None | str | Unset = UNSET,
-    region_price_max: float | None | str | Unset = UNSET,
+    price: None | str | Unset = UNSET,
 ) -> HTTPValidationError | PaginatedResponseProductVariant | None:
     """List Variants
 
@@ -446,18 +278,12 @@ async def asyncio(
         limit (int | Unset):  Default: 20.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
             values. Same key = OR, different keys = AND.
-        price_key (None | str | Unset): Price map key to filter on (e.g. 'USD')
-        price_min (float | None | str | Unset): Minimum price value (inclusive)
-        price_max (float | None | str | Unset): Maximum price value (inclusive)
-        location_price_id (None | str | Unset): Location ID for location price filtering
-        location_price_key (None | str | Unset): Price key within the location price map
-        location_price_min (float | None | str | Unset): Minimum location price value (inclusive)
-        location_price_max (float | None | str | Unset): Maximum location price value (inclusive)
-        region_price_code (None | str | Unset): Region/country code for region price filtering
-            (ISO 3166-1 alpha-2)
-        region_price_key (None | str | Unset): Price key within the region price map
-        region_price_min (float | None | str | Unset): Minimum region price value (inclusive)
-        region_price_max (float | None | str | Unset): Maximum region price value (inclusive)
+        price (None | str | Unset): Whitespace-separated price search tokens (shlex-quoted for
+            values containing spaces). '<key>>=<value>' / '<key><=<value>' filter the top-level price
+            map. 'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-
+            only checks any key is set; id+key checks that key is set; +op adds a range).
+            'region:<code>[:<key>[<op><value>]]' does the same for region_price. Example: 'USD>=10
+            USD<=50 loc:LOC1:retail>=5 region:US:retail'
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -476,16 +302,6 @@ async def asyncio(
             before=before,
             limit=limit,
             attrs=attrs,
-            price_key=price_key,
-            price_min=price_min,
-            price_max=price_max,
-            location_price_id=location_price_id,
-            location_price_key=location_price_key,
-            location_price_min=location_price_min,
-            location_price_max=location_price_max,
-            region_price_code=region_price_code,
-            region_price_key=region_price_key,
-            region_price_min=region_price_min,
-            region_price_max=region_price_max,
+            price=price,
         )
     ).parsed

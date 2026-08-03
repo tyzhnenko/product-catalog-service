@@ -977,7 +977,7 @@ class TestListProductsByVariantFilters:
     def test_filter_by_location_price_id(
         self, api_client, sample_product_data, another_product_data, sample_store, sample_location
     ):
-        """location_price_id alone returns products with a variant priced at that location."""
+        """'loc:<id>' alone returns products with a variant priced at that location."""
         priced_product = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data).json()
         unpriced_product = api_client.post(f"/api/v1/products/{sample_store['id']}", json=another_product_data).json()
 
@@ -998,7 +998,7 @@ class TestListProductsByVariantFilters:
 
         response = api_client.get(
             f"/api/v1/products/{sample_store['id']}",
-            params={"location_price_id": sample_location["id"]},
+            params={"price": f"loc:{sample_location['id']}"},
         )
 
         assert response.status_code == 200
@@ -1009,7 +1009,7 @@ class TestListProductsByVariantFilters:
     def test_filter_by_location_price_id_no_match_returns_empty(
         self, api_client, sample_product_data, sample_store, sample_location
     ):
-        """A location_price_id with no matching variants returns an empty list, not all products."""
+        """A 'loc:<id>' token with no matching variants returns an empty list, not all products."""
         product = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data).json()
         api_client.post(
             f"/api/v1/variants/{sample_store['id']}/{product['id']}",
@@ -1018,7 +1018,7 @@ class TestListProductsByVariantFilters:
 
         response = api_client.get(
             f"/api/v1/products/{sample_store['id']}",
-            params={"location_price_id": sample_location["id"]},
+            params={"price": f"loc:{sample_location['id']}"},
         )
 
         assert response.status_code == 200
@@ -1057,7 +1057,7 @@ class TestListProductsByVariantFilters:
         assert items[0]["id"] == matching_product["id"]
 
     def test_filter_by_price_range(self, api_client, sample_product_data, another_product_data, sample_store):
-        """price_key/price_min/price_max narrow by variant top-level price."""
+        """'USD<=<value>' narrows by variant top-level price."""
         cheap_product = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data).json()
         expensive_product = api_client.post(f"/api/v1/products/{sample_store['id']}", json=another_product_data).json()
 
@@ -1080,7 +1080,7 @@ class TestListProductsByVariantFilters:
 
         response = api_client.get(
             f"/api/v1/products/{sample_store['id']}",
-            params={"price_key": "USD", "price_max": "50.00"},
+            params={"price": "USD<=50.00"},
         )
 
         assert response.status_code == 200
