@@ -1,6 +1,7 @@
 # from uuid import uuid7
 
 import pendulum
+from pydantic import BaseModel
 
 from src.core.logging import logger
 from src.core.types import PaginatedResponse
@@ -18,6 +19,10 @@ from src.models.categories import CategoryModel
 from src.models.products import ProductModel
 from src.models.stores import StoreModel
 from src.models.variants import VariantModel
+
+
+class _VariantProductIdProjection(BaseModel):
+    product_id: ProductID
 
 
 class ProductsService:
@@ -80,6 +85,7 @@ class ProductsService:
         before: str | None,
         limit: int,
         filters: dict | None = None,
+        variant_filters: dict | None = None,
     ) -> PaginatedResponse[Product] | None:
         store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
         if not store:
@@ -87,6 +93,13 @@ class ProductsService:
             return None
 
         query_filter = {"store_id": store_id, "deleted_at": None, **(filters or {})}
+
+        if variant_filters:
+            variant_query = {"store_id": store_id, "deleted_at": None, **variant_filters}
+            variants = await VariantModel.find(variant_query).project(_VariantProductIdProjection).to_list()
+            product_ids = list({variant.product_id for variant in variants})
+            query_filter["_id"] = {"$in": product_ids}
+
         return await paginate(
             ProductModel.find(query_filter),
             after,

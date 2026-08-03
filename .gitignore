@@ -170,3 +170,6 @@ fabric.properties
 settings.local.yaml
 
 openapi.json
+
+# Claude Code local state (settings, worktrees)
+.claude/

@@ -462,6 +462,44 @@ class TestListVariants:
         assert response.status_code == 404
         assert response.json()["detail"] == "Product or store not found"
 
+    def test_list_variants_filter_by_location_price_id(
+        self, api_client, minimal_variant_data, sample_store, sample_product, sample_location
+    ):
+        """location_price_id alone (no location_price_key) narrows to variants priced at that location."""
+        priced_variant_data = {
+            **minimal_variant_data,
+            "location_price": {
+                sample_location["id"]: {
+                    "retail": {"type": "decimal", "name": "Retail Price", "value": "12.50"},
+                }
+            },
+        }
+        priced = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=priced_variant_data
+        ).json()
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=minimal_variant_data)
+
+        response = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"location_price_id": sample_location["id"]},
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["id"] == priced["id"]
+
+    def test_list_variants_location_price_min_without_key_returns_400(
+        self, api_client, sample_store, sample_product, sample_location
+    ):
+        """location_price_min without location_price_key is rejected rather than silently ignored."""
+        response = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"location_price_id": sample_location["id"], "location_price_min": "10.00"},
+        )
+
+        assert response.status_code == 400
+
 
 class TestGetVariant:
     """Tests for GET /api/v1/variants/{store_id}/{product_id}/{variant_id}."""

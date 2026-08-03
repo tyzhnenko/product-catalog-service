@@ -916,6 +916,37 @@ class TestBundleLocationPrice:
         assert sample_location["id"] in data["location_price"]
         assert another_location["id"] in data["location_price"]
 
+    def test_list_bundles_filter_by_location_price_id(
+        self, api_client, sample_store, minimal_bundle_data, sample_location
+    ):
+        """location_price_id alone (no location_price_key) narrows to bundles priced at that location."""
+        priced_bundle_data = {
+            **minimal_bundle_data,
+            "location_price": {
+                sample_location["id"]: {"retail": {"type": "decimal", "name": "Retail Price", "value": "49.99"}}
+            },
+        }
+        priced = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=priced_bundle_data).json()
+        api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=minimal_bundle_data)
+
+        response = api_client.get(
+            f"/api/v1/bundles/{sample_store['id']}", params={"location_price_id": sample_location["id"]}
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["id"] == priced["id"]
+
+    def test_list_bundles_location_price_min_without_key_returns_400(self, api_client, sample_store, sample_location):
+        """location_price_min without location_price_key is rejected rather than silently ignored."""
+        response = api_client.get(
+            f"/api/v1/bundles/{sample_store['id']}",
+            params={"location_price_id": sample_location["id"], "location_price_min": "10.00"},
+        )
+
+        assert response.status_code == 400
+
 
 class TestBundleImages:
     """Tests for bundle images field."""

@@ -177,8 +177,21 @@ class TestBuildLocationPriceFilter:
         ("location_price_id", "location_price_key", "location_price_min", "location_price_max", "expected"),
         [
             (None, "retail", Decimal("10"), Decimal("20"), {}),
-            ("loc-1", None, Decimal("10"), Decimal("20"), {}),
-            ("loc-1", "retail", None, None, {}),
+            (None, None, None, None, {}),
+            (
+                "loc-1",
+                None,
+                None,
+                None,
+                {"location_price.loc-1": {"$exists": True, "$ne": {}}},
+            ),
+            (
+                "loc-1",
+                "retail",
+                None,
+                None,
+                {"location_price.loc-1.retail": {"$exists": True}},
+            ),
             (
                 "loc-1",
                 "retail",
@@ -220,14 +233,29 @@ class TestBuildLocationPriceFilter:
             == expected
         )
 
+    @pytest.mark.parametrize(
+        ("location_price_min", "location_price_max"), [(Decimal("10"), None), (None, Decimal("20"))]
+    )
+    def test_min_or_max_without_key_raises_400(self, location_price_min, location_price_max):
+        with pytest.raises(HTTPException) as exc_info:
+            build_location_price_filter("loc-1", None, location_price_min, location_price_max)
+        assert exc_info.value.status_code == 400
+
 
 class TestBuildRegionPriceFilter:
     @pytest.mark.parametrize(
         ("region_price_code", "region_price_key", "region_price_min", "region_price_max", "expected"),
         [
             (None, "retail", Decimal("10"), Decimal("20"), {}),
-            ("us-east", None, Decimal("10"), Decimal("20"), {}),
-            ("us-east", "retail", None, None, {}),
+            (None, None, None, None, {}),
+            (
+                "us-east",
+                None,
+                None,
+                None,
+                {"region_price.us-east": {"$exists": True, "$ne": {}}},
+            ),
+            ("us-east", "retail", None, None, {"region_price.us-east.retail": {"$exists": True}}),
             (
                 "us-east",
                 "retail",
@@ -268,3 +296,9 @@ class TestBuildRegionPriceFilter:
             )
             == expected
         )
+
+    @pytest.mark.parametrize(("region_price_min", "region_price_max"), [(Decimal("10"), None), (None, Decimal("20"))])
+    def test_min_or_max_without_key_raises_400(self, region_price_min, region_price_max):
+        with pytest.raises(HTTPException) as exc_info:
+            build_region_price_filter("us-east", None, region_price_min, region_price_max)
+        assert exc_info.value.status_code == 400

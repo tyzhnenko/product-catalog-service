@@ -185,15 +185,22 @@ def build_location_price_filter(
     location_price_max: Decimal | None,
 ) -> dict:
     """Build a MongoDB filter dict for the location_price map."""
-    if not location_price_id or not location_price_key:
+    if not location_price_id:
         return {}
+    if not location_price_key:
+        if location_price_min is not None or location_price_max is not None:
+            raise HTTPException(
+                status_code=400,
+                detail="location_price_key is required when location_price_min or location_price_max is set",
+            )
+        return {f"location_price.{location_price_id}": {"$exists": True, "$ne": {}}}
     conditions: dict = {}
     if location_price_min is not None:
         conditions["$gte"] = location_price_min
     if location_price_max is not None:
         conditions["$lte"] = location_price_max
     if not conditions:
-        return {}
+        return {f"location_price.{location_price_id}.{location_price_key}": {"$exists": True}}
     return {f"location_price.{location_price_id}.{location_price_key}.value": conditions}
 
 
@@ -204,13 +211,20 @@ def build_region_price_filter(
     region_price_max: Decimal | None,
 ) -> dict:
     """Build a MongoDB filter dict for the region_price map."""
-    if not region_price_code or not region_price_key:
+    if not region_price_code:
         return {}
+    if not region_price_key:
+        if region_price_min is not None or region_price_max is not None:
+            raise HTTPException(
+                status_code=400,
+                detail="region_price_key is required when region_price_min or region_price_max is set",
+            )
+        return {f"region_price.{region_price_code}": {"$exists": True, "$ne": {}}}
     conditions: dict = {}
     if region_price_min is not None:
         conditions["$gte"] = region_price_min
     if region_price_max is not None:
         conditions["$lte"] = region_price_max
     if not conditions:
-        return {}
+        return {f"region_price.{region_price_code}.{region_price_key}": {"$exists": True}}
     return {f"region_price.{region_price_code}.{region_price_key}.value": conditions}
