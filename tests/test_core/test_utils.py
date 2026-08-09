@@ -10,8 +10,7 @@ from fastapi import HTTPException
 
 from src.core.utils import (
     build_attribute_filter,
-    build_location_price_filter,
-    build_region_price_filter,
+    build_price_search_filter,
     decode_cursor,
     encode_cursor,
     split_path,
@@ -172,133 +171,70 @@ class TestBuildAttributeFilter:
         assert build_attribute_filter(attrs) == expected
 
 
-class TestBuildLocationPriceFilter:
+class TestBuildPriceSearchFilter:
     @pytest.mark.parametrize(
-        ("location_price_id", "location_price_key", "location_price_min", "location_price_max", "expected"),
+        ("tokens", "expected"),
         [
-            (None, "retail", Decimal("10"), Decimal("20"), {}),
-            (None, None, None, None, {}),
+            ([], {}),
+            (["USD"], {}),
+            (["USD>=10"], {"price.USD.value": {"$gte": Decimal("10")}}),
+            (["USD<=50"], {"price.USD.value": {"$lte": Decimal("50")}}),
             (
-                "loc-1",
-                None,
-                None,
-                None,
+                ["USD>=10", "USD<=50"],
+                {"price.USD.value": {"$gte": Decimal("10"), "$lte": Decimal("50")}},
+            ),
+            (
+                ["loc:loc-1"],
                 {"location_price.loc-1": {"$exists": True, "$ne": {}}},
             ),
             (
-                "loc-1",
-                "retail",
-                None,
-                None,
+                ["loc:loc-1:retail"],
                 {"location_price.loc-1.retail": {"$exists": True}},
             ),
             (
-                "loc-1",
-                "retail",
-                Decimal("10"),
-                None,
+                ["loc:loc-1:retail>=10"],
                 {"location_price.loc-1.retail.value": {"$gte": Decimal("10")}},
             ),
             (
-                "loc-1",
-                "retail",
-                None,
-                Decimal("20"),
-                {"location_price.loc-1.retail.value": {"$lte": Decimal("20")}},
-            ),
-            (
-                "loc-1",
-                "retail",
-                Decimal("10"),
-                Decimal("20"),
+                ["loc:loc-1:retail>=10", "loc:loc-1:retail<=20"],
                 {"location_price.loc-1.retail.value": {"$gte": Decimal("10"), "$lte": Decimal("20")}},
             ),
-        ],
-    )
-    def test_builds_expected_filter(
-        self,
-        location_price_id,
-        location_price_key,
-        location_price_min,
-        location_price_max,
-        expected,
-    ):
-        assert (
-            build_location_price_filter(
-                location_price_id,
-                location_price_key,
-                location_price_min,
-                location_price_max,
-            )
-            == expected
-        )
-
-    @pytest.mark.parametrize(
-        ("location_price_min", "location_price_max"), [(Decimal("10"), None), (None, Decimal("20"))]
-    )
-    def test_min_or_max_without_key_raises_400(self, location_price_min, location_price_max):
-        with pytest.raises(HTTPException) as exc_info:
-            build_location_price_filter("loc-1", None, location_price_min, location_price_max)
-        assert exc_info.value.status_code == 400
-
-
-class TestBuildRegionPriceFilter:
-    @pytest.mark.parametrize(
-        ("region_price_code", "region_price_key", "region_price_min", "region_price_max", "expected"),
-        [
-            (None, "retail", Decimal("10"), Decimal("20"), {}),
-            (None, None, None, None, {}),
             (
-                "us-east",
-                None,
-                None,
-                None,
+                ["region:us-east"],
                 {"region_price.us-east": {"$exists": True, "$ne": {}}},
             ),
-            ("us-east", "retail", None, None, {"region_price.us-east.retail": {"$exists": True}}),
             (
-                "us-east",
-                "retail",
-                Decimal("10"),
-                None,
-                {"region_price.us-east.retail.value": {"$gte": Decimal("10")}},
+                ["region:us-east:retail"],
+                {"region_price.us-east.retail": {"$exists": True}},
             ),
             (
-                "us-east",
-                "retail",
-                None,
-                Decimal("20"),
+                ["region:us-east:retail<=20"],
                 {"region_price.us-east.retail.value": {"$lte": Decimal("20")}},
             ),
             (
-                "us-east",
-                "retail",
-                Decimal("10"),
-                Decimal("20"),
-                {"region_price.us-east.retail.value": {"$gte": Decimal("10"), "$lte": Decimal("20")}},
+                ["USD>=10", "loc:loc-1:retail>=5", "region:us-east:retail<=20"],
+                {
+                    "price.USD.value": {"$gte": Decimal("10")},
+                    "location_price.loc-1.retail.value": {"$gte": Decimal("5")},
+                    "region_price.us-east.retail.value": {"$lte": Decimal("20")},
+                },
             ),
+            (["invalid-scope:foo"], {}),
+            (["loc:"], {}),
         ],
     )
-    def test_builds_expected_filter(
-        self,
-        region_price_code,
-        region_price_key,
-        region_price_min,
-        region_price_max,
-        expected,
-    ):
-        assert (
-            build_region_price_filter(
-                region_price_code,
-                region_price_key,
-                region_price_min,
-                region_price_max,
-            )
-            == expected
-        )
+    def test_builds_expected_filter(self, tokens, expected):
+        assert build_price_search_filter(tokens) == expected
 
-    @pytest.mark.parametrize(("region_price_min", "region_price_max"), [(Decimal("10"), None), (None, Decimal("20"))])
-    def test_min_or_max_without_key_raises_400(self, region_price_min, region_price_max):
+    @pytest.mark.parametrize(
+        "tokens",
+        [
+            ["USD>=notanumber"],
+            ["loc:loc-1:retail>=notanumber"],
+            ["region:us-east:retail<=notanumber"],
+        ],
+    )
+    def test_invalid_value_raises_400(self, tokens):
         with pytest.raises(HTTPException) as exc_info:
-            build_region_price_filter("us-east", None, region_price_min, region_price_max)
+            build_price_search_filter(tokens)
         assert exc_info.value.status_code == 400

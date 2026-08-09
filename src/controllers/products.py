@@ -1,4 +1,4 @@
-from decimal import Decimal
+import shlex
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Query, Response, Security, status
@@ -6,12 +6,7 @@ from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.core.types import PaginatedResponse
-from src.core.utils import (
-    build_attribute_filter,
-    build_location_price_filter,
-    build_price_filter,
-    build_region_price_filter,
-)
+from src.core.utils import build_attribute_filter, build_price_search_filter
 from src.domain.products import ProductsService
 from src.domain.types.products import NewProduct, Product, ProductID, UpdateProduct
 from src.domain.types.stores import StoreID
@@ -48,29 +43,24 @@ async def list_products(
             "variant matching all filters. Same key = OR, different keys = AND."
         ),
     ),
-    price_key: str | None = Query(None, description="Variant price map key to filter on (e.g. 'USD')"),
-    price_min: Decimal | None = Query(None, description="Minimum variant price value (inclusive)"),
-    price_max: Decimal | None = Query(None, description="Maximum variant price value (inclusive)"),
-    location_price_id: str | None = Query(
-        None, description="Location ID - returns products with a variant priced at this location"
+    price: str | None = Query(
+        None,
+        description=(
+            "Whitespace-separated variant price search tokens (shlex-quoted for values containing spaces). "
+            "Returns products with at least one matching variant. "
+            "'<key>>=<value>' / '<key><=<value>' filter the top-level price map. "
+            "'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price "
+            "(id-only checks any key is set; id+key checks that key is set; +op adds a range). "
+            "'region:<code>[:<key>[<op><value>]]' does the same for region_price. "
+            "Example: 'USD>=10 USD<=50 loc:LOC1:retail>=5 region:US:retail'"
+        ),
     ),
-    location_price_key: str | None = Query(None, description="Price key within the location price map"),
-    location_price_min: Decimal | None = Query(None, description="Minimum location price value (inclusive)"),
-    location_price_max: Decimal | None = Query(None, description="Maximum location price value (inclusive)"),
-    region_price_code: str | None = Query(
-        None, description="Region/country code for region price filtering (ISO 3166-1 alpha-2)"
-    ),
-    region_price_key: str | None = Query(None, description="Price key within the region price map"),
-    region_price_min: Decimal | None = Query(None, description="Minimum region price value (inclusive)"),
-    region_price_max: Decimal | None = Query(None, description="Maximum region price value (inclusive)"),
 ) -> PaginatedResponse[Product]:
     """List all products for a specific store."""
     filters = build_attribute_filter(attrs)
     variant_filters = {
         **build_attribute_filter(variants_attrs),
-        **build_price_filter(price_key, price_min, price_max),
-        **build_location_price_filter(location_price_id, location_price_key, location_price_min, location_price_max),
-        **build_region_price_filter(region_price_code, region_price_key, region_price_min, region_price_max),
+        **build_price_search_filter(shlex.split(price) if price else []),
     }
     result = await service.list_products(
         store_id,

@@ -465,7 +465,7 @@ class TestListVariants:
     def test_list_variants_filter_by_location_price_id(
         self, api_client, minimal_variant_data, sample_store, sample_product, sample_location
     ):
-        """location_price_id alone (no location_price_key) narrows to variants priced at that location."""
+        """'loc:<id>' alone (no key) narrows to variants priced at that location."""
         priced_variant_data = {
             **minimal_variant_data,
             "location_price": {
@@ -481,7 +481,7 @@ class TestListVariants:
 
         response = api_client.get(
             f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
-            params={"location_price_id": sample_location["id"]},
+            params={"price": f"loc:{sample_location['id']}"},
         )
 
         assert response.status_code == 200
@@ -489,13 +489,11 @@ class TestListVariants:
         assert len(items) == 1
         assert items[0]["id"] == priced["id"]
 
-    def test_list_variants_location_price_min_without_key_returns_400(
-        self, api_client, sample_store, sample_product, sample_location
-    ):
-        """location_price_min without location_price_key is rejected rather than silently ignored."""
+    def test_list_variants_invalid_price_token_returns_400(self, api_client, sample_store, sample_product):
+        """A price token with a non-numeric range value is rejected."""
         response = api_client.get(
             f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
-            params={"location_price_id": sample_location["id"], "location_price_min": "10.00"},
+            params={"price": "USD>=notanumber"},
         )
 
         assert response.status_code == 400
@@ -2737,10 +2735,10 @@ class TestListVariantsByPrice:
     def test_filter_by_price_min(
         self, api_client, sample_store, sample_product, variant_with_price, variant_with_high_price
     ):
-        """price_min filters out variants below the minimum."""
+        """'USD>=<value>' filters out variants below the minimum."""
         response = api_client.get(
             f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
-            params={"price_key": "USD", "price_min": "50.00"},
+            params={"price": "USD>=50.00"},
         )
 
         assert response.status_code == 200
@@ -2751,10 +2749,10 @@ class TestListVariantsByPrice:
     def test_filter_by_price_max(
         self, api_client, sample_store, sample_product, variant_with_price, variant_with_high_price
     ):
-        """price_max filters out variants above the maximum."""
+        """'USD<=<value>' filters out variants above the maximum."""
         response = api_client.get(
             f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
-            params={"price_key": "USD", "price_max": "50.00"},
+            params={"price": "USD<=50.00"},
         )
 
         assert response.status_code == 200
@@ -2765,10 +2763,10 @@ class TestListVariantsByPrice:
     def test_filter_by_price_range(
         self, api_client, sample_store, sample_product, variant_with_price, variant_with_high_price
     ):
-        """price_min + price_max together define an inclusive range."""
+        """'USD>=<min> USD<=<max>' together define an inclusive range."""
         response = api_client.get(
             f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
-            params={"price_key": "USD", "price_min": "20.00", "price_max": "50.00"},
+            params={"price": "USD>=20.00 USD<=50.00"},
         )
 
         assert response.status_code == 200
@@ -2776,13 +2774,13 @@ class TestListVariantsByPrice:
         assert len(items) == 1
         assert items[0]["id"] == variant_with_price["id"]
 
-    def test_price_key_without_min_max_returns_all(
+    def test_price_key_without_range_returns_all(
         self, api_client, sample_store, sample_product, variant_with_price, variant_with_high_price
     ):
-        """price_key alone without min/max applies no filter."""
+        """A bare key with no operator applies no filter."""
         response = api_client.get(
             f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
-            params={"price_key": "USD"},
+            params={"price": "USD"},
         )
 
         assert response.status_code == 200

@@ -18,6 +18,8 @@ def _get_kwargs(
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
     attrs: list[str] | Unset = UNSET,
+    variants_attrs: list[str] | Unset = UNSET,
+    price: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -43,6 +45,19 @@ def _get_kwargs(
         json_attrs = attrs
 
     params["attrs"] = json_attrs
+
+    json_variants_attrs: list[str] | Unset = UNSET
+    if not isinstance(variants_attrs, Unset):
+        json_variants_attrs = variants_attrs
+
+    params["variants_attrs"] = json_variants_attrs
+
+    json_price: None | str | Unset
+    if isinstance(price, Unset):
+        json_price = UNSET
+    else:
+        json_price = price
+    params["price"] = json_price
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -95,6 +110,8 @@ def sync_detailed(
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
     attrs: list[str] | Unset = UNSET,
+    variants_attrs: list[str] | Unset = UNSET,
+    price: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | PaginatedResponseProduct]:
     """List Products
 
@@ -105,8 +122,18 @@ def sync_detailed(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
-        attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
-            values. Same key = OR, different keys = AND.
+        attrs (list[str] | Unset): Product attribute filters in 'key:value' format. Repeat for
+            multiple values. Same key = OR, different keys = AND.
+        variants_attrs (list[str] | Unset): Variant attribute filters in 'key:value' format.
+            Returns products that have at least one variant matching all filters. Same key = OR,
+            different keys = AND.
+        price (None | str | Unset): Whitespace-separated variant price search tokens (shlex-quoted
+            for values containing spaces). Returns products with at least one matching variant.
+            '<key>>=<value>' / '<key><=<value>' filter the top-level price map. 'loc:<id>',
+            'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-only checks any key
+            is set; id+key checks that key is set; +op adds a range).
+            'region:<code>[:<key>[<op><value>]]' does the same for region_price. Example: 'USD>=10
+            USD<=50 loc:LOC1:retail>=5 region:US:retail'
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -122,6 +149,8 @@ def sync_detailed(
         before=before,
         limit=limit,
         attrs=attrs,
+        variants_attrs=variants_attrs,
+        price=price,
     )
 
     response = client.get_httpx_client().request(
@@ -139,6 +168,8 @@ def sync(
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
     attrs: list[str] | Unset = UNSET,
+    variants_attrs: list[str] | Unset = UNSET,
+    price: None | str | Unset = UNSET,
 ) -> HTTPValidationError | PaginatedResponseProduct | None:
     """List Products
 
@@ -149,8 +180,18 @@ def sync(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
-        attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
-            values. Same key = OR, different keys = AND.
+        attrs (list[str] | Unset): Product attribute filters in 'key:value' format. Repeat for
+            multiple values. Same key = OR, different keys = AND.
+        variants_attrs (list[str] | Unset): Variant attribute filters in 'key:value' format.
+            Returns products that have at least one variant matching all filters. Same key = OR,
+            different keys = AND.
+        price (None | str | Unset): Whitespace-separated variant price search tokens (shlex-quoted
+            for values containing spaces). Returns products with at least one matching variant.
+            '<key>>=<value>' / '<key><=<value>' filter the top-level price map. 'loc:<id>',
+            'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-only checks any key
+            is set; id+key checks that key is set; +op adds a range).
+            'region:<code>[:<key>[<op><value>]]' does the same for region_price. Example: 'USD>=10
+            USD<=50 loc:LOC1:retail>=5 region:US:retail'
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -167,6 +208,8 @@ def sync(
         before=before,
         limit=limit,
         attrs=attrs,
+        variants_attrs=variants_attrs,
+        price=price,
     ).parsed
 
 
@@ -178,6 +221,8 @@ async def asyncio_detailed(
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
     attrs: list[str] | Unset = UNSET,
+    variants_attrs: list[str] | Unset = UNSET,
+    price: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | PaginatedResponseProduct]:
     """List Products
 
@@ -188,8 +233,18 @@ async def asyncio_detailed(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
-        attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
-            values. Same key = OR, different keys = AND.
+        attrs (list[str] | Unset): Product attribute filters in 'key:value' format. Repeat for
+            multiple values. Same key = OR, different keys = AND.
+        variants_attrs (list[str] | Unset): Variant attribute filters in 'key:value' format.
+            Returns products that have at least one variant matching all filters. Same key = OR,
+            different keys = AND.
+        price (None | str | Unset): Whitespace-separated variant price search tokens (shlex-quoted
+            for values containing spaces). Returns products with at least one matching variant.
+            '<key>>=<value>' / '<key><=<value>' filter the top-level price map. 'loc:<id>',
+            'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-only checks any key
+            is set; id+key checks that key is set; +op adds a range).
+            'region:<code>[:<key>[<op><value>]]' does the same for region_price. Example: 'USD>=10
+            USD<=50 loc:LOC1:retail>=5 region:US:retail'
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -205,6 +260,8 @@ async def asyncio_detailed(
         before=before,
         limit=limit,
         attrs=attrs,
+        variants_attrs=variants_attrs,
+        price=price,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -220,6 +277,8 @@ async def asyncio(
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
     attrs: list[str] | Unset = UNSET,
+    variants_attrs: list[str] | Unset = UNSET,
+    price: None | str | Unset = UNSET,
 ) -> HTTPValidationError | PaginatedResponseProduct | None:
     """List Products
 
@@ -230,8 +289,18 @@ async def asyncio(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
-        attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
-            values. Same key = OR, different keys = AND.
+        attrs (list[str] | Unset): Product attribute filters in 'key:value' format. Repeat for
+            multiple values. Same key = OR, different keys = AND.
+        variants_attrs (list[str] | Unset): Variant attribute filters in 'key:value' format.
+            Returns products that have at least one variant matching all filters. Same key = OR,
+            different keys = AND.
+        price (None | str | Unset): Whitespace-separated variant price search tokens (shlex-quoted
+            for values containing spaces). Returns products with at least one matching variant.
+            '<key>>=<value>' / '<key><=<value>' filter the top-level price map. 'loc:<id>',
+            'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-only checks any key
+            is set; id+key checks that key is set; +op adds a range).
+            'region:<code>[:<key>[<op><value>]]' does the same for region_price. Example: 'USD>=10
+            USD<=50 loc:LOC1:retail>=5 region:US:retail'
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -249,5 +318,7 @@ async def asyncio(
             before=before,
             limit=limit,
             attrs=attrs,
+            variants_attrs=variants_attrs,
+            price=price,
         )
     ).parsed
