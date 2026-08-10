@@ -18,6 +18,7 @@ By using this project or its source code, for any purpose and in any shape or fo
     - [x] Paginated listing
     - [ ] Search by attributes (coming soon)
     - [ ] Batch create/update (coming soon)
+    - [ ] Sort by prices (coming soon)
 - [x] Variant management with option combinations
     - [x] Dynamic attributes
     - [x] Default price management
@@ -27,6 +28,7 @@ By using this project or its source code, for any purpose and in any shape or fo
     - [ ] Search by attributes (coming soon)
     - [ ] Search by prices (coming soon)
     - [ ] Batch create/update (coming soon)
+    - [ ] Sort by prices (coming soon)
 - [x] Categories management
     - [x] Attributes management
     - [x] Paginated listing
