@@ -14,7 +14,7 @@ class LocationModel(BaseAppDocument):
     class Settings:
         name = "locations"
         indexes: list[IndexModel] = [
-            IndexModel(["name"], unique=True),
+            IndexModel(["store_id", "name"], unique=True),
             IndexModel(["store_id", "deleted_at"]),  # Optimize list queries with soft delete filtering
             IndexModel(
                 ["attributes.$**"],
