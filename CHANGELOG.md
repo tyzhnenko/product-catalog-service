@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.5.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.4.4...v0.5.0) (2026-08-15)
+
+
+### Features
+
+* add variant-level filtering to product listing ([20ddb10](https://github.com/tyzhnenko/product-catalog-service/commit/20ddb10d0a8ebbb737718e3afc7af9a1a7c3b0d5))
+* collapse price/location/region query params into a single price search string ([#48](https://github.com/tyzhnenko/product-catalog-service/issues/48)) ([1009ea5](https://github.com/tyzhnenko/product-catalog-service/commit/1009ea503ca6b674b481d7b0fd371dc7943b81ea))
+
+
+### Bug Fixes
+
+* update location model index to enforce unique store_id and name combination ([d02fd48](https://github.com/tyzhnenko/product-catalog-service/commit/d02fd48ab6eb4a7444892b882e326559e6e3ca64))
+
+
+### Documentation
+
+* add CLAUDE.md ([e95a944](https://github.com/tyzhnenko/product-catalog-service/commit/e95a9444dd9e12fd0fb4b2e56671aece9ef778f9))
+* add new features in readme ([a1cfa39](https://github.com/tyzhnenko/product-catalog-service/commit/a1cfa396a6ceba60058c24c14ea3a23651247503))
+
+
+### Continuous Integration
+
+* bump workflow action versions ([#46](https://github.com/tyzhnenko/product-catalog-service/issues/46)) ([935047c](https://github.com/tyzhnenko/product-catalog-service/commit/935047cf338000f74fd2ef567298cce765e0a5f1))
+
 ## [0.4.4](https://github.com/tyzhnenko/product-catalog-service/compare/v0.4.3...v0.4.4) (2026-07-31)
 
 
