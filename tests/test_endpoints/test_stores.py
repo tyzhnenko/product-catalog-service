@@ -246,6 +246,36 @@ class TestUpdateStore:
         assert data["name"] == "Completely New Store"
         assert data["url"] == "https://completelynew.com/"
 
+    def test_update_store_seo(self, api_client, sample_store_data):
+        """Test updating a store's seo field."""
+        create_response = api_client.post("/api/v1/stores/", json=sample_store_data)
+        store_id = create_response.json()["id"]
+
+        update_data = {"seo": {"slug": "test-coffee-store"}}
+        response = api_client.put(f"/api/v1/stores/{store_id}", json=update_data)
+
+        assert response.status_code == 200
+        assert response.json()["seo"]["slug"] == "test-coffee-store"
+
+    def test_update_store_duplicate_slug_returns_409(self, api_client):
+        """Test that updating a store's slug to collide with another store returns 409."""
+        first_data = {
+            "name": "First Store",
+            "url": "https://first-store.example.com/",
+            "seo": {"slug": "first-store"},
+        }
+        second_data = {
+            "name": "Second Store",
+            "url": "https://second-store.example.com/",
+            "seo": {"slug": "second-store"},
+        }
+        api_client.post("/api/v1/stores/", json=first_data)
+        second = api_client.post("/api/v1/stores/", json=second_data).json()
+
+        response = api_client.put(f"/api/v1/stores/{second['id']}", json={"seo": {"slug": "first-store"}})
+
+        assert response.status_code == 409
+
     def test_update_store_not_found(self, api_client):
         """Test updating a non-existent store."""
         non_existent_id = str(PydanticObjectId())

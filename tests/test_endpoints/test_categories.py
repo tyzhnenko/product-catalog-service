@@ -467,6 +467,31 @@ class TestUpdateCategory:
         assert response.status_code == 404
         assert response.json()["detail"] == "Category not found"
 
+    def test_update_category_nonexistent_store(self, api_client, sample_category_data, sample_store):
+        """Test updating a category scoped to a well-formed but non-existent store."""
+        create_response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=sample_category_data)
+        category_id = create_response.json()["id"]
+
+        non_existent_store_id = str(PydanticObjectId())
+        update_data = {"name": "Hacked Name"}
+        response = api_client.put(f"/api/v1/categories/{non_existent_store_id}/{category_id}", json=update_data)
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Category not found"
+
+    def test_update_category_duplicate_slug_returns_409(self, api_client, sample_store):
+        """Test that updating a category's slug to collide with another category in the same store returns 409."""
+        first_data = {"name": "First", "path": "/first", "seo": {"slug": "first-category"}}
+        second_data = {"name": "Second", "path": "/second", "seo": {"slug": "second-category"}}
+        api_client.post(f"/api/v1/categories/{sample_store['id']}", json=first_data)
+        second = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=second_data).json()
+
+        response = api_client.put(
+            f"/api/v1/categories/{sample_store['id']}/{second['id']}", json={"seo": {"slug": "first-category"}}
+        )
+
+        assert response.status_code == 409
+
     def test_update_category_empty_name(self, api_client, sample_category_data, sample_store):
         """Test updating category with empty name."""
         # Create a category first
@@ -530,6 +555,17 @@ class TestDeleteCategory:
         response = api_client.delete(f"/api/v1/categories/{sample_store['id']}/{invalid_id}")
 
         assert response.status_code == 422
+
+    def test_delete_category_nonexistent_store(self, api_client, sample_category_data, sample_store):
+        """Test deleting a category scoped to a well-formed but non-existent store."""
+        create_response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=sample_category_data)
+        category_id = create_response.json()["id"]
+
+        non_existent_store_id = str(PydanticObjectId())
+        response = api_client.delete(f"/api/v1/categories/{non_existent_store_id}/{category_id}")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Category not found"
 
     def test_delete_already_deleted_category(self, api_client, sample_category_data, sample_store):
         """Test deleting an already deleted category."""

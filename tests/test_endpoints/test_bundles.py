@@ -180,6 +180,16 @@ class TestCreateBundle:
         assert data["categories"] is None
         assert "id" in data
 
+    def test_create_bundle_with_empty_categories_and_components(self, api_client, minimal_bundle_data, sample_store):
+        """Test bundle creation with explicit empty categories/components lists (not omitted)."""
+        data = {**minimal_bundle_data, "categories": [], "components": []}
+        response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=data)
+
+        assert response.status_code == 200
+        body = response.json()
+        assert body["categories"] == []
+        assert body["components"] == []
+
     def test_create_bundle_missing_name(self, api_client, sample_store):
         """Test bundle creation without name."""
         invalid_data = {}
@@ -688,6 +698,31 @@ class TestUpdateBundle:
         assert response.status_code == 404
         assert response.json()["detail"] == "Bundle not found"
 
+    def test_update_bundle_nonexistent_store(self, api_client, sample_bundle_data, sample_store):
+        """Test updating a bundle scoped to a well-formed but non-existent store."""
+        create_response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=sample_bundle_data)
+        bundle_id = create_response.json()["id"]
+
+        non_existent_store_id = str(PydanticObjectId())
+        update_data = {"name": "Hacked Name"}
+        response = api_client.patch(f"/api/v1/bundles/{non_existent_store_id}/{bundle_id}", json=update_data)
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Bundle not found"
+
+    def test_update_bundle_duplicate_slug_returns_409(self, api_client, sample_store, minimal_bundle_data):
+        """Test that updating a bundle's slug to collide with another bundle in the same store returns 409."""
+        first_data = {**minimal_bundle_data, "name": "First Bundle", "seo": {"slug": "first-bundle"}}
+        second_data = {**minimal_bundle_data, "name": "Second Bundle", "seo": {"slug": "second-bundle"}}
+        api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=first_data)
+        second = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=second_data).json()
+
+        response = api_client.patch(
+            f"/api/v1/bundles/{sample_store['id']}/{second['id']}", json={"seo": {"slug": "first-bundle"}}
+        )
+
+        assert response.status_code == 409
+
     def test_update_bundle_with_invalid_category(self, api_client, sample_bundle_data, sample_store):
         """Test updating bundle with non-existent category - should filter it out."""
         # Create a bundle first
@@ -762,6 +797,17 @@ class TestDeleteBundle:
         # Verify bundle still exists in first store
         get_response = api_client.get(f"/api/v1/bundles/{sample_store['id']}/{bundle_id}")
         assert get_response.status_code == 200
+
+    def test_delete_bundle_nonexistent_store(self, api_client, sample_bundle_data, sample_store):
+        """Test deleting a bundle scoped to a well-formed but non-existent store."""
+        create_response = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=sample_bundle_data)
+        bundle_id = create_response.json()["id"]
+
+        non_existent_store_id = str(PydanticObjectId())
+        response = api_client.delete(f"/api/v1/bundles/{non_existent_store_id}/{bundle_id}")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Bundle not found"
 
     def test_delete_bundle_invalid_uuid(self, api_client, sample_store):
         """Test deleting a bundle with invalid UUID format (rejected by path param validation)."""

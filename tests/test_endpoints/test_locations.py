@@ -398,6 +398,42 @@ class TestUpdateLocation:
 
         assert response.status_code == 422
 
+    def test_update_location_nonexistent_store(self, api_client, sample_location_data, sample_store):
+        """Test updating a location scoped to a well-formed but non-existent store."""
+        create_response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=sample_location_data)
+        location_id = create_response.json()["id"]
+
+        non_existent_store_id = str(PydanticObjectId())
+        update_data = {"name": "Hacked Name"}
+        response = api_client.put(f"/api/v1/locations/{non_existent_store_id}/{location_id}", json=update_data)
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Location not found"
+
+    def test_update_location_seo(self, api_client, sample_location_data, sample_store):
+        """Test updating a location's seo field."""
+        create_response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=sample_location_data)
+        location_id = create_response.json()["id"]
+
+        update_data = {"seo": {"slug": "downtown-location"}}
+        response = api_client.put(f"/api/v1/locations/{sample_store['id']}/{location_id}", json=update_data)
+
+        assert response.status_code == 200
+        assert response.json()["seo"]["slug"] == "downtown-location"
+
+    def test_update_location_duplicate_slug_returns_409(self, api_client, sample_store):
+        """Test that updating a location's slug to collide with another location in the same store returns 409."""
+        first_data = {"name": "First", "seo": {"slug": "first-location"}}
+        second_data = {"name": "Second", "seo": {"slug": "second-location"}}
+        api_client.post(f"/api/v1/locations/{sample_store['id']}", json=first_data)
+        second = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=second_data).json()
+
+        response = api_client.put(
+            f"/api/v1/locations/{sample_store['id']}/{second['id']}", json={"seo": {"slug": "first-location"}}
+        )
+
+        assert response.status_code == 409
+
 
 class TestDeleteLocation:
     """Tests for DELETE /api/v1/locations/{store_id}/{location_id}."""
@@ -430,6 +466,17 @@ class TestDeleteLocation:
         response = api_client.delete(f"/api/v1/locations/{sample_store['id']}/{invalid_id}")
 
         assert response.status_code == 422
+
+    def test_delete_location_nonexistent_store(self, api_client, sample_location_data, sample_store):
+        """Test deleting a location scoped to a well-formed but non-existent store."""
+        create_response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=sample_location_data)
+        location_id = create_response.json()["id"]
+
+        non_existent_store_id = str(PydanticObjectId())
+        response = api_client.delete(f"/api/v1/locations/{non_existent_store_id}/{location_id}")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Location not found"
 
     def test_get_deleted_location(self, api_client, sample_location_data, sample_store):
         """Test that a deleted location can still be retrieved (soft delete)."""

@@ -728,6 +728,44 @@ class TestUpdateVariant:
         assert response.status_code == 404
         assert response.json()["detail"] == "Variant not found"
 
+    def test_update_variant_nonexistent_store(self, api_client, sample_variant_data, sample_store, sample_product):
+        """Test updating a variant scoped to a well-formed but non-existent store."""
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        non_existent_store_id = str(PydanticObjectId())
+        update_data = {"title": "Hacked Title"}
+        response = api_client.patch(
+            f"/api/v1/variants/{non_existent_store_id}/{sample_product['id']}/{variant_id}", json=update_data
+        )
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Variant not found"
+
+    def test_update_variant_duplicate_slug_returns_409(
+        self, api_client, sample_store, sample_product, sample_variant_data
+    ):
+        """Test that updating a variant's slug to collide with another variant on the same product returns 409."""
+        first_data = {**sample_variant_data, "seo": {"slug": "first-variant"}}
+        second_data = {
+            "title": "Second Variant",
+            "options": [{"name": "Size", "value": "1kg"}],
+            "seo": {"slug": "second-variant"},
+        }
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=first_data)
+        second = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=second_data
+        ).json()
+
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{second['id']}",
+            json={"seo": {"slug": "first-variant"}},
+        )
+
+        assert response.status_code == 409
+
     def test_update_variant_wrong_product(
         self, api_client, sample_variant_data, sample_store, sample_product, another_product
     ):
@@ -849,6 +887,19 @@ class TestDeleteVariant:
         non_existent_id = str(PydanticObjectId())
 
         response = api_client.delete(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{non_existent_id}")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Variant not found"
+
+    def test_delete_variant_nonexistent_store(self, api_client, sample_variant_data, sample_store, sample_product):
+        """Test deleting a variant scoped to a well-formed but non-existent store."""
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        non_existent_store_id = str(PydanticObjectId())
+        response = api_client.delete(f"/api/v1/variants/{non_existent_store_id}/{sample_product['id']}/{variant_id}")
 
         assert response.status_code == 404
         assert response.json()["detail"] == "Variant not found"

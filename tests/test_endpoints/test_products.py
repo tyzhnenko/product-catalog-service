@@ -621,6 +621,31 @@ class TestUpdateProduct:
         assert response.status_code == 404
         assert response.json()["detail"] == "Product not found"
 
+    def test_update_product_nonexistent_store(self, api_client, sample_product_data, sample_store):
+        """Test updating a product scoped to a well-formed but non-existent store."""
+        create_response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        product_id = create_response.json()["id"]
+
+        non_existent_store_id = str(PydanticObjectId())
+        update_data = {"name": "Hacked Name"}
+        response = api_client.patch(f"/api/v1/products/{non_existent_store_id}/{product_id}", json=update_data)
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Product not found"
+
+    def test_update_product_duplicate_slug_returns_409(self, api_client, sample_store, minimal_product_data):
+        """Test that updating a product's slug to collide with another product in the same store returns 409."""
+        first_data = {**minimal_product_data, "name": "First", "seo": {"slug": "first-product"}}
+        second_data = {**minimal_product_data, "name": "Second", "seo": {"slug": "second-product"}}
+        api_client.post(f"/api/v1/products/{sample_store['id']}", json=first_data)
+        second = api_client.post(f"/api/v1/products/{sample_store['id']}", json=second_data).json()
+
+        response = api_client.patch(
+            f"/api/v1/products/{sample_store['id']}/{second['id']}", json={"seo": {"slug": "first-product"}}
+        )
+
+        assert response.status_code == 409
+
 
 class TestDeleteProduct:
     """Tests for DELETE /api/v1/products/{store_id}/{product_id}."""
@@ -664,6 +689,17 @@ class TestDeleteProduct:
         response = api_client.delete(f"/api/v1/products/{sample_store['id']}/{invalid_id}")
 
         assert response.status_code == 422
+
+    def test_delete_product_nonexistent_store(self, api_client, sample_product_data, sample_store):
+        """Test deleting a product scoped to a well-formed but non-existent store."""
+        create_response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        product_id = create_response.json()["id"]
+
+        non_existent_store_id = str(PydanticObjectId())
+        response = api_client.delete(f"/api/v1/products/{non_existent_store_id}/{product_id}")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Product not found"
 
 
 class TestProductCRUDIntegration:
