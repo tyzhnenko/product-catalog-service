@@ -68,8 +68,8 @@ def sync_detailed(
      Get a specific bundle by ID.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        bundle_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        bundle_id (str): Bundle ID or slug ref (prefixed 's-')
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -102,8 +102,8 @@ def sync(
      Get a specific bundle by ID.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        bundle_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        bundle_id (str): Bundle ID or slug ref (prefixed 's-')
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -131,8 +131,8 @@ async def asyncio_detailed(
      Get a specific bundle by ID.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        bundle_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        bundle_id (str): Bundle ID or slug ref (prefixed 's-')
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -163,8 +163,8 @@ async def asyncio(
      Get a specific bundle by ID.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        bundle_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        bundle_id (str): Bundle ID or slug ref (prefixed 's-')
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

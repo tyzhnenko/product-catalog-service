@@ -2,11 +2,12 @@ from typing import cast
 
 # from uuid import uuid7
 import pendulum
+from pymongo.errors import DuplicateKeyError
 
 from src.core.logging import logger
 from src.core.types import PaginatedResponse
-from src.core.utils import paginate
-from src.domain.types.bundles import Bundle, BundleID, NewBundle, UpdateBundle
+from src.core.utils import paginate, parse_ref, raise_for_duplicate_key
+from src.domain.types.bundles import Bundle, NewBundle, UpdateBundle
 from src.domain.types.categories import CategoryID
 from src.domain.types.locations import LocationID
 from src.domain.types.prices import LocationPriceMap
@@ -103,11 +104,11 @@ class BundlesService:
 
         return sanitized_location_price if sanitized_location_price else None
 
-    async def create_bundle(self, store_id: StoreID, new_bundle: NewBundle) -> Bundle | None:
+    async def create_bundle(self, store_id: str, new_bundle: NewBundle) -> Bundle | None:
         """Create a new bundle in the specified store.
 
         Args:
-            store_id: The UUID of the store where the bundle will be created.
+            store_id: The UUID or slug ref of the store where the bundle will be created.
             new_bundle: The bundle data to create.
 
         Returns:
@@ -115,27 +116,27 @@ class BundlesService:
 
         """
         # Check if store exists
-        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
-        if not store:
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
+        if not store or store.id is None:
             logger.warning(f"Store not found: {store_id}")
             return None
 
         # Sanitize categories - keep only valid ones
         valid_categories = None
         if new_bundle.categories is not None:
-            valid_categories = await self._sanitize_categories(store_id, new_bundle.categories)
+            valid_categories = await self._sanitize_categories(cast(StoreID, store.id), new_bundle.categories)
 
         # Sanitize components - keep only valid ones
         valid_components = None
         if new_bundle.components is not None:
-            valid_components = await self._sanitize_components(store_id, new_bundle.components)
+            valid_components = await self._sanitize_components(cast(StoreID, store.id), new_bundle.components)
 
         # Sanitize location_price - keep only valid locations
-        valid_location_price = await self._sanitize_location_prices(store_id, new_bundle.location_price)
+        valid_location_price = await self._sanitize_location_prices(cast(StoreID, store.id), new_bundle.location_price)
 
         bundle = BundleModel(
             # id=uuid7(),
-            store_id=store_id,
+            store_id=store.id,
             name=new_bundle.name,
             description=new_bundle.description,
             components=valid_components,
@@ -145,27 +146,31 @@ class BundlesService:
             location_price=valid_location_price,
             region_price=new_bundle.region_price,
             images=new_bundle.images,
+            seo=new_bundle.seo,
         )
-        bundle = await bundle.create()
-        logger.info(f"Created bundle {bundle.id} for store {store_id}")
+        try:
+            bundle = await bundle.create()
+        except DuplicateKeyError as exc:
+            raise_for_duplicate_key(exc)
+        logger.info(f"Created bundle {bundle.id} for store {store.id}")
 
         return Bundle.model_validate(bundle.model_dump())
 
     async def list_bundles(
         self,
-        store_id: StoreID,
+        store_id: str,
         after: str | None,
         before: str | None,
         limit: int,
         filters: dict | None = None,
     ) -> PaginatedResponse[Bundle] | None:
         """List all non-deleted bundles for a specific store."""
-        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
 
-        query_filter = {"store_id": store_id, "deleted_at": None, **(filters or {})}
+        query_filter = {"store_id": store.id, "deleted_at": None, **(filters or {})}
         return await paginate(
             BundleModel.find(query_filter),
             after,
@@ -174,24 +179,26 @@ class BundlesService:
             transform=Bundle.model_validate,
         )
 
-    async def get_bundle(self, store_id: StoreID, bundle_id: BundleID) -> Bundle | None:
+    async def get_bundle(self, store_id: str, bundle_id: str) -> Bundle | None:
         """Get a specific bundle by ID from a store.
 
         Args:
-            store_id: The UUID of the store.
-            bundle_id: The UUID of the bundle to retrieve.
+            store_id: The UUID or slug ref of the store.
+            bundle_id: The UUID or slug ref of the bundle to retrieve.
 
         Returns:
             The Bundle object if found and belongs to the store, None otherwise.
 
         """
         # Check if store exists
-        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
 
-        bundle = await BundleModel.find({"_id": bundle_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        bundle = await BundleModel.find(
+            {**parse_ref(bundle_id), "store_id": store.id, "deleted_at": None}
+        ).first_or_none()
         if bundle:
             return Bundle.model_validate(bundle.model_dump())
         logger.warning(f"Bundle not found or access denied: bundle_id={bundle_id}, store_id={store_id}")
@@ -199,15 +206,15 @@ class BundlesService:
 
     async def update_bundle(
         self,
-        store_id: StoreID,
-        bundle_id: BundleID,
+        store_id: str,
+        bundle_id: str,
         update_data: UpdateBundle,
     ) -> Bundle | None:
         """Update an existing bundle's information.
 
         Args:
-            store_id: The UUID of the store.
-            bundle_id: The UUID of the bundle to update.
+            store_id: The UUID or slug ref of the store.
+            bundle_id: The UUID or slug ref of the bundle to update.
             update_data: The partial bundle data to update.
 
         Returns:
@@ -215,12 +222,14 @@ class BundlesService:
 
         """
         # Check if store exists
-        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
 
-        bundle = await BundleModel.find({"_id": bundle_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        bundle = await BundleModel.find(
+            {**parse_ref(bundle_id), "store_id": store.id, "deleted_at": None}
+        ).first_or_none()
         if not bundle:
             logger.warning(f"Bundle not found or access denied: bundle_id={bundle_id}, store_id={store_id}")
             return None
@@ -230,48 +239,57 @@ class BundlesService:
 
         # Sanitize categories if they are being updated
         if "categories" in update_dict and update_dict["categories"] is not None:
-            update_dict["categories"] = await self._sanitize_categories(store_id, update_dict["categories"])
+            update_dict["categories"] = await self._sanitize_categories(
+                cast(StoreID, store.id), update_dict["categories"]
+            )
 
         # Sanitize components if they are being updated
         if "components" in update_dict and update_dict["components"] is not None:
-            update_dict["components"] = await self._sanitize_components(store_id, update_dict["components"])
+            update_dict["components"] = await self._sanitize_components(
+                cast(StoreID, store.id), update_dict["components"]
+            )
 
         # Sanitize location_price if it is being updated
         if "location_price" in update_dict:
             update_dict["location_price"] = await self._sanitize_location_prices(
-                store_id, update_dict["location_price"]
+                cast(StoreID, store.id), update_dict["location_price"]
             )
 
         for field, value in update_dict.items():
             setattr(bundle, field, value)
 
-        await bundle.save()
-        logger.info(f"Updated bundle {bundle_id} for store {store_id}")
+        try:
+            await bundle.save()
+        except DuplicateKeyError as exc:
+            raise_for_duplicate_key(exc)
+        logger.info(f"Updated bundle {bundle_id} for store {store.id}")
         return Bundle.model_validate(bundle.model_dump())
 
-    async def delete_bundle(self, store_id: StoreID, bundle_id: BundleID) -> bool:
+    async def delete_bundle(self, store_id: str, bundle_id: str) -> bool:
         """Soft delete a bundle by setting its deleted_at timestamp.
 
         Args:
-            store_id: The UUID of the store.
-            bundle_id: The UUID of the bundle to delete.
+            store_id: The UUID or slug ref of the store.
+            bundle_id: The UUID or slug ref of the bundle to delete.
 
         Returns:
             True if the bundle was successfully deleted, False otherwise.
 
         """
         # Check if store exists
-        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return False
 
-        bundle = await BundleModel.find({"_id": bundle_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        bundle = await BundleModel.find(
+            {**parse_ref(bundle_id), "store_id": store.id, "deleted_at": None}
+        ).first_or_none()
         if not bundle:
             logger.warning(f"Bundle not found or access denied: bundle_id={bundle_id}, store_id={store_id}")
             return False
 
         bundle.deleted_at = pendulum.now()
         await bundle.save()
-        logger.info(f"Deleted bundle {bundle_id} for store {store_id}")
+        logger.info(f"Deleted bundle {bundle_id} for store {store.id}")
         return True

@@ -11,8 +11,8 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.attributes_map import AttributesMap
-    from ..models.category_seo import CategorySEO
     from ..models.image import Image
+    from ..models.seo import SEO
 
 
 T = TypeVar("T", bound="UpdateCategory")
@@ -26,7 +26,7 @@ class UpdateCategory:
         name (None | str | Unset):
         description (None | str | Unset):
         status (CategoryStatusEnum | None | Unset):
-        seo (CategorySEO | None | Unset):
+        seo (None | SEO | Unset):
         path (None | str | Unset):
         attributes (AttributesMap | None | Unset):
         images (list[Image] | None | Unset):
@@ -35,7 +35,7 @@ class UpdateCategory:
     name: None | str | Unset = UNSET
     description: None | str | Unset = UNSET
     status: CategoryStatusEnum | None | Unset = UNSET
-    seo: CategorySEO | None | Unset = UNSET
+    seo: None | SEO | Unset = UNSET
     path: None | str | Unset = UNSET
     attributes: AttributesMap | None | Unset = UNSET
     images: list[Image] | None | Unset = UNSET
@@ -43,7 +43,7 @@ class UpdateCategory:
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.attributes_map import AttributesMap
-        from ..models.category_seo import CategorySEO
+        from ..models.seo import SEO
 
         name: None | str | Unset
         if isinstance(self.name, Unset):
@@ -68,7 +68,7 @@ class UpdateCategory:
         seo: dict[str, Any] | None | Unset
         if isinstance(self.seo, Unset):
             seo = UNSET
-        elif isinstance(self.seo, CategorySEO):
+        elif isinstance(self.seo, SEO):
             seo = self.seo.to_dict()
         else:
             seo = self.seo
@@ -122,8 +122,8 @@ class UpdateCategory:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.attributes_map import AttributesMap
-        from ..models.category_seo import CategorySEO
         from ..models.image import Image
+        from ..models.seo import SEO
 
         d = dict(src_dict)
 
@@ -162,7 +162,7 @@ class UpdateCategory:
 
         status = _parse_status(d.pop("status", UNSET))
 
-        def _parse_seo(data: object) -> CategorySEO | None | Unset:
+        def _parse_seo(data: object) -> None | SEO | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -170,12 +170,12 @@ class UpdateCategory:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                seo_type_0 = CategorySEO.from_dict(data)
+                seo_type_0 = SEO.from_dict(data)
 
                 return seo_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(CategorySEO | None | Unset, data)
+            return cast(None | SEO | Unset, data)
 
         seo = _parse_seo(d.pop("seo", UNSET))
 

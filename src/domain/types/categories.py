@@ -8,6 +8,8 @@ from pydantic_extra_types.pendulum_dt import DateTime
 from src.core.utils import split_path
 from src.domain.types.attributes import AttributesMap
 from src.domain.types.media import Image
+from src.domain.types.refs import ObjectIdRef, SlugRef
+from src.domain.types.seo import SEO
 
 type CategoryID = Annotated[
     PydanticObjectId,
@@ -15,6 +17,14 @@ type CategoryID = Annotated[
         ...,
         title="Category ID",
         description="Unique identifier for a category",
+    ),
+]
+
+type CategoryRef = Annotated[
+    ObjectIdRef | SlugRef,
+    Field(
+        title="Category Ref",
+        description="Category ID or slug ref (prefixed 's-')",
     ),
 ]
 
@@ -35,46 +45,6 @@ type CategoryDescription = Annotated[
         min_length=1,
         max_length=2048,
         description="Description of the category",
-    ),
-]
-
-type CategorySEOSlug = Annotated[
-    str,
-    Field(
-        ...,
-        min_length=1,
-        max_length=64,
-        description="Slug of the category",
-    ),
-]
-
-type CategorySEOTitle = Annotated[
-    str,
-    Field(
-        ...,
-        min_length=1,
-        max_length=128,
-        description="SEO title of the category",
-    ),
-]
-
-type CategorySEODescription = Annotated[
-    str,
-    Field(
-        ...,
-        min_length=1,
-        max_length=1024,
-        description="SEO description of the category",
-    ),
-]
-
-type CategorySEOKeywords = Annotated[
-    str,
-    Field(
-        ...,
-        min_length=1,
-        max_length=256,
-        description="SEO keywords of the category",
     ),
 ]
 
@@ -112,22 +82,6 @@ type CategoryStatus = Annotated[
 ]
 
 
-class CategorySEO(BaseModel):
-    """SEO information for a category."""
-
-    model_config = ConfigDict(
-        title="CategorySEO",
-        json_schema_extra={
-            "description": "SEO information for a category",
-        },
-    )
-
-    slug: CategorySEOSlug | None = None
-    title: CategorySEOTitle | None = None
-    description: CategorySEODescription | None = None
-    keywords: CategorySEOKeywords | None = None
-
-
 class NewCategory(BaseModel):
     """Data required to create a new category."""
 
@@ -142,7 +96,7 @@ class NewCategory(BaseModel):
     description: CategoryDescription | None = None
     status: CategoryStatus = CategoryStatusEnum.ACTIVE
     path: CategoryPath
-    seo: CategorySEO | None = None
+    seo: SEO | None = None
     attributes: AttributesMap | None = None
     images: CategoryImages | None = None
 
@@ -167,7 +121,7 @@ class Category(BaseModel):
     description: CategoryDescription | None
     status: CategoryStatus
     path: CategoryPath
-    seo: CategorySEO | None
+    seo: SEO | None
     attributes: AttributesMap | None
     images: CategoryImages | None
     updated_at: DateTime
@@ -187,7 +141,7 @@ class UpdateCategory(BaseModel):
     name: CategoryName | None = None
     description: CategoryDescription | None = None
     status: CategoryStatus | None = None
-    seo: CategorySEO | None = None
+    seo: SEO | None = None
     path: CategoryPath | None = None
     attributes: AttributesMap | None = None
     images: CategoryImages | None = None

@@ -275,7 +275,7 @@ class TestCreateVariant:
         assert response.status_code == 422
 
     def test_create_variant_invalid_store_id(self, api_client, sample_variant_data, sample_product):
-        """Test variant creation with invalid store_id UUID format."""
+        """Test variant creation with invalid store_id format (rejected by path param validation)."""
         response = api_client.post(
             f"/api/v1/variants/not-a-valid-uuid/{sample_product['id']}", json=sample_variant_data
         )
@@ -368,6 +368,35 @@ class TestCreateVariant:
         )
         assert response2.status_code == 200
 
+    def test_create_variant_duplicate_slug_within_same_product_returns_409(
+        self, api_client, sample_store, sample_product, sample_variant_data
+    ):
+        """Test that creating a second variant with the same slug within the same product returns 409."""
+        variant_data = {**sample_variant_data, "seo": {"slug": "250g-whole-beans"}}
+        first = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+        assert first.status_code == 200
+
+        duplicate_data = {
+            "title": "Different Title",
+            "sku": "DIFFERENT-SKU",
+            "options": [{"name": "Size", "value": "500g"}],
+            "seo": {"slug": "250g-whole-beans"},
+        }
+        response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=duplicate_data)
+
+        assert response.status_code == 409
+
+    def test_create_variant_same_slug_different_product_allowed(
+        self, api_client, sample_store, sample_product, another_product, sample_variant_data
+    ):
+        """Test that the same variant slug can be reused across different products within one store."""
+        variant_data = {**sample_variant_data, "seo": {"slug": "250g-whole-beans"}}
+        response1 = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+        assert response1.status_code == 200
+
+        response2 = api_client.post(f"/api/v1/variants/{sample_store['id']}/{another_product['id']}", json=variant_data)
+        assert response2.status_code == 200
+
     def test_create_variant_empty_options_duplicate(self, api_client, sample_store, sample_product):
         """Test that creating multiple variants with empty options fails."""
         variant_data_1 = {
@@ -395,6 +424,27 @@ class TestCreateVariant:
 
 class TestListVariants:
     """Tests for GET /api/v1/variants/{store_id}/{product_id}."""
+
+    def test_list_variants_by_store_slug(self, api_client, sample_variant_data):
+        """Test that the store_id path segment also accepts an 's-<slug>' ref."""
+        store_data = {
+            "name": "Slug Store for Variants",
+            "url": "https://slugstorevariants.com/",
+            "seo": {"slug": "slug-store-variants"},
+        }
+        store = api_client.post("/api/v1/stores/", json=store_data).json()
+        product = api_client.post(
+            f"/api/v1/products/{store['id']}", json={"name": "Ethiopian Coffee", "tags": []}
+        ).json()
+        create_response = api_client.post(f"/api/v1/variants/{store['id']}/{product['id']}", json=sample_variant_data)
+        created_variant = create_response.json()
+
+        response = api_client.get(f"/api/v1/variants/s-slug-store-variants/{product['id']}")
+
+        assert response.status_code == 200
+        variants = response.json()["items"]
+        assert len(variants) == 1
+        assert variants[0]["id"] == created_variant["id"]
 
     def test_list_variants_empty(self, api_client, sample_store, sample_product):
         """Test listing variants when database is empty."""
@@ -529,6 +579,38 @@ class TestGetVariant:
         assert response.status_code == 404
         assert response.json()["detail"] == "Variant not found"
 
+    def test_get_variant_by_slug(self, api_client, sample_variant_data, sample_store, sample_product):
+        """Test that a variant can be looked up by its 's-<slug>' ref, resolving to the same document."""
+        variant_data = {**sample_variant_data, "seo": {"slug": "250g-whole-beans"}}
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data
+        )
+        created_variant = create_response.json()
+
+        response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/s-250g-whole-beans")
+
+        assert response.status_code == 200
+        assert response.json()["id"] == created_variant["id"]
+
+    def test_get_variant_by_slug_with_product_slug(self, api_client, sample_variant_data, sample_store):
+        """Test end-to-end slug resolution: both product_id and variant_id as 's-<slug>' refs."""
+        product_data = {
+            "name": "Ethiopian Coffee",
+            "tags": ["single-origin"],
+            "seo": {"slug": "ethiopian-coffee"},
+        }
+        product_response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=product_data)
+        product = product_response.json()
+
+        variant_data = {**sample_variant_data, "seo": {"slug": "250g-whole-beans"}}
+        create_response = api_client.post(f"/api/v1/variants/{sample_store['id']}/{product['id']}", json=variant_data)
+        created_variant = create_response.json()
+
+        response = api_client.get(f"/api/v1/variants/{sample_store['id']}/s-ethiopian-coffee/s-250g-whole-beans")
+
+        assert response.status_code == 200
+        assert response.json()["id"] == created_variant["id"]
+
     def test_get_variant_wrong_product(
         self, api_client, sample_variant_data, sample_store, sample_product, another_product
     ):
@@ -546,7 +628,7 @@ class TestGetVariant:
         assert response.json()["detail"] == "Variant not found"
 
     def test_get_variant_invalid_uuid(self, api_client, sample_store, sample_product):
-        """Test getting a variant with invalid UUID format."""
+        """Test getting a variant with invalid UUID format (rejected by path param validation)."""
         invalid_id = "not-a-valid-uuid"
 
         response = api_client.get(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{invalid_id}")
@@ -645,6 +727,44 @@ class TestUpdateVariant:
 
         assert response.status_code == 404
         assert response.json()["detail"] == "Variant not found"
+
+    def test_update_variant_nonexistent_store(self, api_client, sample_variant_data, sample_store, sample_product):
+        """Test updating a variant scoped to a well-formed but non-existent store."""
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        non_existent_store_id = str(PydanticObjectId())
+        update_data = {"title": "Hacked Title"}
+        response = api_client.patch(
+            f"/api/v1/variants/{non_existent_store_id}/{sample_product['id']}/{variant_id}", json=update_data
+        )
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Variant not found"
+
+    def test_update_variant_duplicate_slug_returns_409(
+        self, api_client, sample_store, sample_product, sample_variant_data
+    ):
+        """Test that updating a variant's slug to collide with another variant on the same product returns 409."""
+        first_data = {**sample_variant_data, "seo": {"slug": "first-variant"}}
+        second_data = {
+            "title": "Second Variant",
+            "options": [{"name": "Size", "value": "1kg"}],
+            "seo": {"slug": "second-variant"},
+        }
+        api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=first_data)
+        second = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=second_data
+        ).json()
+
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{second['id']}",
+            json={"seo": {"slug": "first-variant"}},
+        )
+
+        assert response.status_code == 409
 
     def test_update_variant_wrong_product(
         self, api_client, sample_variant_data, sample_store, sample_product, another_product
@@ -771,6 +891,19 @@ class TestDeleteVariant:
         assert response.status_code == 404
         assert response.json()["detail"] == "Variant not found"
 
+    def test_delete_variant_nonexistent_store(self, api_client, sample_variant_data, sample_store, sample_product):
+        """Test deleting a variant scoped to a well-formed but non-existent store."""
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data
+        )
+        variant_id = create_response.json()["id"]
+
+        non_existent_store_id = str(PydanticObjectId())
+        response = api_client.delete(f"/api/v1/variants/{non_existent_store_id}/{sample_product['id']}/{variant_id}")
+
+        assert response.status_code == 404
+        assert response.json()["detail"] == "Variant not found"
+
     def test_delete_variant_wrong_product(
         self, api_client, sample_variant_data, sample_store, sample_product, another_product
     ):
@@ -788,7 +921,7 @@ class TestDeleteVariant:
         assert response.json()["detail"] == "Variant not found"
 
     def test_delete_variant_invalid_uuid(self, api_client, sample_store, sample_product):
-        """Test deleting a variant with invalid UUID format."""
+        """Test deleting a variant with invalid UUID format (rejected by path param validation)."""
         invalid_id = "not-a-valid-uuid"
 
         response = api_client.delete(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{invalid_id}")

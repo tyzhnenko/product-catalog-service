@@ -2,6 +2,7 @@ from pymongo import IndexModel
 
 from src.domain.types.attributes import AttributesMap
 from src.domain.types.locations import LocationName
+from src.domain.types.seo import SEO
 from src.domain.types.stores import StoreID
 from src.models.base import BaseAppDocument
 
@@ -10,6 +11,7 @@ class LocationModel(BaseAppDocument):
     name: LocationName
     store_id: StoreID
     attributes: AttributesMap
+    seo: SEO | None = None
 
     class Settings:
         name = "locations"
@@ -19,5 +21,10 @@ class LocationModel(BaseAppDocument):
             IndexModel(
                 ["attributes.$**"],
                 name="attributes_wildcard_idx",
+            ),
+            IndexModel(
+                ["store_id", "seo.slug"],
+                unique=True,
+                partialFilterExpression={"seo.slug": {"$exists": True}},
             ),
         ]

@@ -47,6 +47,17 @@ class TestCreateStore:
         assert response.status_code == 422
         assert "detail" in response.json()
 
+    def test_create_store_duplicate_slug_returns_409(self, api_client, sample_store_data):
+        """Test that creating a second store with the same slug returns 409."""
+        store_data = {**sample_store_data, "seo": {"slug": "test-coffee-store"}}
+        first = api_client.post("/api/v1/stores/", json=store_data)
+        assert first.status_code == 200
+
+        duplicate_data = {**store_data, "name": "Different Name", "url": "https://different.example.com/"}
+        response = api_client.post("/api/v1/stores/", json=duplicate_data)
+
+        assert response.status_code == 409
+
     def test_create_store_missing_name(self, api_client):
         """Test store creation without name."""
         invalid_data = {
@@ -142,6 +153,17 @@ class TestGetStore:
         assert data["name"] == sample_store_data["name"]
         assert data["url"] == sample_store_data["url"]
 
+    def test_get_store_by_slug(self, api_client, sample_store_data):
+        """Test that a store can be looked up by its 's-<slug>' ref, resolving to the same document."""
+        store_data = {**sample_store_data, "seo": {"slug": "test-coffee-store"}}
+        create_response = api_client.post("/api/v1/stores/", json=store_data)
+        created_store = create_response.json()
+
+        response = api_client.get("/api/v1/stores/s-test-coffee-store")
+
+        assert response.status_code == 200
+        assert response.json()["id"] == created_store["id"]
+
     def test_get_store_not_found(self, api_client):
         """Test getting a non-existent store."""
         # Generate a random UUID7
@@ -153,7 +175,7 @@ class TestGetStore:
         assert response.json()["detail"] == "Store not found"
 
     def test_get_store_invalid_uuid(self, api_client):
-        """Test getting a store with invalid UUID format."""
+        """Test getting a store with invalid UUID format (rejected by path param validation)."""
         invalid_id = "not-a-valid-uuid"
 
         response = api_client.get(f"/api/v1/stores/{invalid_id}")
@@ -223,6 +245,36 @@ class TestUpdateStore:
         assert data["id"] == store_id
         assert data["name"] == "Completely New Store"
         assert data["url"] == "https://completelynew.com/"
+
+    def test_update_store_seo(self, api_client, sample_store_data):
+        """Test updating a store's seo field."""
+        create_response = api_client.post("/api/v1/stores/", json=sample_store_data)
+        store_id = create_response.json()["id"]
+
+        update_data = {"seo": {"slug": "test-coffee-store"}}
+        response = api_client.put(f"/api/v1/stores/{store_id}", json=update_data)
+
+        assert response.status_code == 200
+        assert response.json()["seo"]["slug"] == "test-coffee-store"
+
+    def test_update_store_duplicate_slug_returns_409(self, api_client):
+        """Test that updating a store's slug to collide with another store returns 409."""
+        first_data = {
+            "name": "First Store",
+            "url": "https://first-store.example.com/",
+            "seo": {"slug": "first-store"},
+        }
+        second_data = {
+            "name": "Second Store",
+            "url": "https://second-store.example.com/",
+            "seo": {"slug": "second-store"},
+        }
+        api_client.post("/api/v1/stores/", json=first_data)
+        second = api_client.post("/api/v1/stores/", json=second_data).json()
+
+        response = api_client.put(f"/api/v1/stores/{second['id']}", json={"seo": {"slug": "first-store"}})
+
+        assert response.status_code == 409
 
     def test_update_store_not_found(self, api_client):
         """Test updating a non-existent store."""
@@ -295,7 +347,7 @@ class TestDeleteStore:
         assert response.json()["detail"] == "Store not found"
 
     def test_delete_store_invalid_uuid(self, api_client):
-        """Test deleting a store with invalid UUID format."""
+        """Test deleting a store with invalid UUID format (rejected by path param validation)."""
         invalid_id = "not-a-valid-uuid"
 
         response = api_client.delete(f"/api/v1/stores/{invalid_id}")

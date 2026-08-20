@@ -6,10 +6,10 @@ from src.domain.types.products import (
     ProductBrand,
     ProductDescription,
     ProductName,
-    ProductSEO,
     ProductStatus,
     ProductTags,
 )
+from src.domain.types.seo import SEO
 from src.domain.types.stores import StoreID
 from src.models.base import BaseAppDocument
 
@@ -21,7 +21,7 @@ class ProductModel(BaseAppDocument):
     brand: ProductBrand | None = None
     tags: ProductTags
     status: ProductStatus
-    seo: ProductSEO | None = None
+    seo: SEO | None = None
     attributes: AttributesMap
     categories: list[CategoryID] = []
 
@@ -32,5 +32,10 @@ class ProductModel(BaseAppDocument):
             IndexModel(
                 ["attributes.$**"],
                 name="attributes_wildcard_idx",
+            ),
+            IndexModel(
+                ["store_id", "seo.slug"],
+                unique=True,
+                partialFilterExpression={"seo.slug": {"$exists": True}},
             ),
         ]

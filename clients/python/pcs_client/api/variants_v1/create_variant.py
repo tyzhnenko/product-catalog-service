@@ -78,8 +78,8 @@ def sync_detailed(
      Create a new variant for a specific product.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
         body (NewProductVariant): Data required to create a new product variant
 
     Raises:
@@ -115,8 +115,8 @@ def sync(
      Create a new variant for a specific product.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
         body (NewProductVariant): Data required to create a new product variant
 
     Raises:
@@ -147,8 +147,8 @@ async def asyncio_detailed(
      Create a new variant for a specific product.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
         body (NewProductVariant): Data required to create a new product variant
 
     Raises:
@@ -182,8 +182,8 @@ async def asyncio(
      Create a new variant for a specific product.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
         body (NewProductVariant): Data required to create a new product variant
 
     Raises:

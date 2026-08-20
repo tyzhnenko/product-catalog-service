@@ -4,6 +4,8 @@ from beanie import PydanticObjectId
 from pydantic import BaseModel, ConfigDict, Field
 
 from src.domain.types.base import HTTPURLField
+from src.domain.types.refs import ObjectIdRef, SlugRef
+from src.domain.types.seo import SEO
 
 type StoreID = Annotated[
     PydanticObjectId,
@@ -11,6 +13,14 @@ type StoreID = Annotated[
         ...,
         title="Store ID",
         description="Unique identifier for a store",
+    ),
+]
+
+type StoreRef = Annotated[
+    ObjectIdRef | SlugRef,
+    Field(
+        title="Store Ref",
+        description="Store ID or slug ref (prefixed 's-')",
     ),
 ]
 
@@ -33,6 +43,7 @@ class NewStore(BaseModel):
 
     name: StoreName
     url: HTTPURLField
+    seo: SEO | None = None
 
 
 class Store(BaseModel):
@@ -43,6 +54,7 @@ class Store(BaseModel):
     id: StoreID
     name: StoreName
     url: HTTPURLField
+    seo: SEO | None = None
 
 
 class UpdateStore(BaseModel):
@@ -52,3 +64,4 @@ class UpdateStore(BaseModel):
 
     name: StoreName | None = None
     url: HTTPURLField | None = None
+    seo: SEO | None = None

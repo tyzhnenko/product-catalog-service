@@ -8,12 +8,12 @@ from attrs import field as _attrs_field
 
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="ProductSEO")
+T = TypeVar("T", bound="SEO")
 
 
 @_attrs_define
-class ProductSEO:
-    """SEO information for a product
+class SEO:
+    """SEO information
 
     Attributes:
         slug (None | str | Unset):
@@ -107,15 +107,15 @@ class ProductSEO:
 
         keywords = _parse_keywords(d.pop("keywords", UNSET))
 
-        product_seo = cls(
+        seo = cls(
             slug=slug,
             title=title,
             description=description,
             keywords=keywords,
         )
 
-        product_seo.additional_properties = d
-        return product_seo
+        seo.additional_properties = d
+        return seo
 
     @property
     def additional_keys(self) -> list[str]:

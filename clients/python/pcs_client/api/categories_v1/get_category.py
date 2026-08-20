@@ -68,8 +68,8 @@ def sync_detailed(
      Retrieve details of a specific category by its ID for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        category_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        category_id (str): Category ID or slug ref (prefixed 's-')
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -102,8 +102,8 @@ def sync(
      Retrieve details of a specific category by its ID for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        category_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        category_id (str): Category ID or slug ref (prefixed 's-')
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -131,8 +131,8 @@ async def asyncio_detailed(
      Retrieve details of a specific category by its ID for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        category_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        category_id (str): Category ID or slug ref (prefixed 's-')
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -163,8 +163,8 @@ async def asyncio(
      Retrieve details of a specific category by its ID for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        category_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        category_id (str): Category ID or slug ref (prefixed 's-')
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

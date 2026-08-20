@@ -10,6 +10,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.attributes_map import AttributesMap
+    from ..models.seo import SEO
 
 
 T = TypeVar("T", bound="UpdateLocation")
@@ -21,14 +22,17 @@ class UpdateLocation:
     Attributes:
         name (None | str | Unset):
         attributes (AttributesMap | None | Unset):
+        seo (None | SEO | Unset):
     """
 
     name: None | str | Unset = UNSET
     attributes: AttributesMap | None | Unset = UNSET
+    seo: None | SEO | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.attributes_map import AttributesMap
+        from ..models.seo import SEO
 
         name: None | str | Unset
         if isinstance(self.name, Unset):
@@ -44,6 +48,14 @@ class UpdateLocation:
         else:
             attributes = self.attributes
 
+        seo: dict[str, Any] | None | Unset
+        if isinstance(self.seo, Unset):
+            seo = UNSET
+        elif isinstance(self.seo, SEO):
+            seo = self.seo.to_dict()
+        else:
+            seo = self.seo
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update({})
@@ -51,12 +63,15 @@ class UpdateLocation:
             field_dict["name"] = name
         if attributes is not UNSET:
             field_dict["attributes"] = attributes
+        if seo is not UNSET:
+            field_dict["seo"] = seo
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.attributes_map import AttributesMap
+        from ..models.seo import SEO
 
         d = dict(src_dict)
 
@@ -86,9 +101,27 @@ class UpdateLocation:
 
         attributes = _parse_attributes(d.pop("attributes", UNSET))
 
+        def _parse_seo(data: object) -> None | SEO | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                seo_type_0 = SEO.from_dict(data)
+
+                return seo_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | SEO | Unset, data)
+
+        seo = _parse_seo(d.pop("seo", UNSET))
+
         update_location = cls(
             name=name,
             attributes=attributes,
+            seo=seo,
         )
 
         update_location.additional_properties = d

@@ -8,6 +8,8 @@ from src.domain.types.attributes import AttributesMap
 from src.domain.types.categories import CategoryID
 from src.domain.types.media import Image
 from src.domain.types.prices import LocationPriceMap, PriceMap, RegionPriceMap
+from src.domain.types.refs import ObjectIdRef, SlugRef
+from src.domain.types.seo import SEO
 from src.domain.types.variants import VariantID
 
 type BundleID = Annotated[
@@ -16,6 +18,14 @@ type BundleID = Annotated[
         ...,
         title="Bundle ID",
         description="Unique identifier for a bundle",
+    ),
+]
+
+type BundleRef = Annotated[
+    ObjectIdRef | SlugRef,
+    Field(
+        title="Bundle Ref",
+        description="Bundle ID or slug ref (prefixed 's-')",
     ),
 ]
 
@@ -90,6 +100,7 @@ class NewBundle(BaseModel):
     location_price: LocationPriceMap | None = None
     region_price: RegionPriceMap | None = None
     images: BundleImages | None = None
+    seo: SEO | None = None
 
 
 class Bundle(BaseModel):
@@ -105,6 +116,7 @@ class Bundle(BaseModel):
     location_price: LocationPriceMap | None = None
     region_price: RegionPriceMap | None = None
     images: BundleImages | None = None
+    seo: SEO | None = None
     updated_at: DateTime
     created_at: DateTime
 
@@ -119,3 +131,4 @@ class UpdateBundle(BaseModel):
     location_price: LocationPriceMap | None = None
     region_price: RegionPriceMap | None = None
     images: BundleImages | None = None
+    seo: SEO | None = None

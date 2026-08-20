@@ -118,7 +118,7 @@ def sync_detailed(
      Retrieve a list of all products for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
@@ -176,7 +176,7 @@ def sync(
      Retrieve a list of all products for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
@@ -229,7 +229,7 @@ async def asyncio_detailed(
      Retrieve a list of all products for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
@@ -285,7 +285,7 @@ async def asyncio(
      Retrieve a list of all products for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
