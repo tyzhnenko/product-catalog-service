@@ -78,8 +78,8 @@ def sync_detailed(
      Update a specific product's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
         body (UpdateProduct): Data required to update a product
 
     Raises:
@@ -115,8 +115,8 @@ def sync(
      Update a specific product's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
         body (UpdateProduct): Data required to update a product
 
     Raises:
@@ -147,8 +147,8 @@ async def asyncio_detailed(
      Update a specific product's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
         body (UpdateProduct): Data required to update a product
 
     Raises:
@@ -182,8 +182,8 @@ async def asyncio(
      Update a specific product's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
         body (UpdateProduct): Data required to update a product
 
     Raises:

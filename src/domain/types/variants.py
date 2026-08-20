@@ -7,6 +7,8 @@ from src.domain.types.attributes import AttributesMap
 from src.domain.types.media import Image
 from src.domain.types.prices import LocationPriceMap, PriceMap, RegionPriceMap
 from src.domain.types.products import ProductID
+from src.domain.types.refs import ObjectIdRef, SlugRef
+from src.domain.types.seo import SEO
 
 type VariantID = Annotated[
     PydanticObjectId,
@@ -14,6 +16,14 @@ type VariantID = Annotated[
         ...,
         title="Variant ID",
         description="Unique identifier for a variant",
+    ),
+]
+
+type VariantRef = Annotated[
+    ObjectIdRef | SlugRef,
+    Field(
+        title="Variant Ref",
+        description="Variant ID or slug ref (prefixed 's-')",
     ),
 ]
 
@@ -141,6 +151,7 @@ class NewProductVariant(BaseModel):
     location_price: LocationPriceMap | None = None
     region_price: RegionPriceMap | None = None
     images: VariantImages | None = None
+    seo: SEO | None = None
 
 
 class ProductVariant(BaseModel):
@@ -166,6 +177,7 @@ class ProductVariant(BaseModel):
     location_price: LocationPriceMap | None = None
     region_price: RegionPriceMap | None = None
     images: VariantImages | None = None
+    seo: SEO | None = None
 
 
 class UpdateProductVariant(BaseModel):
@@ -188,3 +200,4 @@ class UpdateProductVariant(BaseModel):
     location_price: LocationPriceMap | None = None
     region_price: RegionPriceMap | None = None
     images: VariantImages | None = None
+    seo: SEO | None = None

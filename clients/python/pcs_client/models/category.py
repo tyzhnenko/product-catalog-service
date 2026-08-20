@@ -11,8 +11,8 @@ from ..models.category_status_enum import CategoryStatusEnum
 
 if TYPE_CHECKING:
     from ..models.attributes_map import AttributesMap
-    from ..models.category_seo import CategorySEO
     from ..models.image import Image
+    from ..models.seo import SEO
 
 
 T = TypeVar("T", bound="Category")
@@ -28,7 +28,7 @@ class Category:
         description (None | str):
         status (CategoryStatusEnum):
         path (str): Path of the category. Example: '/electronics/laptops'. Root categories have path as '/electronics'.
-        seo (CategorySEO | None):
+        seo (None | SEO):
         attributes (AttributesMap | None):
         images (list[Image] | None):
         updated_at (datetime.datetime):
@@ -40,7 +40,7 @@ class Category:
     description: None | str
     status: CategoryStatusEnum
     path: str
-    seo: CategorySEO | None
+    seo: None | SEO
     attributes: AttributesMap | None
     images: list[Image] | None
     updated_at: datetime.datetime
@@ -49,7 +49,7 @@ class Category:
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.attributes_map import AttributesMap
-        from ..models.category_seo import CategorySEO
+        from ..models.seo import SEO
 
         id = self.id
 
@@ -63,7 +63,7 @@ class Category:
         path = self.path
 
         seo: dict[str, Any] | None
-        if isinstance(self.seo, CategorySEO):
+        if isinstance(self.seo, SEO):
             seo = self.seo.to_dict()
         else:
             seo = self.seo
@@ -110,8 +110,8 @@ class Category:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.attributes_map import AttributesMap
-        from ..models.category_seo import CategorySEO
         from ..models.image import Image
+        from ..models.seo import SEO
 
         d = dict(src_dict)
         id = d.pop("id")
@@ -129,18 +129,18 @@ class Category:
 
         path = d.pop("path")
 
-        def _parse_seo(data: object) -> CategorySEO | None:
+        def _parse_seo(data: object) -> None | SEO:
             if data is None:
                 return data
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                seo_type_0 = CategorySEO.from_dict(data)
+                seo_type_0 = SEO.from_dict(data)
 
                 return seo_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(CategorySEO | None, data)
+            return cast(None | SEO, data)
 
         seo = _parse_seo(d.pop("seo"))
 

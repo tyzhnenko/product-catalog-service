@@ -8,8 +8,8 @@ from src.core.auth import ro_access, rw_access
 from src.core.types import PaginatedResponse
 from src.core.utils import build_attribute_filter, build_price_search_filter
 from src.domain.products import ProductsService
-from src.domain.types.products import NewProduct, Product, ProductID, UpdateProduct
-from src.domain.types.stores import StoreID
+from src.domain.types.products import NewProduct, Product, ProductRef, UpdateProduct
+from src.domain.types.stores import StoreRef
 from src.settings import load_settings
 
 _settings = load_settings()
@@ -24,7 +24,7 @@ router = APIRouter()
     dependencies=[Security(ro_access)],
 )
 async def list_products(
-    store_id: StoreID,
+    store_id: StoreRef,
     service: Annotated[ProductsService, Depends(ProductsService)],
     after: str | None = Query(None, description="Cursor for forward pagination"),
     before: str | None = Query(None, description="Cursor for backward pagination"),
@@ -86,7 +86,7 @@ async def list_products(
     dependencies=[Security(rw_access)],
 )
 async def create_product(
-    store_id: StoreID,
+    store_id: StoreRef,
     new_product: NewProduct,
     service: Annotated[ProductsService, Depends(ProductsService)],
 ) -> Product:
@@ -108,8 +108,8 @@ async def create_product(
     dependencies=[Security(ro_access)],
 )
 async def get_product(
-    store_id: StoreID,
-    product_id: ProductID,
+    store_id: StoreRef,
+    product_id: ProductRef,
     service: Annotated[ProductsService, Depends(ProductsService)],
 ) -> Product:
     """Get a specific product by ID."""
@@ -130,8 +130,8 @@ async def get_product(
     dependencies=[Security(rw_access)],
 )
 async def update_product(
-    store_id: StoreID,
-    product_id: ProductID,
+    store_id: StoreRef,
+    product_id: ProductRef,
     update_data: UpdateProduct,
     service: Annotated[ProductsService, Depends(ProductsService)],
 ) -> Product:
@@ -153,8 +153,8 @@ async def update_product(
     dependencies=[Security(rw_access)],
 )
 async def delete_product(
-    store_id: StoreID,
-    product_id: ProductID,
+    store_id: StoreRef,
+    product_id: ProductRef,
     service: Annotated[ProductsService, Depends(ProductsService)],
 ) -> Response:
     """Delete a product (soft delete)."""

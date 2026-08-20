@@ -101,6 +101,16 @@ class TestCreateCategory:
         assert data["path"] == "/test-category"
         assert "id" in data
 
+    def test_create_category_duplicate_slug_returns_409(self, api_client, sample_category_data, sample_store):
+        """Test that creating a second category with the same slug in the same store returns 409."""
+        first = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=sample_category_data)
+        assert first.status_code == 200
+
+        duplicate_data = {**sample_category_data, "name": "Different Name", "path": "/different-path"}
+        response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=duplicate_data)
+
+        assert response.status_code == 409
+
     def test_create_category_missing_name(self, api_client, sample_store):
         """Test category creation without name."""
         invalid_data = {}
@@ -120,12 +130,13 @@ class TestCreateCategory:
         assert response.status_code == 422
 
     def test_create_category_invalid_store_id(self, api_client):
-        """Test category creation with invalid store_id UUID format."""
-        invalid_data = {
+        """Test category creation with invalid store_id format (rejected by path param validation)."""
+        valid_data = {
             "name": "Test Category",
+            "path": "/test-category",
         }
 
-        response = api_client.post("/api/v1/categories/not-a-valid-uuid", json=invalid_data)
+        response = api_client.post("/api/v1/categories/not-a-valid-uuid", json=valid_data)
 
         assert response.status_code == 422
 
@@ -178,6 +189,24 @@ class TestCreateCategory:
 
 class TestListCategories:
     """Tests for GET /api/v1/categories/{store_id}."""
+
+    def test_list_categories_by_store_slug(self, api_client, sample_category_data):
+        """Test that the store_id path segment also accepts an 's-<slug>' ref."""
+        store_data = {
+            "name": "Slug Store for Categories",
+            "url": "https://slugstorecategories.com/",
+            "seo": {"slug": "slug-store-categories"},
+        }
+        store = api_client.post("/api/v1/stores/", json=store_data).json()
+        create_response = api_client.post(f"/api/v1/categories/{store['id']}", json=sample_category_data)
+        created_category = create_response.json()
+
+        response = api_client.get("/api/v1/categories/s-slug-store-categories")
+
+        assert response.status_code == 200
+        categories = response.json()["items"]
+        assert len(categories) == 1
+        assert categories[0]["id"] == created_category["id"]
 
     def test_list_categories_empty(self, api_client, sample_store):
         """Test listing categories when database is empty."""
@@ -257,6 +286,17 @@ class TestGetCategory:
         assert data["name"] == sample_category_data["name"]
         assert data["description"] == sample_category_data["description"]
 
+    def test_get_category_by_slug(self, api_client, sample_category_data, sample_store):
+        """Test that a category can be looked up by its 's-<slug>' ref, resolving to the same document."""
+        create_response = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=sample_category_data)
+        created_category = create_response.json()
+
+        slug_ref = f"s-{sample_category_data['seo']['slug']}"
+        response = api_client.get(f"/api/v1/categories/{sample_store['id']}/{slug_ref}")
+
+        assert response.status_code == 200
+        assert response.json()["id"] == created_category["id"]
+
     def test_get_category_not_found(self, api_client, sample_store):
         """Test getting a non-existent category."""
         non_existent_id = str(PydanticObjectId())
@@ -267,7 +307,7 @@ class TestGetCategory:
         assert response.json()["detail"] == "Category not found"
 
     def test_get_category_invalid_uuid(self, api_client, sample_store):
-        """Test getting a category with invalid UUID format."""
+        """Test getting a category with invalid UUID format (rejected by path param validation)."""
         invalid_id = "not-a-valid-uuid"
 
         response = api_client.get(f"/api/v1/categories/{sample_store['id']}/{invalid_id}")
@@ -484,7 +524,7 @@ class TestDeleteCategory:
         assert response.json()["detail"] == "Category not found"
 
     def test_delete_category_invalid_uuid(self, api_client, sample_store):
-        """Test deleting a category with invalid UUID format."""
+        """Test deleting a category with invalid UUID format (rejected by path param validation)."""
         invalid_id = "not-a-valid-uuid"
 
         response = api_client.delete(f"/api/v1/categories/{sample_store['id']}/{invalid_id}")

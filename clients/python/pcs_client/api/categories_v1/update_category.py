@@ -76,8 +76,8 @@ def sync_detailed(
      Update details of a specific category by its ID for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        category_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        category_id (str): Category ID or slug ref (prefixed 's-')
         body (UpdateCategory): Data required to update a category
 
     Raises:
@@ -113,8 +113,8 @@ def sync(
      Update details of a specific category by its ID for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        category_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        category_id (str): Category ID or slug ref (prefixed 's-')
         body (UpdateCategory): Data required to update a category
 
     Raises:
@@ -145,8 +145,8 @@ async def asyncio_detailed(
      Update details of a specific category by its ID for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        category_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        category_id (str): Category ID or slug ref (prefixed 's-')
         body (UpdateCategory): Data required to update a category
 
     Raises:
@@ -180,8 +180,8 @@ async def asyncio(
      Update details of a specific category by its ID for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        category_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        category_id (str): Category ID or slug ref (prefixed 's-')
         body (UpdateCategory): Data required to update a category
 
     Raises:

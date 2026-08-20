@@ -11,8 +11,8 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.attributes_map import AttributesMap
-    from ..models.category_seo import CategorySEO
     from ..models.image import Image
+    from ..models.seo import SEO
 
 
 T = TypeVar("T", bound="NewCategory")
@@ -27,7 +27,7 @@ class NewCategory:
         path (str): Path of the category. Example: '/electronics/laptops'. Root categories have path as '/electronics'.
         description (None | str | Unset):
         status (CategoryStatusEnum | Unset):
-        seo (CategorySEO | None | Unset):
+        seo (None | SEO | Unset):
         attributes (AttributesMap | None | Unset):
         images (list[Image] | None | Unset):
     """
@@ -36,14 +36,14 @@ class NewCategory:
     path: str
     description: None | str | Unset = UNSET
     status: CategoryStatusEnum | Unset = UNSET
-    seo: CategorySEO | None | Unset = UNSET
+    seo: None | SEO | Unset = UNSET
     attributes: AttributesMap | None | Unset = UNSET
     images: list[Image] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.attributes_map import AttributesMap
-        from ..models.category_seo import CategorySEO
+        from ..models.seo import SEO
 
         name = self.name
 
@@ -62,7 +62,7 @@ class NewCategory:
         seo: dict[str, Any] | None | Unset
         if isinstance(self.seo, Unset):
             seo = UNSET
-        elif isinstance(self.seo, CategorySEO):
+        elif isinstance(self.seo, SEO):
             seo = self.seo.to_dict()
         else:
             seo = self.seo
@@ -111,8 +111,8 @@ class NewCategory:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.attributes_map import AttributesMap
-        from ..models.category_seo import CategorySEO
         from ..models.image import Image
+        from ..models.seo import SEO
 
         d = dict(src_dict)
         name = d.pop("name")
@@ -135,7 +135,7 @@ class NewCategory:
         else:
             status = CategoryStatusEnum(_status)
 
-        def _parse_seo(data: object) -> CategorySEO | None | Unset:
+        def _parse_seo(data: object) -> None | SEO | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -143,12 +143,12 @@ class NewCategory:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                seo_type_0 = CategorySEO.from_dict(data)
+                seo_type_0 = SEO.from_dict(data)
 
                 return seo_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(CategorySEO | None | Unset, data)
+            return cast(None | SEO | Unset, data)
 
         seo = _parse_seo(d.pop("seo", UNSET))
 

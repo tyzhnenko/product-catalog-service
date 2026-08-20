@@ -4,7 +4,6 @@ from .attributes_map import AttributesMap
 from .bool_attribute import BoolAttribute
 from .bundle import Bundle
 from .category import Category
-from .category_seo import CategorySEO
 from .category_status_enum import CategoryStatusEnum
 from .date_attribute import DateAttribute
 from .date_time_attribute import DateTimeAttribute
@@ -63,10 +62,10 @@ from .paginated_response_product_variant import PaginatedResponseProductVariant
 from .paginated_response_store import PaginatedResponseStore
 from .price_map import PriceMap
 from .product import Product
-from .product_seo import ProductSEO
 from .product_status_enum import ProductStatusEnum
 from .product_variant import ProductVariant
 from .region_price_map import RegionPriceMap
+from .seo import SEO
 from .store import Store
 from .string_attribute import StringAttribute
 from .text_attribute import TextAttribute
@@ -87,7 +86,6 @@ __all__ = (
     "BoolAttribute",
     "Bundle",
     "Category",
-    "CategorySEO",
     "CategoryStatusEnum",
     "DateAttribute",
     "DateTimeAttribute",
@@ -146,10 +144,10 @@ __all__ = (
     "PaginatedResponseStore",
     "PriceMap",
     "Product",
-    "ProductSEO",
     "ProductStatusEnum",
     "ProductVariant",
     "RegionPriceMap",
+    "SEO",
     "Store",
     "StringAttribute",
     "TextAttribute",

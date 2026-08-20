@@ -78,8 +78,8 @@ def sync_detailed(
      Update details of a specific location by its ID for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        location_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        location_id (str): Location ID or slug ref (prefixed 's-')
         body (UpdateLocation):
 
     Raises:
@@ -115,8 +115,8 @@ def sync(
      Update details of a specific location by its ID for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        location_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        location_id (str): Location ID or slug ref (prefixed 's-')
         body (UpdateLocation):
 
     Raises:
@@ -147,8 +147,8 @@ async def asyncio_detailed(
      Update details of a specific location by its ID for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        location_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        location_id (str): Location ID or slug ref (prefixed 's-')
         body (UpdateLocation):
 
     Raises:
@@ -182,8 +182,8 @@ async def asyncio(
      Update details of a specific location by its ID for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        location_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        location_id (str): Location ID or slug ref (prefixed 's-')
         body (UpdateLocation):
 
     Raises:

@@ -3,11 +3,13 @@ import os
 from decimal import Decimal, InvalidOperation
 from itertools import accumulate
 from pathlib import Path
-from typing import Any, Callable, TypeVar, overload
+from typing import Any, Callable, NoReturn, TypeVar, overload
 
 from beanie import Document, PydanticObjectId
 from beanie.odm.queries.find import FindMany
+from bson.errors import InvalidId
 from fastapi import HTTPException
+from pymongo.errors import DuplicateKeyError
 
 from src.core.types import PaginatedResponse
 
@@ -41,6 +43,27 @@ def split_path(path: str) -> list[str]:
             lambda x, y: os.path.join(x, y),
         )
     )
+
+
+def parse_ref(ref: str, slug_field: str = "seo.slug") -> dict[str, Any]:
+    """Resolve a path-param ref to a Mongo filter clause.
+
+    A value prefixed with 's-' is treated as a slug lookup on `slug_field`; anything else is
+    parsed as an ObjectId. A 24-hex-char ObjectId can never start with 's-', so the two forms
+    are unambiguous.
+    """
+    if ref.startswith("s-"):
+        return {slug_field: ref[2:]}
+    try:
+        return {"_id": PydanticObjectId(ref)}
+    except InvalidId:
+        raise ValueError(f"Invalid reference: {ref}") from None
+
+
+def raise_for_duplicate_key(exc: DuplicateKeyError) -> NoReturn:
+    key_pattern = (exc.details or {}).get("keyPattern", {})
+    fields = ", ".join(key_pattern.keys()) or "unknown field"
+    raise HTTPException(status_code=409, detail=f"Duplicate value for: {fields}") from exc
 
 
 def encode_cursor(object_id: PydanticObjectId) -> str:

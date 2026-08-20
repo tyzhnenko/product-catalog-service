@@ -75,7 +75,7 @@ def sync_detailed(
      Create a new location for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
         body (NewLocation):
 
     Raises:
@@ -109,7 +109,7 @@ def sync(
      Create a new location for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
         body (NewLocation):
 
     Raises:
@@ -138,7 +138,7 @@ async def asyncio_detailed(
      Create a new location for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
         body (NewLocation):
 
     Raises:
@@ -170,7 +170,7 @@ async def asyncio(
      Create a new location for a specific store.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
         body (NewLocation):
 
     Raises:

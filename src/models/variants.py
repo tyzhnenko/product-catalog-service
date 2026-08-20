@@ -3,6 +3,7 @@ from pymongo import IndexModel
 from src.domain.types.attributes import AttributesMap
 from src.domain.types.prices import LocationPriceMap, PriceMap, RegionPriceMap
 from src.domain.types.products import ProductID
+from src.domain.types.seo import SEO
 from src.domain.types.stores import StoreID
 from src.domain.types.variants import (
     VariantEAN,
@@ -32,6 +33,7 @@ class VariantModel(BaseAppDocument):
     location_price: LocationPriceMap | None
     region_price: RegionPriceMap | None
     images: VariantImages | None = None
+    seo: SEO | None = None
 
     class Settings:
         name = "variants"
@@ -52,5 +54,10 @@ class VariantModel(BaseAppDocument):
             IndexModel(
                 ["region_price.$**"],
                 name="region_price_wildcard_idx",
+            ),
+            IndexModel(
+                ["store_id", "product_id", "seo.slug"],
+                unique=True,
+                partialFilterExpression={"seo.slug": {"$exists": True}},
             ),
         ]

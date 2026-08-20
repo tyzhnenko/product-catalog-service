@@ -7,9 +7,9 @@ from src.domain.types.categories import (
     CategoryImages,
     CategoryName,
     CategoryPath,
-    CategorySEO,
     CategoryStatus,
 )
+from src.domain.types.seo import SEO
 from src.domain.types.stores import StoreID
 from src.models.base import BaseAppDocument
 
@@ -19,7 +19,7 @@ class CategoryModel(BaseAppDocument):
     name: CategoryName
     description: CategoryDescription | None = None
     status: CategoryStatus
-    seo: CategorySEO | None = None
+    seo: SEO | None = None
     path: CategoryPath
     paths: list[str] = []
     attributes: AttributesMap
@@ -34,6 +34,11 @@ class CategoryModel(BaseAppDocument):
             IndexModel(
                 ["attributes.$**"],
                 name="attributes_wildcard_idx",
+            ),
+            IndexModel(
+                ["store_id", "seo.slug"],
+                unique=True,
+                partialFilterExpression={"seo.slug": {"$exists": True}},
             ),
         ]
 

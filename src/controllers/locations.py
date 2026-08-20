@@ -6,8 +6,8 @@ from fastapi.routing import APIRouter
 from src.core.auth import ro_access, rw_access
 from src.core.types import PaginatedResponse
 from src.domain.locations import LocationsService
-from src.domain.types.locations import Location, LocationID, NewLocation, UpdateLocation
-from src.domain.types.stores import StoreID
+from src.domain.types.locations import Location, LocationRef, NewLocation, UpdateLocation
+from src.domain.types.stores import StoreRef
 from src.settings import load_settings
 
 _settings = load_settings()
@@ -22,7 +22,7 @@ router = APIRouter()
     dependencies=[Security(ro_access)],
 )
 async def list_locations(
-    store_id: StoreID,
+    store_id: StoreRef,
     service: Annotated[LocationsService, Depends(LocationsService)],
     after: str | None = Query(None, description="Cursor for forward pagination"),
     before: str | None = Query(None, description="Cursor for backward pagination"),
@@ -45,7 +45,7 @@ async def list_locations(
     dependencies=[Security(rw_access)],
 )
 async def create_location(
-    store_id: StoreID,
+    store_id: StoreRef,
     new_location: NewLocation,
     service: Annotated[LocationsService, Depends(LocationsService)],
 ) -> Location:
@@ -66,8 +66,8 @@ async def create_location(
     dependencies=[Security(ro_access)],
 )
 async def get_location(
-    store_id: StoreID,
-    location_id: LocationID,
+    store_id: StoreRef,
+    location_id: LocationRef,
     service: Annotated[LocationsService, Depends(LocationsService)],
 ) -> Location:
     location = await service.get_location(store_id, location_id)
@@ -87,8 +87,8 @@ async def get_location(
     dependencies=[Security(rw_access)],
 )
 async def update_location(
-    store_id: StoreID,
-    location_id: LocationID,
+    store_id: StoreRef,
+    location_id: LocationRef,
     update_data: UpdateLocation,
     service: Annotated[LocationsService, Depends(LocationsService)],
 ) -> Location:
@@ -110,8 +110,8 @@ async def update_location(
     dependencies=[Security(rw_access)],
 )
 async def delete_location(
-    store_id: StoreID,
-    location_id: LocationID,
+    store_id: StoreRef,
+    location_id: LocationRef,
     service: Annotated[LocationsService, Depends(LocationsService)],
 ):
     success = await service.delete_location(store_id, location_id)

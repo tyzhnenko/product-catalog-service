@@ -9,6 +9,7 @@ from src.domain.types.bundles import (
     BundleName,
 )
 from src.domain.types.prices import LocationPriceMap, PriceMap, RegionPriceMap
+from src.domain.types.seo import SEO
 from src.domain.types.stores import StoreID
 from src.models.base import BaseAppDocument
 
@@ -24,6 +25,7 @@ class BundleModel(BaseAppDocument):
     location_price: LocationPriceMap | None
     region_price: RegionPriceMap | None
     images: BundleImages | None = None
+    seo: SEO | None = None
 
     class Settings:
         name = "bundles"
@@ -44,5 +46,10 @@ class BundleModel(BaseAppDocument):
             IndexModel(
                 ["region_price.$**"],
                 name="region_price_wildcard_idx",
+            ),
+            IndexModel(
+                ["store_id", "seo.slug"],
+                unique=True,
+                partialFilterExpression={"seo.slug": {"$exists": True}},
             ),
         ]

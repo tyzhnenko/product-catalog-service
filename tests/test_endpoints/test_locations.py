@@ -102,6 +102,17 @@ class TestCreateLocation:
         assert data["attributes"] == location_with_attributes_data["attributes"]
         assert "id" in data
 
+    def test_create_location_duplicate_slug_returns_409(self, api_client, sample_location_data, sample_store):
+        """Test that creating a second location with the same slug in the same store returns 409."""
+        location_data = {**sample_location_data, "seo": {"slug": "downtown-location"}}
+        first = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=location_data)
+        assert first.status_code == 200
+
+        duplicate_data = {**location_data, "name": "Different Name"}
+        response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=duplicate_data)
+
+        assert response.status_code == 409
+
     def test_create_location_missing_name(self, api_client, sample_store):
         """Test location creation without name."""
         invalid_data = {
@@ -124,7 +135,7 @@ class TestCreateLocation:
         assert response.status_code == 422
 
     def test_create_location_invalid_store_id(self, api_client):
-        """Test location creation with invalid store_id UUID format."""
+        """Test location creation with invalid store_id format (rejected by path param validation)."""
         invalid_data = {
             "name": "Test Location",
             "store_id": str(PydanticObjectId()),
@@ -150,6 +161,24 @@ class TestCreateLocation:
 
 class TestListLocations:
     """Tests for GET /api/v1/locations/{store_id}."""
+
+    def test_list_locations_by_store_slug(self, api_client):
+        """Test that the store_id path segment also accepts an 's-<slug>' ref."""
+        store_data = {
+            "name": "Slug Store for Locations",
+            "url": "https://slugstorelocations.com/",
+            "seo": {"slug": "slug-store-locations"},
+        }
+        store = api_client.post("/api/v1/stores/", json=store_data).json()
+        create_response = api_client.post(f"/api/v1/locations/{store['id']}", json={"name": "Downtown Location"})
+        created_location = create_response.json()
+
+        response = api_client.get("/api/v1/locations/s-slug-store-locations")
+
+        assert response.status_code == 200
+        locations = response.json()["items"]
+        assert len(locations) == 1
+        assert locations[0]["id"] == created_location["id"]
 
     def test_list_locations_empty(self, api_client, sample_store):
         """Test listing locations when database is empty."""
@@ -213,6 +242,17 @@ class TestGetLocation:
         assert data["name"] == sample_location_data["name"]
         assert data["store_id"] == sample_location_data["store_id"]
 
+    def test_get_location_by_slug(self, api_client, sample_location_data, sample_store):
+        """Test that a location can be looked up by its 's-<slug>' ref, resolving to the same document."""
+        location_data = {**sample_location_data, "seo": {"slug": "downtown-location"}}
+        create_response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=location_data)
+        created_location = create_response.json()
+
+        response = api_client.get(f"/api/v1/locations/{sample_store['id']}/s-downtown-location")
+
+        assert response.status_code == 200
+        assert response.json()["id"] == created_location["id"]
+
     def test_get_location_not_found(self, api_client, sample_store):
         """Test getting a non-existent location."""
         # Generate a random UUID7
@@ -224,7 +264,7 @@ class TestGetLocation:
         assert response.json()["detail"] == "Location not found"
 
     def test_get_location_invalid_uuid(self, api_client, sample_store):
-        """Test getting a location with invalid UUID format."""
+        """Test getting a location with invalid UUID format (rejected by path param validation)."""
         invalid_id = "not-a-valid-uuid"
 
         response = api_client.get(f"/api/v1/locations/{sample_store['id']}/{invalid_id}")
@@ -384,7 +424,7 @@ class TestDeleteLocation:
         assert response.json()["detail"] == "Location not found"
 
     def test_delete_location_invalid_uuid(self, api_client, sample_store):
-        """Test deleting a location with invalid UUID format."""
+        """Test deleting a location with invalid UUID format (rejected by path param validation)."""
         invalid_id = "not-a-valid-uuid"
 
         response = api_client.delete(f"/api/v1/locations/{sample_store['id']}/{invalid_id}")

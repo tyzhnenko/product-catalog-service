@@ -2,10 +2,11 @@ from typing import cast
 
 # from uuid import uuid7
 import pendulum
+from pymongo.errors import DuplicateKeyError
 
 from src.core.logging import logger
 from src.core.types import PaginatedResponse
-from src.core.utils import paginate
+from src.core.utils import paginate, parse_ref, raise_for_duplicate_key
 from src.domain.types.locations import LocationID
 from src.domain.types.prices import LocationPriceMap
 from src.domain.types.products import ProductID
@@ -18,6 +19,7 @@ from src.domain.types.variants import (
 )
 from src.models.locations import LocationModel
 from src.models.products import ProductModel
+from src.models.stores import StoreModel
 from src.models.variants import VariantModel
 
 
@@ -117,26 +119,38 @@ class VariantsService:
 
         return sanitized_location_price if sanitized_location_price else None
 
-    async def create_variant(
-        self, store_id: StoreID, product_id: ProductID, new_variant: NewProductVariant
-    ) -> ProductVariant | None:
-        # Check if product exists and belongs to the store (product query validates store ownership)
-        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+    async def _resolve_product(self, store_id: str, product_id: str) -> ProductModel | None:
+        """Resolve the store and product refs, returning the product if both exist and are linked."""
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
+        if not store or store.id is None:
+            logger.warning(f"Store not found: {store_id}")
+            return None
+
+        product = await ProductModel.find(
+            {**parse_ref(product_id), "store_id": store.id, "deleted_at": None}
+        ).first_or_none()
         if not product:
             logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
+        return product
+
+    async def create_variant(
+        self, store_id: str, product_id: str, new_variant: NewProductVariant
+    ) -> ProductVariant | None:
+        product = await self._resolve_product(store_id, product_id)
+        if not product or product.id is None:
             return None
 
         # Check for duplicate options within the product
-        if await self._check_duplicate_options(product_id, store_id, new_variant.options):
+        if await self._check_duplicate_options(cast(ProductID, product.id), product.store_id, new_variant.options):
             raise DuplicateVariantOptionsError(f"A variant with these options already exists for product {product_id}")
 
         # Sanitize location_price - keep only valid locations
-        valid_location_price = await self._sanitize_location_prices(store_id, new_variant.location_price)
+        valid_location_price = await self._sanitize_location_prices(product.store_id, new_variant.location_price)
 
         variant = VariantModel(
             # id=uuid7(),
-            store_id=store_id,
-            product_id=product_id,
+            store_id=product.store_id,
+            product_id=cast(ProductID, product.id),
             title=new_variant.title,
             sku=new_variant.sku,
             upc=new_variant.upc,
@@ -149,27 +163,35 @@ class VariantsService:
             location_price=valid_location_price,
             region_price=new_variant.region_price,
             images=new_variant.images,
+            seo=new_variant.seo,
         )
-        variant = await variant.create()
+        try:
+            variant = await variant.create()
+        except DuplicateKeyError as exc:
+            raise_for_duplicate_key(exc)
         logger.info(f"Created variant {variant.id} for product {product_id}")
 
         return ProductVariant.model_validate(variant)
 
     async def list_variants(
         self,
-        store_id: StoreID,
-        product_id: ProductID,
+        store_id: str,
+        product_id: str,
         after: str | None,
         before: str | None,
         limit: int,
         filters: dict | None = None,
     ) -> PaginatedResponse[ProductVariant] | None:
-        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
-        if not product:
-            logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
+        product = await self._resolve_product(store_id, product_id)
+        if not product or product.id is None:
             return None
 
-        query_filter = {"product_id": product_id, "store_id": store_id, "deleted_at": None, **(filters or {})}
+        query_filter = {
+            "product_id": product.id,
+            "store_id": product.store_id,
+            "deleted_at": None,
+            **(filters or {}),
+        }
         return await paginate(
             VariantModel.find(query_filter),
             after,
@@ -178,17 +200,13 @@ class VariantsService:
             transform=ProductVariant.model_validate,
         )
 
-    async def get_variant(
-        self, store_id: StoreID, product_id: ProductID, variant_id: VariantID
-    ) -> ProductVariant | None:
-        # Check if product exists and belongs to the store
-        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
-        if not product:
-            logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
+    async def get_variant(self, store_id: str, product_id: str, variant_id: str) -> ProductVariant | None:
+        product = await self._resolve_product(store_id, product_id)
+        if not product or product.id is None:
             return None
 
         variant = await VariantModel.find(
-            {"_id": variant_id, "product_id": product_id, "store_id": store_id, "deleted_at": None}
+            {**parse_ref(variant_id), "product_id": product.id, "store_id": product.store_id, "deleted_at": None}
         ).first_or_none()
         if variant:
             return ProductVariant.model_validate(variant)
@@ -197,19 +215,17 @@ class VariantsService:
 
     async def update_variant(
         self,
-        store_id: StoreID,
-        product_id: ProductID,
-        variant_id: VariantID,
+        store_id: str,
+        product_id: str,
+        variant_id: str,
         update_data: UpdateProductVariant,
     ) -> ProductVariant | None:
-        # Check if product exists and belongs to the store
-        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
-        if not product:
-            logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
+        product = await self._resolve_product(store_id, product_id)
+        if not product or product.id is None:
             return None
 
         variant = await VariantModel.find(
-            {"_id": variant_id, "product_id": product_id, "store_id": store_id, "deleted_at": None}
+            {**parse_ref(variant_id), "product_id": product.id, "store_id": product.store_id, "deleted_at": None}
         ).first_or_none()
         if not variant:
             logger.warning(f"Variant not found or access denied: variant_id={variant_id}, product_id={product_id}")
@@ -221,7 +237,10 @@ class VariantsService:
         # Check for duplicate options if options are being updated
         if "options" in update_dict:
             if await self._check_duplicate_options(
-                product_id, store_id, update_dict["options"], exclude_variant_id=variant_id
+                cast(ProductID, product.id),
+                product.store_id,
+                update_dict["options"],
+                exclude_variant_id=cast(VariantID, variant.id),
             ):
                 raise DuplicateVariantOptionsError(
                     f"A variant with these options already exists for product {product_id}"
@@ -230,25 +249,26 @@ class VariantsService:
         # Sanitize location_price if it's being updated
         if "location_price" in update_dict:
             update_dict["location_price"] = await self._sanitize_location_prices(
-                store_id, update_dict["location_price"]
+                product.store_id, update_dict["location_price"]
             )
 
         for field, value in update_dict.items():
             setattr(variant, field, value)
 
-        await variant.save()
+        try:
+            await variant.save()
+        except DuplicateKeyError as exc:
+            raise_for_duplicate_key(exc)
         logger.info(f"Updated variant {variant_id} for product {product_id}")
         return ProductVariant.model_validate(variant)
 
-    async def delete_variant(self, store_id: StoreID, product_id: ProductID, variant_id: VariantID) -> bool:
-        # Check if product exists and belongs to the store
-        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
-        if not product:
-            logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
+    async def delete_variant(self, store_id: str, product_id: str, variant_id: str) -> bool:
+        product = await self._resolve_product(store_id, product_id)
+        if not product or product.id is None:
             return False
 
         variant = await VariantModel.find(
-            {"_id": variant_id, "product_id": product_id, "store_id": store_id, "deleted_at": None}
+            {**parse_ref(variant_id), "product_id": product.id, "store_id": product.store_id, "deleted_at": None}
         ).first_or_none()
         if not variant:
             logger.warning(f"Variant not found or access denied: variant_id={variant_id}, product_id={product_id}")

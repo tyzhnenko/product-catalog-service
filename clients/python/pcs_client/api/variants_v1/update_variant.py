@@ -81,9 +81,9 @@ def sync_detailed(
      Update a specific variant's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        variant_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
+        variant_id (str): Variant ID or slug ref (prefixed 's-')
         body (UpdateProductVariant): Data required to update a product variant
 
     Raises:
@@ -121,9 +121,9 @@ def sync(
      Update a specific variant's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        variant_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
+        variant_id (str): Variant ID or slug ref (prefixed 's-')
         body (UpdateProductVariant): Data required to update a product variant
 
     Raises:
@@ -156,9 +156,9 @@ async def asyncio_detailed(
      Update a specific variant's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        variant_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
+        variant_id (str): Variant ID or slug ref (prefixed 's-')
         body (UpdateProductVariant): Data required to update a product variant
 
     Raises:
@@ -194,9 +194,9 @@ async def asyncio(
      Update a specific variant's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        variant_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
+        variant_id (str): Variant ID or slug ref (prefixed 's-')
         body (UpdateProductVariant): Data required to update a product variant
 
     Raises:

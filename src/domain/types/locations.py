@@ -4,6 +4,8 @@ from beanie import PydanticObjectId
 from pydantic import BaseModel, ConfigDict, Field
 
 from src.domain.types.attributes import AttributesMap
+from src.domain.types.refs import ObjectIdRef, SlugRef
+from src.domain.types.seo import SEO
 from src.domain.types.stores import StoreID
 
 type LocationID = Annotated[
@@ -12,6 +14,14 @@ type LocationID = Annotated[
         ...,
         title="Location ID",
         description="Unique identifier for a location",
+    ),
+]
+
+type LocationRef = Annotated[
+    ObjectIdRef | SlugRef,
+    Field(
+        title="Location Ref",
+        description="Location ID or slug ref (prefixed 's-')",
     ),
 ]
 
@@ -33,6 +43,7 @@ class NewLocation(BaseModel):
 
     name: LocationName
     attributes: AttributesMap = Field(default_factory=dict)
+    seo: SEO | None = None
 
 
 class Location(BaseModel):
@@ -44,6 +55,7 @@ class Location(BaseModel):
     name: LocationName
     store_id: StoreID
     attributes: AttributesMap
+    seo: SEO | None = None
 
 
 class UpdateLocation(BaseModel):
@@ -53,3 +65,4 @@ class UpdateLocation(BaseModel):
 
     name: LocationName | None = None
     attributes: AttributesMap | None = None
+    seo: SEO | None = None

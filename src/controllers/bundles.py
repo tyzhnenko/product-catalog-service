@@ -8,8 +8,8 @@ from src.core.auth import ro_access, rw_access
 from src.core.types import PaginatedResponse
 from src.core.utils import build_attribute_filter, build_price_search_filter
 from src.domain.bundles import BundlesService
-from src.domain.types.bundles import Bundle, BundleID, NewBundle, UpdateBundle
-from src.domain.types.stores import StoreID
+from src.domain.types.bundles import Bundle, BundleRef, NewBundle, UpdateBundle
+from src.domain.types.stores import StoreRef
 from src.settings import load_settings
 
 _settings = load_settings()
@@ -24,7 +24,7 @@ router = APIRouter()
     dependencies=[Security(ro_access)],
 )
 async def list_bundles(
-    store_id: StoreID,
+    store_id: StoreRef,
     service: Annotated[BundlesService, Depends(BundlesService)],
     after: str | None = Query(None, description="Cursor for forward pagination"),
     before: str | None = Query(None, description="Cursor for backward pagination"),
@@ -69,7 +69,7 @@ async def list_bundles(
     dependencies=[Security(rw_access)],
 )
 async def create_bundle(
-    store_id: StoreID,
+    store_id: StoreRef,
     new_bundle: NewBundle,
     service: Annotated[BundlesService, Depends(BundlesService)],
 ) -> Bundle:
@@ -91,8 +91,8 @@ async def create_bundle(
     dependencies=[Security(ro_access)],
 )
 async def get_bundle(
-    store_id: StoreID,
-    bundle_id: BundleID,
+    store_id: StoreRef,
+    bundle_id: BundleRef,
     service: Annotated[BundlesService, Depends(BundlesService)],
 ) -> Bundle:
     """Get a specific bundle by ID."""
@@ -113,8 +113,8 @@ async def get_bundle(
     dependencies=[Security(rw_access)],
 )
 async def update_bundle(
-    store_id: StoreID,
-    bundle_id: BundleID,
+    store_id: StoreRef,
+    bundle_id: BundleRef,
     update_data: UpdateBundle,
     service: Annotated[BundlesService, Depends(BundlesService)],
 ) -> Bundle:
@@ -136,8 +136,8 @@ async def update_bundle(
     dependencies=[Security(rw_access)],
 )
 async def delete_bundle(
-    store_id: StoreID,
-    bundle_id: BundleID,
+    store_id: StoreRef,
+    bundle_id: BundleRef,
     service: Annotated[BundlesService, Depends(BundlesService)],
 ) -> Response:
     """Delete a bundle (soft delete)."""

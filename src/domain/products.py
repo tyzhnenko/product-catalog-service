@@ -1,11 +1,14 @@
 # from uuid import uuid7
 
+from typing import cast
+
 import pendulum
 from pydantic import BaseModel
+from pymongo.errors import DuplicateKeyError
 
 from src.core.logging import logger
 from src.core.types import PaginatedResponse
-from src.core.utils import paginate
+from src.core.utils import paginate, parse_ref, raise_for_duplicate_key
 from src.domain.types.categories import CategoryID
 from src.domain.types.products import (
     NewProduct,
@@ -51,19 +54,19 @@ class ProductsService:
 
         return valid_ids
 
-    async def create_product(self, store_id: StoreID, new_product: NewProduct) -> Product | None:
+    async def create_product(self, store_id: str, new_product: NewProduct) -> Product | None:
         # Check if store exists
-        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
-        if not store:
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
+        if not store or store.id is None:
             logger.warning(f"Store not found: {store_id}")
             return None
 
         # Sanitize categories - keep only valid ones
-        valid_categories = await self._sanitize_categories(store_id, new_product.categories or [])
+        valid_categories = await self._sanitize_categories(cast(StoreID, store.id), new_product.categories or [])
 
         product = ProductModel(
             # id=uuid7(),
-            store_id=store_id,
+            store_id=store.id,
             name=new_product.name,
             description=new_product.description,
             brand=new_product.brand,
@@ -73,29 +76,32 @@ class ProductsService:
             attributes=new_product.attributes or {},
             categories=valid_categories,
         )
-        product = await product.create()
-        logger.info(f"Created product {product.id} for store {store_id}")
+        try:
+            product = await product.create()
+        except DuplicateKeyError as exc:
+            raise_for_duplicate_key(exc)
+        logger.info(f"Created product {product.id} for store {store.id}")
 
         return Product.model_validate(product)
 
     async def list_products(
         self,
-        store_id: StoreID,
+        store_id: str,
         after: str | None,
         before: str | None,
         limit: int,
         filters: dict | None = None,
         variant_filters: dict | None = None,
     ) -> PaginatedResponse[Product] | None:
-        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
 
-        query_filter = {"store_id": store_id, "deleted_at": None, **(filters or {})}
+        query_filter = {"store_id": store.id, "deleted_at": None, **(filters or {})}
 
         if variant_filters:
-            variant_query = {"store_id": store_id, "deleted_at": None, **variant_filters}
+            variant_query = {"store_id": store.id, "deleted_at": None, **variant_filters}
             variants = await VariantModel.find(variant_query).project(_VariantProductIdProjection).to_list()
             product_ids = list({variant.product_id for variant in variants})
             query_filter["_id"] = {"$in": product_ids}
@@ -108,14 +114,16 @@ class ProductsService:
             transform=Product.model_validate,
         )
 
-    async def get_product(self, store_id: StoreID, product_id: ProductID) -> Product | None:
+    async def get_product(self, store_id: str, product_id: str) -> Product | None:
         # Check if store exists
-        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
 
-        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        product = await ProductModel.find(
+            {**parse_ref(product_id), "store_id": store.id, "deleted_at": None}
+        ).first_or_none()
         if product:
             return Product.model_validate(product)
         logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
@@ -123,17 +131,19 @@ class ProductsService:
 
     async def update_product(
         self,
-        store_id: StoreID,
-        product_id: ProductID,
+        store_id: str,
+        product_id: str,
         update_data: UpdateProduct,
     ) -> Product | None:
         # Check if store exists
-        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
 
-        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        product = await ProductModel.find(
+            {**parse_ref(product_id), "store_id": store.id, "deleted_at": None}
+        ).first_or_none()
         if not product:
             logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
             return None
@@ -143,23 +153,30 @@ class ProductsService:
 
         # Sanitize categories if they are being updated
         if "categories" in update_dict and update_dict["categories"] is not None:
-            update_dict["categories"] = await self._sanitize_categories(store_id, update_dict["categories"])
+            update_dict["categories"] = await self._sanitize_categories(
+                cast(StoreID, store.id), update_dict["categories"]
+            )
 
         for field, value in update_dict.items():
             setattr(product, field, value)
 
-        await product.save()
-        logger.info(f"Updated product {product_id} for store {store_id}")
+        try:
+            await product.save()
+        except DuplicateKeyError as exc:
+            raise_for_duplicate_key(exc)
+        logger.info(f"Updated product {product_id} for store {store.id}")
         return Product.model_validate(product)
 
-    async def delete_product(self, store_id: StoreID, product_id: ProductID) -> bool:
+    async def delete_product(self, store_id: str, product_id: str) -> bool:
         # Check if store exists
-        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return False
 
-        product = await ProductModel.find({"_id": product_id, "store_id": store_id, "deleted_at": None}).first_or_none()
+        product = await ProductModel.find(
+            {**parse_ref(product_id), "store_id": store.id, "deleted_at": None}
+        ).first_or_none()
         if not product:
             logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
             return False
@@ -167,7 +184,7 @@ class ProductsService:
         now = pendulum.now()
 
         # Soft delete all variants of this product
-        variants_result = await VariantModel.find({"product_id": product_id, "deleted_at": None}).update_many(
+        variants_result = await VariantModel.find({"product_id": product.id, "deleted_at": None}).update_many(
             {"$set": {"deleted_at": now}}
         )
         logger.info(f"Soft deleted {getattr(variants_result, 'modified_count', 0)} variants for product {product_id}")
@@ -175,5 +192,5 @@ class ProductsService:
         # Delete the product itself
         product.deleted_at = now
         await product.save()
-        logger.info(f"Deleted product {product_id} for store {store_id}")
+        logger.info(f"Deleted product {product_id} for store {store.id}")
         return True

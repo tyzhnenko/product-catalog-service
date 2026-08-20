@@ -5,8 +5,10 @@ from beanie import PydanticObjectId
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic_extra_types.pendulum_dt import DateTime
 
-from src.domain.categories import CategoryID
 from src.domain.types.attributes import AttributesMap
+from src.domain.types.categories import CategoryID
+from src.domain.types.refs import ObjectIdRef, SlugRef
+from src.domain.types.seo import SEO
 
 type ProductID = Annotated[
     PydanticObjectId,
@@ -14,6 +16,14 @@ type ProductID = Annotated[
         ...,
         title="Product ID",
         description="Unique identifier for a product",
+    ),
+]
+
+type ProductRef = Annotated[
+    ObjectIdRef | SlugRef,
+    Field(
+        title="Product Ref",
+        description="Product ID or slug ref (prefixed 's-')",
     ),
 ]
 
@@ -56,16 +66,6 @@ type ProductTags = Annotated[
 ]
 
 
-type ProductSEOSlug = Annotated[
-    str,
-    Field(
-        ...,
-        min_length=1,
-        max_length=64,
-        description="Slug of the product",
-    ),
-]
-
 type ProductCategory = Annotated[
     CategoryID,
     Field(
@@ -79,36 +79,6 @@ type ProductCategories = Annotated[
     Field(
         default_factory=list,
         description="List of category identifiers for the product",
-    ),
-]
-
-type ProductSEOTitle = Annotated[
-    str,
-    Field(
-        ...,
-        min_length=1,
-        max_length=128,
-        description="SEO title of the product",
-    ),
-]
-
-type ProductSEODescription = Annotated[
-    str,
-    Field(
-        ...,
-        min_length=1,
-        max_length=1024,
-        description="SEO description of the product",
-    ),
-]
-
-type ProductSEOKeywords = Annotated[
-    str,
-    Field(
-        ...,
-        min_length=1,
-        max_length=256,
-        description="SEO keywords of the product",
     ),
 ]
 
@@ -128,22 +98,6 @@ type ProductStatus = Annotated[
 ]
 
 
-class ProductSEO(BaseModel):
-    """SEO information for a product."""
-
-    model_config = ConfigDict(
-        title="ProductSEO",
-        json_schema_extra={
-            "description": "SEO information for a product",
-        },
-    )
-
-    slug: ProductSEOSlug | None = None
-    title: ProductSEOTitle | None = None
-    description: ProductSEODescription | None = None
-    keywords: ProductSEOKeywords | None = None
-
-
 class NewProduct(BaseModel):
     model_config = ConfigDict(
         title="NewProduct",
@@ -156,7 +110,7 @@ class NewProduct(BaseModel):
     description: ProductDescription | None = None
     brand: ProductBrand | None = None
     tags: ProductTags
-    seo: ProductSEO | None = None
+    seo: SEO | None = None
     categories: ProductCategories | None = None
     attributes: AttributesMap | None = None
 
@@ -175,7 +129,7 @@ class Product(BaseModel):
     description: ProductDescription | None = None
     brand: ProductBrand | None = None
     tags: ProductTags
-    seo: ProductSEO | None = None
+    seo: SEO | None = None
     status: ProductStatus
     categories: ProductCategories
     attributes: AttributesMap
@@ -196,7 +150,7 @@ class UpdateProduct(BaseModel):
     description: ProductDescription | None = None
     brand: ProductBrand | None = None
     tags: ProductTags | None = None
-    seo: ProductSEO | None = None
+    seo: SEO | None = None
     status: ProductStatus | None = None
     categories: ProductCategories | None = None
     attributes: AttributesMap | None = None

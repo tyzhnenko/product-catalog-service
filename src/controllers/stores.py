@@ -6,7 +6,7 @@ from fastapi.routing import APIRouter
 from src.core.auth import ro_access, rw_access
 from src.core.types import PaginatedResponse
 from src.domain.stores import StoresService
-from src.domain.types.stores import NewStore, Store, StoreID, UpdateStore
+from src.domain.types.stores import NewStore, Store, StoreRef, UpdateStore
 from src.settings import load_settings
 
 _settings = load_settings()
@@ -52,7 +52,7 @@ async def create_store(
     dependencies=[Security(ro_access)],
 )
 async def get_store(
-    store_id: StoreID,
+    store_id: StoreRef,
     service: Annotated[StoresService, Depends(StoresService)],
 ) -> Store:
     store = await service.get_store(store_id)
@@ -72,7 +72,7 @@ async def get_store(
     dependencies=[Security(rw_access)],
 )
 async def update_store(
-    store_id: StoreID,
+    store_id: StoreRef,
     update_data: UpdateStore,
     service: Annotated[StoresService, Depends(StoresService)],
 ):
@@ -94,7 +94,7 @@ async def update_store(
     dependencies=[Security(rw_access)],
 )
 async def delete_store(
-    store_id: StoreID,
+    store_id: StoreRef,
     service: Annotated[StoresService, Depends(StoresService)],
 ):
     success = await service.delete_store(store_id)

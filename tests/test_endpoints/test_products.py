@@ -151,6 +151,16 @@ class TestCreateProduct:
         assert data["attributes"] == {}
         assert "id" in data
 
+    def test_create_product_duplicate_slug_returns_409(self, api_client, sample_product_data, sample_store):
+        """Test that creating a second product with the same slug in the same store returns 409."""
+        first = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        assert first.status_code == 200
+
+        duplicate_data = {**sample_product_data, "name": "Different Name"}
+        response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=duplicate_data)
+
+        assert response.status_code == 409
+
     def test_create_product_missing_name(self, api_client, sample_store):
         """Test product creation without name."""
         invalid_data = {
@@ -173,7 +183,7 @@ class TestCreateProduct:
         assert response.status_code == 422
 
     def test_create_product_invalid_store_id(self, api_client, sample_product_data):
-        """Test product creation with invalid store_id UUID format."""
+        """Test product creation with invalid store_id format (rejected by path param validation)."""
         response = api_client.post("/api/v1/products/not-a-valid-uuid", json=sample_product_data)
 
         assert response.status_code == 422
@@ -281,6 +291,24 @@ class TestCreateProduct:
 class TestListProducts:
     """Tests for GET /api/v1/products/{store_id}."""
 
+    def test_list_products_by_store_slug(self, api_client, sample_product_data):
+        """Test that the store_id path segment also accepts an 's-<slug>' ref."""
+        store_data = {
+            "name": "Slug Store for Products",
+            "url": "https://slugstoreproducts.com/",
+            "seo": {"slug": "slug-store-products"},
+        }
+        store = api_client.post("/api/v1/stores/", json=store_data).json()
+        create_response = api_client.post(f"/api/v1/products/{store['id']}", json=sample_product_data)
+        created_product = create_response.json()
+
+        response = api_client.get("/api/v1/products/s-slug-store-products")
+
+        assert response.status_code == 200
+        products = response.json()["items"]
+        assert len(products) == 1
+        assert products[0]["id"] == created_product["id"]
+
     def test_list_products_empty(self, api_client, sample_store):
         """Test listing products when database is empty."""
         response = api_client.get(f"/api/v1/products/{sample_store['id']}")
@@ -363,6 +391,40 @@ class TestGetProduct:
         assert data["name"] == sample_product_data["name"]
         assert data["description"] == sample_product_data["description"]
 
+    def test_get_product_by_slug(self, api_client, sample_product_data, sample_store):
+        """Test that a product can be looked up by its 's-<slug>' ref, resolving to the same document."""
+        create_response = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        created_product = create_response.json()
+
+        slug_ref = f"s-{sample_product_data['seo']['slug']}"
+        response = api_client.get(f"/api/v1/products/{sample_store['id']}/{slug_ref}")
+
+        assert response.status_code == 200
+        assert response.json()["id"] == created_product["id"]
+
+    def test_get_product_by_store_slug_and_product_slug(self, api_client, sample_product_data):
+        """Test that both the store and product path segments can be resolved by slug at once."""
+        store_data = {
+            "name": "Slug Store for Products 2",
+            "url": "https://slugstoreproducts2.com/",
+            "seo": {"slug": "slug-store-products-2"},
+        }
+        store = api_client.post("/api/v1/stores/", json=store_data).json()
+        create_response = api_client.post(f"/api/v1/products/{store['id']}", json=sample_product_data)
+        created_product = create_response.json()
+
+        slug_ref = f"s-{sample_product_data['seo']['slug']}"
+        response = api_client.get(f"/api/v1/products/s-slug-store-products-2/{slug_ref}")
+
+        assert response.status_code == 200
+        assert response.json()["id"] == created_product["id"]
+
+    def test_get_product_by_slug_not_found(self, api_client, sample_store):
+        """Test that an unknown slug ref returns 404."""
+        response = api_client.get(f"/api/v1/products/{sample_store['id']}/s-does-not-exist")
+
+        assert response.status_code == 404
+
     def test_get_product_not_found(self, api_client, sample_store):
         """Test getting a non-existent product."""
         non_existent_id = str(PydanticObjectId())
@@ -385,7 +447,7 @@ class TestGetProduct:
         assert response.json()["detail"] == "Product not found"
 
     def test_get_product_invalid_uuid(self, api_client, sample_store):
-        """Test getting a product with invalid UUID format."""
+        """Test getting a product with invalid UUID format (rejected by path param validation)."""
         invalid_id = "not-a-valid-uuid"
 
         response = api_client.get(f"/api/v1/products/{sample_store['id']}/{invalid_id}")
@@ -596,7 +658,7 @@ class TestDeleteProduct:
         assert response.json()["detail"] == "Product not found"
 
     def test_delete_product_invalid_uuid(self, api_client, sample_store):
-        """Test deleting a product with invalid UUID format."""
+        """Test deleting a product with invalid UUID format (rejected by path param validation)."""
         invalid_id = "not-a-valid-uuid"
 
         response = api_client.delete(f"/api/v1/products/{sample_store['id']}/{invalid_id}")

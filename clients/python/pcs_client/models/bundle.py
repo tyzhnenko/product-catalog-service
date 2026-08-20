@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from ..models.location_price_map import LocationPriceMap
     from ..models.price_map import PriceMap
     from ..models.region_price_map import RegionPriceMap
+    from ..models.seo import SEO
 
 
 T = TypeVar("T", bound="Bundle")
@@ -36,6 +37,7 @@ class Bundle:
         location_price (LocationPriceMap | None | Unset):
         region_price (None | RegionPriceMap | Unset):
         images (list[Image] | None | Unset):
+        seo (None | SEO | Unset):
     """
 
     id: str
@@ -50,6 +52,7 @@ class Bundle:
     location_price: LocationPriceMap | None | Unset = UNSET
     region_price: None | RegionPriceMap | Unset = UNSET
     images: list[Image] | None | Unset = UNSET
+    seo: None | SEO | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -57,6 +60,7 @@ class Bundle:
         from ..models.location_price_map import LocationPriceMap
         from ..models.price_map import PriceMap
         from ..models.region_price_map import RegionPriceMap
+        from ..models.seo import SEO
 
         id = self.id
 
@@ -134,6 +138,14 @@ class Bundle:
         else:
             images = self.images
 
+        seo: dict[str, Any] | None | Unset
+        if isinstance(self.seo, Unset):
+            seo = UNSET
+        elif isinstance(self.seo, SEO):
+            seo = self.seo.to_dict()
+        else:
+            seo = self.seo
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -160,6 +172,8 @@ class Bundle:
             field_dict["region_price"] = region_price
         if images is not UNSET:
             field_dict["images"] = images
+        if seo is not UNSET:
+            field_dict["seo"] = seo
 
         return field_dict
 
@@ -170,6 +184,7 @@ class Bundle:
         from ..models.location_price_map import LocationPriceMap
         from ..models.price_map import PriceMap
         from ..models.region_price_map import RegionPriceMap
+        from ..models.seo import SEO
 
         d = dict(src_dict)
         id = d.pop("id")
@@ -313,6 +328,23 @@ class Bundle:
 
         images = _parse_images(d.pop("images", UNSET))
 
+        def _parse_seo(data: object) -> None | SEO | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                seo_type_0 = SEO.from_dict(data)
+
+                return seo_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | SEO | Unset, data)
+
+        seo = _parse_seo(d.pop("seo", UNSET))
+
         bundle = cls(
             id=id,
             name=name,
@@ -326,6 +358,7 @@ class Bundle:
             location_price=location_price,
             region_price=region_price,
             images=images,
+            seo=seo,
         )
 
         bundle.additional_properties = d

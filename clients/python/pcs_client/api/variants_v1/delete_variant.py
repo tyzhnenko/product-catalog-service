@@ -69,9 +69,9 @@ def sync_detailed(
      Delete a specific variant (soft delete).
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        variant_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
+        variant_id (str): Variant ID or slug ref (prefixed 's-')
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -106,9 +106,9 @@ def sync(
      Delete a specific variant (soft delete).
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        variant_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
+        variant_id (str): Variant ID or slug ref (prefixed 's-')
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -138,9 +138,9 @@ async def asyncio_detailed(
      Delete a specific variant (soft delete).
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        variant_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
+        variant_id (str): Variant ID or slug ref (prefixed 's-')
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -173,9 +173,9 @@ async def asyncio(
      Delete a specific variant (soft delete).
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        product_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        variant_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        product_id (str): Product ID or slug ref (prefixed 's-')
+        variant_id (str): Variant ID or slug ref (prefixed 's-')
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

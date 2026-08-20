@@ -7,12 +7,15 @@ from decimal import Decimal
 import pytest
 from beanie import PydanticObjectId
 from fastapi import HTTPException
+from pymongo.errors import DuplicateKeyError
 
 from src.core.utils import (
     build_attribute_filter,
     build_price_search_filter,
     decode_cursor,
     encode_cursor,
+    parse_ref,
+    raise_for_duplicate_key,
     split_path,
 )
 
@@ -238,3 +241,43 @@ class TestBuildPriceSearchFilter:
         with pytest.raises(HTTPException) as exc_info:
             build_price_search_filter(tokens)
         assert exc_info.value.status_code == 400
+
+
+class TestParseRef:
+    """Tests for the parse_ref function."""
+
+    def test_object_id_ref(self):
+        object_id = PydanticObjectId()
+        assert parse_ref(str(object_id)) == {"_id": object_id}
+
+    def test_slug_ref(self):
+        assert parse_ref("s-my-product") == {"seo.slug": "my-product"}
+
+    def test_slug_ref_custom_field(self):
+        assert parse_ref("s-my-variant", slug_field="options.slug") == {"options.slug": "my-variant"}
+
+    def test_invalid_ref_raises_value_error(self):
+        with pytest.raises(ValueError, match="Invalid reference"):
+            parse_ref("not-a-valid-ref")
+
+    def test_empty_string_raises_value_error(self):
+        with pytest.raises(ValueError, match="Invalid reference"):
+            parse_ref("")
+
+
+class TestRaiseForDuplicateKey:
+    """Tests for the raise_for_duplicate_key function."""
+
+    def test_raises_409_with_offending_fields(self):
+        exc = DuplicateKeyError("E11000 duplicate key error", 11000, {"keyPattern": {"store_id": 1, "seo.slug": 1}})
+        with pytest.raises(HTTPException) as exc_info:
+            raise_for_duplicate_key(exc)
+        assert exc_info.value.status_code == 409
+        assert "store_id" in exc_info.value.detail
+        assert "seo.slug" in exc_info.value.detail
+
+    def test_raises_409_without_key_pattern(self):
+        exc = DuplicateKeyError("E11000 duplicate key error", 11000, {})
+        with pytest.raises(HTTPException) as exc_info:
+            raise_for_duplicate_key(exc)
+        assert exc_info.value.status_code == 409

@@ -78,8 +78,8 @@ def sync_detailed(
      Update a bundle's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        bundle_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        bundle_id (str): Bundle ID or slug ref (prefixed 's-')
         body (UpdateBundle):
 
     Raises:
@@ -115,8 +115,8 @@ def sync(
      Update a bundle's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        bundle_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        bundle_id (str): Bundle ID or slug ref (prefixed 's-')
         body (UpdateBundle):
 
     Raises:
@@ -147,8 +147,8 @@ async def asyncio_detailed(
      Update a bundle's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        bundle_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        bundle_id (str): Bundle ID or slug ref (prefixed 's-')
         body (UpdateBundle):
 
     Raises:
@@ -182,8 +182,8 @@ async def asyncio(
      Update a bundle's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
-        bundle_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
+        bundle_id (str): Bundle ID or slug ref (prefixed 's-')
         body (UpdateBundle):
 
     Raises:

@@ -1,25 +1,25 @@
 # from uuid import uuid7
 
 import pendulum
+from pymongo.errors import DuplicateKeyError
 
 from src.core.types import PaginatedResponse
-from src.core.utils import paginate
-from src.domain.types.categories import Category, CategoryID, NewCategory, UpdateCategory
-from src.domain.types.stores import StoreID
+from src.core.utils import paginate, parse_ref, raise_for_duplicate_key
+from src.domain.types.categories import Category, NewCategory, UpdateCategory
 from src.models.categories import CategoryModel
 from src.models.stores import StoreModel
 
 
 class CategoriesService:
-    async def create_category(self, store_id: StoreID, new_category: NewCategory) -> Category | None:
+    async def create_category(self, store_id: str, new_category: NewCategory) -> Category | None:
         # Check if store exists
-        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
-        if not store:
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
+        if not store or store.id is None:
             return None
 
         category = CategoryModel(
             # id=uuid7(),
-            store_id=store_id,
+            store_id=store.id,
             name=new_category.name,
             description=new_category.description,
             status=new_category.status,
@@ -29,23 +29,26 @@ class CategoriesService:
             attributes=new_category.attributes or {},
             images=new_category.images,
         )
-        category = await category.create()
+        try:
+            category = await category.create()
+        except DuplicateKeyError as exc:
+            raise_for_duplicate_key(exc)
 
         return Category.model_validate(category.model_dump())
 
     async def list_categories(
         self,
-        store_id: StoreID,
+        store_id: str,
         after: str | None,
         before: str | None,
         limit: int,
         filters: dict | None = None,
     ) -> PaginatedResponse[Category] | None:
-        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             return None
 
-        query_filter = {"store_id": store_id, "deleted_at": None, **(filters or {})}
+        query_filter = {"store_id": store.id, "deleted_at": None, **(filters or {})}
         return await paginate(
             CategoryModel.find(query_filter),
             after,
@@ -54,14 +57,14 @@ class CategoriesService:
             transform=Category.model_validate,
         )
 
-    async def get_category(self, store_id: StoreID, category_id: CategoryID) -> Category | None:
+    async def get_category(self, store_id: str, category_id: str) -> Category | None:
         # Check if store exists
-        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             return None
 
         category = await CategoryModel.find(
-            {"_id": category_id, "store_id": store_id, "deleted_at": None}
+            {**parse_ref(category_id), "store_id": store.id, "deleted_at": None}
         ).first_or_none()
         if category:
             return Category.model_validate(category.model_dump())
@@ -69,17 +72,17 @@ class CategoriesService:
 
     async def update_category(
         self,
-        store_id: StoreID,
-        category_id: CategoryID,
+        store_id: str,
+        category_id: str,
         update_data: UpdateCategory,
     ) -> Category | None:
         # Check if store exists
-        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             return None
 
         category = await CategoryModel.find(
-            {"_id": category_id, "store_id": store_id, "deleted_at": None}
+            {**parse_ref(category_id), "store_id": store.id, "deleted_at": None}
         ).first_or_none()
         if not category:
             return None
@@ -96,17 +99,20 @@ class CategoriesService:
         for field, value in update_dict.items():
             setattr(category, field, value)
 
-        await category.save()
+        try:
+            await category.save()
+        except DuplicateKeyError as exc:
+            raise_for_duplicate_key(exc)
         return Category.model_validate(category.model_dump())
 
-    async def delete_category(self, store_id: StoreID, category_id: CategoryID) -> bool:
+    async def delete_category(self, store_id: str, category_id: str) -> bool:
         # Check if store exists
-        store = await StoreModel.find({"_id": store_id, "deleted_at": None}).first_or_none()
+        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             return False
 
         category = await CategoryModel.find(
-            {"_id": category_id, "store_id": store_id, "deleted_at": None}
+            {**parse_ref(category_id), "store_id": store.id, "deleted_at": None}
         ).first_or_none()
         if not category:
             return False

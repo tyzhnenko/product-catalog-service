@@ -10,7 +10,7 @@ from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.attributes_map import AttributesMap
-    from ..models.product_seo import ProductSEO
+    from ..models.seo import SEO
 
 
 T = TypeVar("T", bound="NewProduct")
@@ -25,7 +25,7 @@ class NewProduct:
         description (None | str | Unset):
         brand (None | str | Unset):
         tags (list[str] | Unset): Tags associated with the product
-        seo (None | ProductSEO | Unset):
+        seo (None | SEO | Unset):
         categories (list[str] | None | Unset):
         attributes (AttributesMap | None | Unset):
     """
@@ -34,14 +34,14 @@ class NewProduct:
     description: None | str | Unset = UNSET
     brand: None | str | Unset = UNSET
     tags: list[str] | Unset = UNSET
-    seo: None | ProductSEO | Unset = UNSET
+    seo: None | SEO | Unset = UNSET
     categories: list[str] | None | Unset = UNSET
     attributes: AttributesMap | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.attributes_map import AttributesMap
-        from ..models.product_seo import ProductSEO
+        from ..models.seo import SEO
 
         name = self.name
 
@@ -64,7 +64,7 @@ class NewProduct:
         seo: dict[str, Any] | None | Unset
         if isinstance(self.seo, Unset):
             seo = UNSET
-        elif isinstance(self.seo, ProductSEO):
+        elif isinstance(self.seo, SEO):
             seo = self.seo.to_dict()
         else:
             seo = self.seo
@@ -111,7 +111,7 @@ class NewProduct:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.attributes_map import AttributesMap
-        from ..models.product_seo import ProductSEO
+        from ..models.seo import SEO
 
         d = dict(src_dict)
         name = d.pop("name")
@@ -136,7 +136,7 @@ class NewProduct:
 
         tags = cast(list[str], d.pop("tags", UNSET))
 
-        def _parse_seo(data: object) -> None | ProductSEO | Unset:
+        def _parse_seo(data: object) -> None | SEO | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -144,12 +144,12 @@ class NewProduct:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                seo_type_0 = ProductSEO.from_dict(data)
+                seo_type_0 = SEO.from_dict(data)
 
                 return seo_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(None | ProductSEO | Unset, data)
+            return cast(None | SEO | Unset, data)
 
         seo = _parse_seo(d.pop("seo", UNSET))
 

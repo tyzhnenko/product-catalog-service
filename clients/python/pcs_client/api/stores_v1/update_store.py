@@ -73,7 +73,7 @@ def sync_detailed(
      Update an existing store's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
         body (UpdateStore):
 
     Raises:
@@ -107,7 +107,7 @@ def sync(
      Update an existing store's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
         body (UpdateStore):
 
     Raises:
@@ -136,7 +136,7 @@ async def asyncio_detailed(
      Update an existing store's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
         body (UpdateStore):
 
     Raises:
@@ -168,7 +168,7 @@ async def asyncio(
      Update an existing store's information.
 
     Args:
-        store_id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        store_id (str): Store ID or slug ref (prefixed 's-')
         body (UpdateStore):
 
     Raises:
