@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.5.0...v0.6.0) (2026-08-20)
+
+
+### Features
+
+* support slug-based refs alongside ObjectId lookups ([#49](https://github.com/tyzhnenko/product-catalog-service/issues/49)) ([008cfc3](https://github.com/tyzhnenko/product-catalog-service/commit/008cfc3ac80b4a649397cde604f882689feca8e0))
+
 ## [0.5.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.4.4...v0.5.0) (2026-08-15)
 
 
