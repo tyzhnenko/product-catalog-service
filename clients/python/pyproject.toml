@@ -1,6 +1,6 @@
 [project]
 name = "product-catalog-service-client"
-version = "0.6.0"
+version = "0.7.0"
 description = "A client library for accessing Product Catalog Service"
 authors = []
 requires-python = ">=3.11"
