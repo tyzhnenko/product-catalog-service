@@ -22,6 +22,7 @@ class PaginatedResponseLocation:
         end_cursor (None | str):
         has_next (bool):
         has_prev (bool):
+        total (int):
     """
 
     items: list[Location]
@@ -29,6 +30,7 @@ class PaginatedResponseLocation:
     end_cursor: None | str
     has_next: bool
     has_prev: bool
+    total: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -47,6 +49,8 @@ class PaginatedResponseLocation:
 
         has_prev = self.has_prev
 
+        total = self.total
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -56,6 +60,7 @@ class PaginatedResponseLocation:
                 "end_cursor": end_cursor,
                 "has_next": has_next,
                 "has_prev": has_prev,
+                "total": total,
             }
         )
 
@@ -91,12 +96,15 @@ class PaginatedResponseLocation:
 
         has_prev = d.pop("has_prev")
 
+        total = d.pop("total")
+
         paginated_response_location = cls(
             items=items,
             start_cursor=start_cursor,
             end_cursor=end_cursor,
             has_next=has_next,
             has_prev=has_prev,
+            total=total,
         )
 
         paginated_response_location.additional_properties = d
