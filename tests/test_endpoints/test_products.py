@@ -859,6 +859,7 @@ class TestListProductsPagination:
         assert data["has_next"] is True
         assert data["has_prev"] is False
         assert data["end_cursor"] is not None
+        assert data["total"] == 3
 
     def test_forward_pagination(self, api_client, sample_store):
         """after=end_cursor fetches the next page."""
@@ -874,6 +875,7 @@ class TestListProductsPagination:
         assert len(page2["items"]) == 1
         assert page2["has_next"] is False
         assert page2["has_prev"] is True
+        assert page2["total"] == 3
 
     def test_middle_page_has_next(self, api_client, sample_store):
         """after=end_cursor on a middle page returns has_next=True and truncates to limit."""
@@ -944,6 +946,7 @@ class TestListProductsPagination:
         assert data["end_cursor"] is None
         assert data["has_next"] is False
         assert data["has_prev"] is False
+        assert data["total"] == 0
 
     def test_invalid_cursor(self, api_client, sample_store):
         """Invalid cursor returns 400."""
@@ -981,9 +984,11 @@ class TestListProductsByAttributes:
         )
 
         assert response.status_code == 200
-        items = response.json()["items"]
+        data = response.json()
+        items = data["items"]
         assert len(items) == 1
         assert items[0]["attributes"]["roast_level"]["value"] == "light"
+        assert data["total"] == 1
 
     def test_filter_by_attribute_no_match(self, api_client, sample_product_data, sample_store):
         """Filter returns empty list when no products match."""

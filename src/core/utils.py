@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import os
 from decimal import Decimal, InvalidOperation
@@ -105,23 +106,28 @@ async def paginate(
     limit: int,
     transform: Callable[[DocT], T] | None = None,
 ) -> PaginatedResponse[Any]:
+    count_query = query.document_model.find(query.get_filter_query())
+
     if after is not None:
         cursor_id = decode_cursor(after)
-        docs = await query.find({"_id": {"$gt": cursor_id}}).sort("+_id").limit(limit + 1).to_list()
+        docs_coro = query.find({"_id": {"$gt": cursor_id}}).sort("+_id").limit(limit + 1).to_list()
+        total, docs = await asyncio.gather(count_query.count(), docs_coro)
         has_next = len(docs) > limit
         has_prev = True
         if has_next:
             docs = docs[:limit]
     elif before is not None:
         cursor_id = decode_cursor(before)
-        docs = await query.find({"_id": {"$lt": cursor_id}}).sort("-_id").limit(limit + 1).to_list()
+        docs_coro = query.find({"_id": {"$lt": cursor_id}}).sort("-_id").limit(limit + 1).to_list()
+        total, docs = await asyncio.gather(count_query.count(), docs_coro)
         has_prev = len(docs) > limit
         has_next = True
         if has_prev:
             docs = docs[:limit]
         docs.reverse()
     else:
-        docs = await query.sort("+_id").limit(limit + 1).to_list()
+        docs_coro = query.sort("+_id").limit(limit + 1).to_list()
+        total, docs = await asyncio.gather(count_query.count(), docs_coro)
         has_next = len(docs) > limit
         has_prev = False
         if has_next:
@@ -142,6 +148,7 @@ async def paginate(
         end_cursor=end_cursor,
         has_next=has_next,
         has_prev=has_prev,
+        total=total,
     )
 
 
