@@ -53,3 +53,4 @@ class PaginatedResponse(BaseModel, Generic[T]):
     end_cursor: str | None
     has_next: bool
     has_prev: bool
+    total: int
