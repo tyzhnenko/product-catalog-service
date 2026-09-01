@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.7.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.6.0...v0.7.0) (2026-08-29)
+
+
+### Features
+
+* add total match count to paginated list responses ([#51](https://github.com/tyzhnenko/product-catalog-service/issues/51)) ([bd24c07](https://github.com/tyzhnenko/product-catalog-service/commit/bd24c07f6cd6c93142480b6aec7670e3700d0ab6))
+
+
+### Chores
+
+* regenerate python client for total match count field ([#53](https://github.com/tyzhnenko/product-catalog-service/issues/53)) ([d6c6415](https://github.com/tyzhnenko/product-catalog-service/commit/d6c64150e93fb41ee47394dac7aa33e89db62b30))
+
 ## [0.6.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.5.0...v0.6.0) (2026-08-20)
 
 
