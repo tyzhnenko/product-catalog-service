@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/tyzhnenko/product-catalog-service/compare/v0.7.0...v0.7.1) (2026-09-06)
+
+
+### Bug Fixes
+
+* bump product updated_at on variant mutations and all document saves ([#54](https://github.com/tyzhnenko/product-catalog-service/issues/54)) ([c1cc459](https://github.com/tyzhnenko/product-catalog-service/commit/c1cc45902e04eaa50b70963ba0adeac763c26363))
+
 ## [0.7.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.6.0...v0.7.0) (2026-08-29)
 
 
