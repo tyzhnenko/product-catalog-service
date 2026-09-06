@@ -1,4 +1,6 @@
 # ruff: noqa: S101, D100, D101, D102, D103
+from datetime import datetime
+
 import pytest
 from beanie import PydanticObjectId
 
@@ -2918,3 +2920,68 @@ class TestListVariantsByPrice:
 
         assert response.status_code == 200
         assert len(response.json()["items"]) == 2
+
+
+class TestVariantUpdatedAtCascade:
+    def _get_product_updated_at(self, api_client, store_id, product_id):
+        response = api_client.get(f"/api/v1/products/{store_id}/{product_id}")
+        return datetime.fromisoformat(response.json()["updated_at"])
+
+    def test_create_variant_bumps_product_updated_at(
+        self, api_client, sample_store, sample_product, sample_variant_data
+    ):
+        before = self._get_product_updated_at(api_client, sample_store["id"], sample_product["id"])
+
+        response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data
+        )
+        assert response.status_code == 200
+
+        after = self._get_product_updated_at(api_client, sample_store["id"], sample_product["id"])
+        assert after > before
+
+    def test_update_variant_bumps_product_updated_at(
+        self, api_client, sample_store, sample_product, sample_variant_data
+    ):
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data
+        )
+        variant_id = create_response.json()["id"]
+        before = self._get_product_updated_at(api_client, sample_store["id"], sample_product["id"])
+
+        response = api_client.patch(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}",
+            json={"title": "Updated Title"},
+        )
+        assert response.status_code == 200
+
+        after = self._get_product_updated_at(api_client, sample_store["id"], sample_product["id"])
+        assert after > before
+
+    def test_delete_variant_bumps_product_updated_at(
+        self, api_client, sample_store, sample_product, sample_variant_data
+    ):
+        create_response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data
+        )
+        variant_id = create_response.json()["id"]
+        before = self._get_product_updated_at(api_client, sample_store["id"], sample_product["id"])
+
+        response = api_client.delete(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{variant_id}")
+        assert response.status_code == 204
+
+        after = self._get_product_updated_at(api_client, sample_store["id"], sample_product["id"])
+        assert after > before
+
+    def test_variant_mutation_does_not_bump_other_products_updated_at(
+        self, api_client, sample_store, sample_product, another_product, sample_variant_data
+    ):
+        before = self._get_product_updated_at(api_client, sample_store["id"], another_product["id"])
+
+        response = api_client.post(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=sample_variant_data
+        )
+        assert response.status_code == 200
+
+        after = self._get_product_updated_at(api_client, sample_store["id"], another_product["id"])
+        assert after == before

@@ -2,7 +2,7 @@
 
 from datetime import datetime, timezone
 
-from beanie import Document
+from beanie import Document, Save, before_event
 from pydantic import Field
 
 
@@ -17,3 +17,7 @@ class BaseAppDocument(Document):
     updated_at: datetime = Field(default_factory=utc_now)
     created_at: datetime = Field(default_factory=utc_now)
     deleted_at: datetime | None = None
+
+    @before_event(Save)
+    def bump_updated_at(self) -> None:
+        self.updated_at = utc_now()

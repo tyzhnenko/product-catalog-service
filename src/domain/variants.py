@@ -169,6 +169,7 @@ class VariantsService:
             variant = await variant.create()
         except DuplicateKeyError as exc:
             raise_for_duplicate_key(exc)
+        await product.save()
         logger.info(f"Created variant {variant.id} for product {product_id}")
 
         return ProductVariant.model_validate(variant)
@@ -259,6 +260,7 @@ class VariantsService:
             await variant.save()
         except DuplicateKeyError as exc:
             raise_for_duplicate_key(exc)
+        await product.save()
         logger.info(f"Updated variant {variant_id} for product {product_id}")
         return ProductVariant.model_validate(variant)
 
@@ -276,5 +278,6 @@ class VariantsService:
 
         variant.deleted_at = pendulum.now()
         await variant.save()
+        await product.save()
         logger.info(f"Deleted variant {variant_id} for product {product_id}")
         return True
