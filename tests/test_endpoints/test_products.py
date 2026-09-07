@@ -161,6 +161,18 @@ class TestCreateProduct:
 
         assert response.status_code == 409
 
+    def test_create_product_reuses_slug_from_deleted_product(self, api_client, sample_product_data, sample_store):
+        """Test that a new product can reuse the slug of a soft-deleted product."""
+        first = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        assert first.status_code == 200
+        first_id = first.json()["id"]
+
+        delete_response = api_client.delete(f"/api/v1/products/{sample_store['id']}/{first_id}")
+        assert delete_response.status_code == 204
+
+        second = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)
+        assert second.status_code == 200
+
     def test_create_product_missing_name(self, api_client, sample_store):
         """Test product creation without name."""
         invalid_data = {

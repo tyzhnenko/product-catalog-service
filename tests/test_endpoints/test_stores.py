@@ -58,6 +58,20 @@ class TestCreateStore:
 
         assert response.status_code == 409
 
+    def test_create_store_reuses_slug_from_deleted_store(self, api_client, sample_store_data):
+        """Test that a new store can reuse the slug of a soft-deleted store."""
+        store_data = {**sample_store_data, "seo": {"slug": "test-coffee-store"}}
+        first = api_client.post("/api/v1/stores/", json=store_data)
+        assert first.status_code == 200
+        first_id = first.json()["id"]
+
+        delete_response = api_client.delete(f"/api/v1/stores/{first_id}")
+        assert delete_response.status_code == 204
+
+        second_data = {**store_data, "name": "Different Name", "url": "https://different.example.com/"}
+        second = api_client.post("/api/v1/stores/", json=second_data)
+        assert second.status_code == 200
+
     def test_create_store_missing_name(self, api_client):
         """Test store creation without name."""
         invalid_data = {

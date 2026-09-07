@@ -111,6 +111,18 @@ class TestCreateCategory:
 
         assert response.status_code == 409
 
+    def test_create_category_reuses_slug_from_deleted_category(self, api_client, sample_category_data, sample_store):
+        """Test that a new category can reuse the slug of a soft-deleted category."""
+        first = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=sample_category_data)
+        assert first.status_code == 200
+        first_id = first.json()["id"]
+
+        delete_response = api_client.delete(f"/api/v1/categories/{sample_store['id']}/{first_id}")
+        assert delete_response.status_code == 204
+
+        second = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=sample_category_data)
+        assert second.status_code == 200
+
     def test_create_category_missing_name(self, api_client, sample_store):
         """Test category creation without name."""
         invalid_data = {}

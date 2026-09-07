@@ -58,6 +58,6 @@ class VariantModel(BaseAppDocument):
             IndexModel(
                 ["store_id", "product_id", "seo.slug"],
                 unique=True,
-                partialFilterExpression={"seo.slug": {"$exists": True}},
+                partialFilterExpression={"seo.slug": {"$exists": True}, "deleted_at": None},
             ),
         ]

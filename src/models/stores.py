@@ -18,6 +18,6 @@ class StoreModel(BaseAppDocument):
             IndexModel(
                 ["seo.slug"],
                 unique=True,
-                partialFilterExpression={"seo.slug": {"$exists": True}},
+                partialFilterExpression={"seo.slug": {"$exists": True}, "deleted_at": None},
             ),
         ]

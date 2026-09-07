@@ -113,6 +113,20 @@ class TestCreateLocation:
 
         assert response.status_code == 409
 
+    def test_create_location_reuses_slug_from_deleted_location(self, api_client, sample_location_data, sample_store):
+        """Test that a new location can reuse the slug of a soft-deleted location."""
+        location_data = {**sample_location_data, "seo": {"slug": "downtown-location"}}
+        first = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=location_data)
+        assert first.status_code == 200
+        first_id = first.json()["id"]
+
+        delete_response = api_client.delete(f"/api/v1/locations/{sample_store['id']}/{first_id}")
+        assert delete_response.status_code == 204
+
+        second_data = {**location_data, "name": "Different Name"}
+        second = api_client.post(f"/api/v1/locations/{sample_store['id']}", json=second_data)
+        assert second.status_code == 200
+
     def test_create_location_missing_name(self, api_client, sample_store):
         """Test location creation without name."""
         invalid_data = {
