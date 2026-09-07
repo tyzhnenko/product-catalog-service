@@ -219,6 +219,19 @@ class TestCreateBundle:
 
         assert response.status_code == 409
 
+    def test_create_bundle_reuses_slug_from_deleted_bundle(self, api_client, sample_bundle_data, sample_store):
+        """Test that a new bundle can reuse the slug of a soft-deleted bundle."""
+        bundle_data = {**sample_bundle_data, "seo": {"slug": "coffee-lovers-bundle"}}
+        first = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data)
+        assert first.status_code == 200
+        first_id = first.json()["id"]
+
+        delete_response = api_client.delete(f"/api/v1/bundles/{sample_store['id']}/{first_id}")
+        assert delete_response.status_code == 204
+
+        second = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=bundle_data)
+        assert second.status_code == 200
+
     def test_create_bundle_invalid_store_id(self, api_client, sample_bundle_data):
         """Test bundle creation with invalid store_id format (rejected by path param validation)."""
         response = api_client.post("/api/v1/bundles/not-a-valid-uuid", json=sample_bundle_data)

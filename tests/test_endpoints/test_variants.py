@@ -388,6 +388,21 @@ class TestCreateVariant:
 
         assert response.status_code == 409
 
+    def test_create_variant_reuses_slug_from_deleted_variant(
+        self, api_client, sample_store, sample_product, sample_variant_data
+    ):
+        """Test that a new variant can reuse the slug of a soft-deleted variant."""
+        variant_data = {**sample_variant_data, "seo": {"slug": "250g-whole-beans"}}
+        first = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+        assert first.status_code == 200
+        first_id = first.json()["id"]
+
+        delete_response = api_client.delete(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}/{first_id}")
+        assert delete_response.status_code == 204
+
+        second = api_client.post(f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}", json=variant_data)
+        assert second.status_code == 200
+
     def test_create_variant_same_slug_different_product_allowed(
         self, api_client, sample_store, sample_product, another_product, sample_variant_data
     ):
