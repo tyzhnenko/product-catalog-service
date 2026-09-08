@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.2](https://github.com/tyzhnenko/product-catalog-service/compare/v0.7.1...v0.7.2) (2026-09-07)
+
+
+### Bug Fixes
+
+* scope unique slug indexes by deleted_at to allow reuse after soft delete ([#56](https://github.com/tyzhnenko/product-catalog-service/issues/56)) ([40490ce](https://github.com/tyzhnenko/product-catalog-service/commit/40490ce63c86d4fb8afbce86be08fbe13c8dac31))
+
 ## [0.7.1](https://github.com/tyzhnenko/product-catalog-service/compare/v0.7.0...v0.7.1) (2026-09-06)
 
 
