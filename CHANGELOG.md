@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.3](https://github.com/tyzhnenko/product-catalog-service/compare/v0.7.2...v0.7.3) (2026-09-10)
+
+
+### Chores
+
+* increase product description size ([#58](https://github.com/tyzhnenko/product-catalog-service/issues/58)) ([e491d75](https://github.com/tyzhnenko/product-catalog-service/commit/e491d75e7e713fa2fad5a2da9f0ff48c95258170))
+
 ## [0.7.2](https://github.com/tyzhnenko/product-catalog-service/compare/v0.7.1...v0.7.2) (2026-09-07)
 
 
