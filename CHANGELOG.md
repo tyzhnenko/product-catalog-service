@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.4](https://github.com/tyzhnenko/product-catalog-service/compare/v0.7.3...v0.7.4) (2026-09-12)
+
+
+### Documentation
+
+* update feature checklist to reflect implemented search capabilities ([#60](https://github.com/tyzhnenko/product-catalog-service/issues/60)) ([a7dc6bf](https://github.com/tyzhnenko/product-catalog-service/commit/a7dc6bfb7a767d9f3f3f6af4785b508bdebfd424))
+
 ## [0.7.3](https://github.com/tyzhnenko/product-catalog-service/compare/v0.7.2...v0.7.3) (2026-09-10)
 
 
