@@ -16,7 +16,8 @@ By using this project or its source code, for any purpose and in any shape or fo
     - [x] Dynamic attributes
     - [x] Categories assignment
     - [x] Paginated listing
-    - [ ] Search by attributes (coming soon)
+    - [x] Search by attributes (own + variant attributes)
+    - [x] Search by variant prices
     - [ ] Batch create/update (coming soon)
     - [ ] Sort by prices (coming soon)
 - [x] Variant management with option combinations
@@ -25,14 +26,14 @@ By using this project or its source code, for any purpose and in any shape or fo
     - [x] Location specific price management
     - [x] Region specific price management
     - [x] Paginated listing
-    - [ ] Search by attributes (coming soon)
-    - [ ] Search by prices (coming soon)
+    - [x] Search by attributes
+    - [x] Search by prices
     - [ ] Batch create/update (coming soon)
     - [ ] Sort by prices (coming soon)
 - [x] Categories management
     - [x] Attributes management
     - [x] Paginated listing
-    - [ ] Search by attributes (coming soon)
+    - [x] Search by attributes
     - [ ] Batch create/update (coming soon)
 - [x] Locations management
     - [x] Attributes management
@@ -45,8 +46,8 @@ By using this project or its source code, for any purpose and in any shape or fo
     - [x] Location specific price management
     - [x] Region specific price management
     - [x] Paginated listing
-    - [ ] Search by attributes (coming soon)
-    - [ ] Search by prices (coming soon)
+    - [x] Search by attributes
+    - [x] Search by prices
     - [ ] Batch create/update (coming soon)
 
 ## Start with Docker
