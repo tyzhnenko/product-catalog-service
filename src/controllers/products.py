@@ -6,7 +6,7 @@ from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.core.types import PaginatedResponse
-from src.core.utils import build_attribute_filter, build_price_search_filter
+from src.core.utils import build_attribute_filter, build_availability_filter, build_price_search_filter
 from src.domain.products import ProductsService
 from src.domain.types.products import NewProduct, Product, ProductRef, UpdateProduct
 from src.domain.types.stores import StoreRef
@@ -55,12 +55,25 @@ async def list_products(
             "Example: 'USD>=10 USD<=50 loc:LOC1:retail>=5 region:US:retail'"
         ),
     ),
+    variants_availability: str | None = Query(
+        None,
+        description=(
+            "Variant stock availability filter. Returns products that have at least one variant matching, "
+            "on the same variant as 'variants_attrs' and 'price'. A variant is in stock at a location unless its "
+            "'locations_availability' attribute marks that location 'out_of_stock'; only locations where the "
+            "variant has a price are considered. 'in_stock': in stock at any priced location. "
+            "'out_of_stock': has a priced location and none is in stock. "
+            "'loc:<id>' / 'loc:<id>:in_stock' / 'loc:<id>:out_of_stock' restrict this to one location. "
+            "Any other value returns 422."
+        ),
+    ),
 ) -> PaginatedResponse[Product]:
     """List all products for a specific store."""
     filters = build_attribute_filter(attrs)
     variant_filters = {
         **build_attribute_filter(variants_attrs),
         **build_price_search_filter(shlex.split(price) if price else []),
+        **build_availability_filter(variants_availability),
     }
     result = await service.list_products(
         store_id,

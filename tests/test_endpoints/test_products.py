@@ -1212,3 +1212,192 @@ class TestListProductsByVariantFilters:
 
         assert response.status_code == 200
         assert len(response.json()["items"]) == 2
+
+
+def _price(value: str = "10.00") -> dict:
+    return {"retail": {"type": "decimal", "name": "Retail", "value": value}}
+
+
+def _availability(**states: str) -> dict:
+    return {
+        "locations_availability": {
+            "type": "map_of_strings",
+            "name": "locations_availability",
+            "values": states,
+        }
+    }
+
+
+class TestListProductsByAvailability:
+    """Tests for GET /api/v1/products/{store_id}?availability=..."""
+
+    @pytest.fixture
+    def loc_a(self, api_client, sample_store):
+        return api_client.post(f"/api/v1/locations/{sample_store['id']}", json={"name": "A"}).json()["id"]
+
+    @pytest.fixture
+    def loc_b(self, api_client, sample_store):
+        return api_client.post(f"/api/v1/locations/{sample_store['id']}", json={"name": "B"}).json()["id"]
+
+    def _product(self, api_client, store, name):
+        data = {"name": name, "tags": [], "categories": []}
+        return api_client.post(f"/api/v1/products/{store['id']}", json=data).json()["id"]
+
+    def _variant(self, api_client, store, product_id, title="V", prices=None, availability=None, attributes=None):
+        body = {
+            "title": title,
+            "options": [{"name": "size", "value": title}],
+            "location_price": {loc: _price() for loc in (prices or [])},
+            "attributes": {**(attributes or {}), **(_availability(**availability) if availability else {})},
+        }
+        response = api_client.post(f"/api/v1/variants/{store['id']}/{product_id}", json=body)
+        assert response.status_code == 200, response.text
+        return response.json()["id"]
+
+    def _ids(self, api_client, store, **params):
+        response = api_client.get(f"/api/v1/products/{store['id']}", params=params)
+        assert response.status_code == 200, response.text
+        return {item["id"] for item in response.json()["items"]}
+
+    def test_missing_attribute_means_in_stock(self, api_client, sample_store, loc_a):
+        product = self._product(api_client, sample_store, "p")
+        self._variant(api_client, sample_store, product, prices=[loc_a])
+
+        assert self._ids(api_client, sample_store, variants_availability="in_stock") == {product}
+        assert self._ids(api_client, sample_store, variants_availability=f"loc:{loc_a}") == {product}
+        assert self._ids(api_client, sample_store, variants_availability="out_of_stock") == set()
+
+    def test_entries_only_for_other_locations_means_in_stock(self, api_client, sample_store, loc_a, loc_b):
+        product = self._product(api_client, sample_store, "p")
+        self._variant(api_client, sample_store, product, prices=[loc_a, loc_b], availability={loc_b: "out_of_stock"})
+
+        assert self._ids(api_client, sample_store, variants_availability=f"loc:{loc_a}:in_stock") == {product}
+        assert self._ids(api_client, sample_store, variants_availability=f"loc:{loc_b}:in_stock") == set()
+
+    def test_one_variant_in_stock_keeps_product_in_stock(self, api_client, sample_store, loc_a):
+        product = self._product(api_client, sample_store, "p")
+        self._variant(api_client, sample_store, product, "sold", prices=[loc_a], availability={loc_a: "out_of_stock"})
+        self._variant(api_client, sample_store, product, "avail", prices=[loc_a])
+
+        # Matching is per variant: the product has both an in-stock and a sold-out variant.
+        assert self._ids(api_client, sample_store, variants_availability="in_stock") == {product}
+        assert self._ids(api_client, sample_store, variants_availability="out_of_stock") == {product}
+
+    def test_out_of_stock_at_a_but_in_stock_at_b(self, api_client, sample_store, loc_a, loc_b):
+        product = self._product(api_client, sample_store, "p")
+        self._variant(api_client, sample_store, product, prices=[loc_a, loc_b], availability={loc_a: "out_of_stock"})
+
+        assert self._ids(api_client, sample_store, variants_availability=f"loc:{loc_a}:out_of_stock") == {product}
+        assert self._ids(api_client, sample_store, variants_availability=f"loc:{loc_b}:out_of_stock") == set()
+        assert self._ids(api_client, sample_store, variants_availability="out_of_stock") == set()
+        assert self._ids(api_client, sample_store, variants_availability="in_stock") == {product}
+
+    def test_all_priced_locations_out_of_stock(self, api_client, sample_store, loc_a, loc_b):
+        product = self._product(api_client, sample_store, "p")
+        self._variant(
+            api_client,
+            sample_store,
+            product,
+            prices=[loc_a, loc_b],
+            availability={loc_a: "out_of_stock", loc_b: "out_of_stock"},
+        )
+
+        assert self._ids(api_client, sample_store, variants_availability="out_of_stock") == {product}
+        assert self._ids(api_client, sample_store, variants_availability="in_stock") == set()
+
+    def test_availability_entry_without_price_is_ignored(self, api_client, sample_store, loc_a, loc_b):
+        sold_out = self._product(api_client, sample_store, "sold-out")
+        # Priced only at A (out of stock); B has a stray in_stock entry but no price, so it must not count.
+        self._variant(
+            api_client, sample_store, sold_out, prices=[loc_a], availability={loc_a: "out_of_stock", loc_b: "in_stock"}
+        )
+        # No price anywhere: not purchasable, and not "out of stock" either.
+        unpriced = self._product(api_client, sample_store, "unpriced")
+        self._variant(api_client, sample_store, unpriced)
+
+        assert self._ids(api_client, sample_store, variants_availability="in_stock") == set()
+        assert self._ids(api_client, sample_store, variants_availability=f"loc:{loc_b}:in_stock") == set()
+        assert self._ids(api_client, sample_store, variants_availability="out_of_stock") == {sold_out}
+
+    def test_updates_are_reflected_immediately(self, api_client, sample_store, loc_a):
+        product = self._product(api_client, sample_store, "p")
+        variant = self._variant(api_client, sample_store, product, prices=[loc_a], availability={loc_a: "out_of_stock"})
+        url = f"/api/v1/variants/{sample_store['id']}/{product}/{variant}"
+        assert self._ids(api_client, sample_store, variants_availability="in_stock") == set()
+
+        api_client.patch(url, json={"attributes": _availability(**{loc_a: "in_stock"})})
+        assert self._ids(api_client, sample_store, variants_availability="in_stock") == {product}
+
+        api_client.patch(url, json={"attributes": _availability(**{loc_a: "out_of_stock"})})
+        assert self._ids(api_client, sample_store, variants_availability="in_stock") == set()
+
+        api_client.patch(url, json={"attributes": {}})
+        assert self._ids(api_client, sample_store, variants_availability="in_stock") == {product}
+
+    def test_scoped_to_shops_selling_different_products(self, api_client, sample_store, loc_a, loc_b):
+        only_a = self._product(api_client, sample_store, "only-a")
+        self._variant(api_client, sample_store, only_a, prices=[loc_a])
+        only_b = self._product(api_client, sample_store, "only-b")
+        self._variant(api_client, sample_store, only_b, prices=[loc_b])
+
+        assert self._ids(api_client, sample_store, variants_availability=f"loc:{loc_a}") == {only_a}
+        assert self._ids(api_client, sample_store, variants_availability=f"loc:{loc_b}:in_stock") == {only_b}
+        assert self._ids(api_client, sample_store, variants_availability="in_stock") == {only_a, only_b}
+
+    def test_combined_with_other_filters(self, api_client, sample_store, loc_a):
+        whole = self._product(api_client, sample_store, "whole")
+        grind = {"grind": {"type": "string", "name": "grind", "value": "whole"}}
+        self._variant(api_client, sample_store, whole, prices=[loc_a], attributes=grind)
+        sold_out = self._product(api_client, sample_store, "sold-out")
+        self._variant(api_client, sample_store, sold_out, prices=[loc_a], availability={loc_a: "out_of_stock"})
+
+        assert self._ids(api_client, sample_store, variants_availability="in_stock", price=f"loc:{loc_a}") == {whole}
+        assert self._ids(api_client, sample_store, variants_availability="in_stock", variants_attrs="grind:whole") == {
+            whole
+        }
+        assert self._ids(api_client, sample_store, variants_availability="out_of_stock", price=f"loc:{loc_a}") == {
+            sold_out
+        }
+
+    def test_pagination_with_filter(self, api_client, sample_store, loc_a):
+        expected = []
+        for i in range(5):
+            product = self._product(api_client, sample_store, f"in-{i}")
+            self._variant(api_client, sample_store, product, prices=[loc_a])
+            expected.append(product)
+            sold = self._product(api_client, sample_store, f"out-{i}")
+            self._variant(api_client, sample_store, sold, prices=[loc_a], availability={loc_a: "out_of_stock"})
+
+        url = f"/api/v1/products/{sample_store['id']}"
+        params = {"variants_availability": "in_stock", "limit": 2}
+        page1 = api_client.get(url, params=params).json()
+        assert [i["id"] for i in page1["items"]] == expected[:2]
+        assert page1["has_next"] and not page1["has_prev"] and page1["total"] == 5
+
+        page2 = api_client.get(url, params={**params, "after": page1["end_cursor"]}).json()
+        assert [i["id"] for i in page2["items"]] == expected[2:4]
+        assert page2["has_next"] and page2["has_prev"]
+
+        page3 = api_client.get(url, params={**params, "after": page2["end_cursor"]}).json()
+        assert [i["id"] for i in page3["items"]] == expected[4:]
+        assert not page3["has_next"]
+
+        back = api_client.get(url, params={**params, "before": page3["start_cursor"]}).json()
+        assert [i["id"] for i in back["items"]] == expected[2:4]
+
+    @pytest.mark.parametrize(
+        "value",
+        ["", "instock", "IN_STOCK", "loc", "loc:", "loc:zzz", "loc:abc:in_stock", "loc:{loc}:maybe", "region:US"],
+    )
+    def test_invalid_availability_returns_422(self, api_client, sample_store, loc_a, value):
+        response = api_client.get(
+            f"/api/v1/products/{sample_store['id']}", params={"variants_availability": value.replace("{loc}", loc_a)}
+        )
+        assert response.status_code == 422
+
+    def test_no_availability_param_returns_everything(self, api_client, sample_store, loc_a):
+        priced = self._product(api_client, sample_store, "priced")
+        self._variant(api_client, sample_store, priced, prices=[loc_a], availability={loc_a: "out_of_stock"})
+        bare = self._product(api_client, sample_store, "bare")
+
+        assert self._ids(api_client, sample_store) == {priced, bare}

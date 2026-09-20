@@ -20,6 +20,7 @@ def _get_kwargs(
     attrs: list[str] | Unset = UNSET,
     variants_attrs: list[str] | Unset = UNSET,
     price: None | str | Unset = UNSET,
+    variants_availability: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -58,6 +59,13 @@ def _get_kwargs(
     else:
         json_price = price
     params["price"] = json_price
+
+    json_variants_availability: None | str | Unset
+    if isinstance(variants_availability, Unset):
+        json_variants_availability = UNSET
+    else:
+        json_variants_availability = variants_availability
+    params["variants_availability"] = json_variants_availability
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -112,6 +120,7 @@ def sync_detailed(
     attrs: list[str] | Unset = UNSET,
     variants_attrs: list[str] | Unset = UNSET,
     price: None | str | Unset = UNSET,
+    variants_availability: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | PaginatedResponseProduct]:
     """List Products
 
@@ -134,6 +143,13 @@ def sync_detailed(
             is set; id+key checks that key is set; +op adds a range).
             'region:<code>[:<key>[<op><value>]]' does the same for region_price. Example: 'USD>=10
             USD<=50 loc:LOC1:retail>=5 region:US:retail'
+        variants_availability (None | str | Unset): Variant stock availability filter. Returns
+            products that have at least one variant matching, on the same variant as 'variants_attrs'
+            and 'price'. A variant is in stock at a location unless its 'locations_availability'
+            attribute marks that location 'out_of_stock'; only locations where the variant has a price
+            are considered. 'in_stock': in stock at any priced location. 'out_of_stock': has a priced
+            location and none is in stock. 'loc:<id>' / 'loc:<id>:in_stock' / 'loc:<id>:out_of_stock'
+            restrict this to one location. Any other value returns 422.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -151,6 +167,7 @@ def sync_detailed(
         attrs=attrs,
         variants_attrs=variants_attrs,
         price=price,
+        variants_availability=variants_availability,
     )
 
     response = client.get_httpx_client().request(
@@ -170,6 +187,7 @@ def sync(
     attrs: list[str] | Unset = UNSET,
     variants_attrs: list[str] | Unset = UNSET,
     price: None | str | Unset = UNSET,
+    variants_availability: None | str | Unset = UNSET,
 ) -> HTTPValidationError | PaginatedResponseProduct | None:
     """List Products
 
@@ -192,6 +210,13 @@ def sync(
             is set; id+key checks that key is set; +op adds a range).
             'region:<code>[:<key>[<op><value>]]' does the same for region_price. Example: 'USD>=10
             USD<=50 loc:LOC1:retail>=5 region:US:retail'
+        variants_availability (None | str | Unset): Variant stock availability filter. Returns
+            products that have at least one variant matching, on the same variant as 'variants_attrs'
+            and 'price'. A variant is in stock at a location unless its 'locations_availability'
+            attribute marks that location 'out_of_stock'; only locations where the variant has a price
+            are considered. 'in_stock': in stock at any priced location. 'out_of_stock': has a priced
+            location and none is in stock. 'loc:<id>' / 'loc:<id>:in_stock' / 'loc:<id>:out_of_stock'
+            restrict this to one location. Any other value returns 422.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -210,6 +235,7 @@ def sync(
         attrs=attrs,
         variants_attrs=variants_attrs,
         price=price,
+        variants_availability=variants_availability,
     ).parsed
 
 
@@ -223,6 +249,7 @@ async def asyncio_detailed(
     attrs: list[str] | Unset = UNSET,
     variants_attrs: list[str] | Unset = UNSET,
     price: None | str | Unset = UNSET,
+    variants_availability: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | PaginatedResponseProduct]:
     """List Products
 
@@ -245,6 +272,13 @@ async def asyncio_detailed(
             is set; id+key checks that key is set; +op adds a range).
             'region:<code>[:<key>[<op><value>]]' does the same for region_price. Example: 'USD>=10
             USD<=50 loc:LOC1:retail>=5 region:US:retail'
+        variants_availability (None | str | Unset): Variant stock availability filter. Returns
+            products that have at least one variant matching, on the same variant as 'variants_attrs'
+            and 'price'. A variant is in stock at a location unless its 'locations_availability'
+            attribute marks that location 'out_of_stock'; only locations where the variant has a price
+            are considered. 'in_stock': in stock at any priced location. 'out_of_stock': has a priced
+            location and none is in stock. 'loc:<id>' / 'loc:<id>:in_stock' / 'loc:<id>:out_of_stock'
+            restrict this to one location. Any other value returns 422.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -262,6 +296,7 @@ async def asyncio_detailed(
         attrs=attrs,
         variants_attrs=variants_attrs,
         price=price,
+        variants_availability=variants_availability,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -279,6 +314,7 @@ async def asyncio(
     attrs: list[str] | Unset = UNSET,
     variants_attrs: list[str] | Unset = UNSET,
     price: None | str | Unset = UNSET,
+    variants_availability: None | str | Unset = UNSET,
 ) -> HTTPValidationError | PaginatedResponseProduct | None:
     """List Products
 
@@ -301,6 +337,13 @@ async def asyncio(
             is set; id+key checks that key is set; +op adds a range).
             'region:<code>[:<key>[<op><value>]]' does the same for region_price. Example: 'USD>=10
             USD<=50 loc:LOC1:retail>=5 region:US:retail'
+        variants_availability (None | str | Unset): Variant stock availability filter. Returns
+            products that have at least one variant matching, on the same variant as 'variants_attrs'
+            and 'price'. A variant is in stock at a location unless its 'locations_availability'
+            attribute marks that location 'out_of_stock'; only locations where the variant has a price
+            are considered. 'in_stock': in stock at any priced location. 'out_of_stock': has a priced
+            location and none is in stock. 'loc:<id>' / 'loc:<id>:in_stock' / 'loc:<id>:out_of_stock'
+            restrict this to one location. Any other value returns 422.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -320,5 +363,6 @@ async def asyncio(
             attrs=attrs,
             variants_attrs=variants_attrs,
             price=price,
+            variants_availability=variants_availability,
         )
     ).parsed

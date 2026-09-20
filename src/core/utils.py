@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import os
+import re
 from decimal import Decimal, InvalidOperation
 from itertools import accumulate
 from pathlib import Path
@@ -188,6 +189,85 @@ def build_attribute_filter(attrs: list[str]) -> dict:
         mongo_key = f"attributes.{key}.value"
         result[mongo_key] = values[0] if len(values) == 1 else {"$in": values}
     return result
+
+
+_OBJECT_ID_RE = re.compile(r"[0-9a-fA-F]{24}")
+
+# Aggregation-expression building blocks for the unscoped case, where location keys are not known up front.
+_PRICED_LOCATIONS = {
+    "$filter": {
+        "input": {"$objectToArray": {"$ifNull": ["$location_price", {}]}},
+        "as": "lp",
+        "cond": {"$gt": [{"$size": {"$objectToArray": {"$ifNull": ["$$lp.v", {}]}}}, 0]},
+    }
+}
+_OUT_OF_STOCK_LOCATIONS = {
+    "$map": {
+        "input": {
+            "$filter": {
+                "input": {"$objectToArray": {"$ifNull": ["$attributes.locations_availability.values", {}]}},
+                "as": "av",
+                "cond": {"$eq": ["$$av.v", "out_of_stock"]},
+            }
+        },
+        "as": "out",
+        "in": "$$out.k",
+    }
+}
+
+
+def _parse_availability(value: str) -> tuple[str | None, bool]:
+    """Parse an ``availability`` query value into ``(location_id, want_in_stock)``.
+
+    Accepted: 'in_stock', 'out_of_stock', 'loc:<id>' (same as in stock), 'loc:<id>:in_stock',
+    'loc:<id>:out_of_stock'. Anything else raises a 422.
+    """
+    if value in ("in_stock", "out_of_stock"):
+        return None, value == "in_stock"
+
+    scope, _, rest = value.partition(":")
+    loc_id, _, state = rest.partition(":")
+    if scope != "loc" or state not in ("", "in_stock", "out_of_stock") or not _OBJECT_ID_RE.fullmatch(loc_id):
+        raise HTTPException(status_code=422, detail=f"Invalid availability filter: '{value}'")
+    return loc_id.lower(), state != "out_of_stock"
+
+
+def _build_priced_filter(location_id: str | None) -> dict:
+    """Variant filter: has a price (an offer) at the location, or at any location when ``location_id`` is None."""
+    if location_id is not None:
+        return {f"location_price.{location_id}": {"$exists": True, "$ne": {}}}
+    return {"$expr": {"$gt": [{"$size": _PRICED_LOCATIONS}, 0]}}
+
+
+def _build_in_stock_filter(location_id: str | None) -> dict:
+    """Variant filter: in stock at the location (or at any priced location when ``location_id`` is None).
+
+    A variant is in stock at a priced location unless ``locations_availability`` explicitly says 'out_of_stock'
+    for it. ``$ne`` also matches a missing attribute or a missing key, so nothing needs backfilling, and
+    availability entries for locations without a price never count.
+    """
+    if location_id is not None:
+        return {
+            **_build_priced_filter(location_id),
+            f"attributes.locations_availability.values.{location_id}": {"$ne": "out_of_stock"},
+        }
+    in_stock_at_loc = {"$not": [{"$in": ["$$loc.k", _OUT_OF_STOCK_LOCATIONS]}]}
+    return {"$expr": {"$anyElementTrue": [{"$map": {"input": _PRICED_LOCATIONS, "as": "loc", "in": in_stock_at_loc}}]}}
+
+
+def build_availability_filter(value: str | None) -> dict:
+    """Build a MongoDB variant filter dict from an availability query value.
+
+    Values: 'in_stock', 'out_of_stock', 'loc:<id>' (same as in stock), 'loc:<id>:in_stock',
+    'loc:<id>:out_of_stock'. None means no filter; anything else raises a 422.
+    Out of stock means the variant has an offer (at the location, or anywhere) but is not in stock there.
+    """
+    if value is None:
+        return {}
+    location_id, in_stock = _parse_availability(value)
+    if in_stock:
+        return _build_in_stock_filter(location_id)
+    return {"$and": [_build_priced_filter(location_id), {"$nor": [_build_in_stock_filter(location_id)]}]}
 
 
 _PRICE_OPS = (">=", "<=")

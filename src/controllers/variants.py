@@ -6,7 +6,7 @@ from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.core.types import PaginatedResponse
-from src.core.utils import build_attribute_filter, build_price_search_filter
+from src.core.utils import build_attribute_filter, build_availability_filter, build_price_search_filter
 from src.domain.types.products import ProductRef
 from src.domain.types.stores import StoreRef
 from src.domain.types.variants import (
@@ -53,11 +53,23 @@ async def list_variants(
             "Example: 'USD>=10 USD<=50 loc:LOC1:retail>=5 region:US:retail'"
         ),
     ),
+    availability: str | None = Query(
+        None,
+        description=(
+            "Filter by stock availability. A variant is in stock at a location unless its "
+            "'locations_availability' attribute marks that location 'out_of_stock'; only locations where the "
+            "variant has a price are considered. 'in_stock': in stock at any priced location. "
+            "'out_of_stock': has a priced location and none is in stock. "
+            "'loc:<id>' / 'loc:<id>:in_stock' / 'loc:<id>:out_of_stock' restrict this to one location. "
+            "Combined with 'attrs' and 'price' using AND. Any other value returns 422."
+        ),
+    ),
 ) -> PaginatedResponse[ProductVariant]:
     """List all variants for a specific product."""
     filters = {
         **build_attribute_filter(attrs),
         **build_price_search_filter(shlex.split(price) if price else []),
+        **build_availability_filter(availability),
     }
     result = await service.list_variants(
         store_id, product_id, after=after, before=before, limit=limit, filters=filters or None
