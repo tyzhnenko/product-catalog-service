@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.8.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.7.4...v0.8.0) (2026-09-20)
+
+
+### Features
+
+* add availability filter to list products and variants ([#64](https://github.com/tyzhnenko/product-catalog-service/issues/64)) ([754884c](https://github.com/tyzhnenko/product-catalog-service/commit/754884c8d2d80b5da6148eead9b28dee46068ae6))
+
+
+### Chores
+
+* **deps:** bump anyio from 4.13.0 to 4.14.2 ([#62](https://github.com/tyzhnenko/product-catalog-service/issues/62)) ([307c835](https://github.com/tyzhnenko/product-catalog-service/commit/307c835ecb7a9e32e6d122d2943de6db9bb955ac))
+
 ## [0.7.4](https://github.com/tyzhnenko/product-catalog-service/compare/v0.7.3...v0.7.4) (2026-09-12)
 
 
