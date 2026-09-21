@@ -1,15 +1,14 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Query, Security, status
+from fastapi import Depends, HTTPException, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
+from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
 from src.domain.stores import StoresService
 from src.domain.types.stores import NewStore, Store, StoreRef, UpdateStore
-from src.settings import load_settings
 
-_settings = load_settings()
 router = APIRouter()
 
 
@@ -22,11 +21,9 @@ router = APIRouter()
 )
 async def list_stores(
     service: Annotated[StoresService, Depends(StoresService)],
-    after: str | None = Query(None, description="Cursor for forward pagination"),
-    before: str | None = Query(None, description="Cursor for backward pagination"),
-    limit: int = Query(_settings.pagination.default_limit, ge=1, le=_settings.pagination.max_limit),
+    pagination: Annotated[PaginationParams, Depends()],
 ) -> PaginatedResponse[Store]:
-    return await service.list_stores(after=after, before=before, limit=limit)
+    return await service.list_stores(after=pagination.after, before=pagination.before, limit=pagination.limit)
 
 
 @router.post(

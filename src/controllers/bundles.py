@@ -5,15 +5,49 @@ from fastapi import Depends, HTTPException, Query, Response, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
+from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
 from src.core.utils import build_attribute_filter, build_price_search_filter
 from src.domain.bundles import BundlesService
 from src.domain.types.bundles import Bundle, BundleRef, NewBundle, UpdateBundle
 from src.domain.types.stores import StoreRef
-from src.settings import load_settings
 
-_settings = load_settings()
 router = APIRouter()
+
+
+def bundle_filters(
+    attrs: Annotated[
+        list[str],
+        Query(
+            default_factory=list,
+            description=(
+                "Attribute filters in 'key:value' format. Repeat for multiple values. "
+                "Same key = OR, different keys = AND."
+            ),
+        ),
+    ],
+    price: Annotated[
+        str | None,
+        Query(
+            description=(
+                "Whitespace-separated price search tokens (shlex-quoted for values containing spaces). "
+                "'<key>>=<value>' / '<key><=<value>' filter the top-level price map. "
+                "'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price "
+                "(id-only checks any key is set; id+key checks that key is set; +op adds a range). "
+                "'region:<code>[:<key>[<op><value>]]' does the same for region_price. "
+                "Example: 'USD>=10 USD<=50 loc:LOC1:retail>=5 region:US:retail'"
+            ),
+        ),
+    ] = None,
+) -> dict | None:
+    filters = {
+        **build_attribute_filter(attrs),
+        **build_price_search_filter(shlex.split(price) if price else []),
+    }
+    return filters or None
+
+
+BundleFilters = Annotated[dict | None, Depends(bundle_filters)]
 
 
 @router.get(
@@ -26,33 +60,13 @@ router = APIRouter()
 async def list_bundles(
     store_id: StoreRef,
     service: Annotated[BundlesService, Depends(BundlesService)],
-    after: str | None = Query(None, description="Cursor for forward pagination"),
-    before: str | None = Query(None, description="Cursor for backward pagination"),
-    limit: int = Query(_settings.pagination.default_limit, ge=1, le=_settings.pagination.max_limit),
-    attrs: list[str] = Query(
-        default_factory=list,
-        description=(
-            "Attribute filters in 'key:value' format. Repeat for multiple values. Same key = OR, different keys = AND."
-        ),
-    ),
-    price: str | None = Query(
-        None,
-        description=(
-            "Whitespace-separated price search tokens (shlex-quoted for values containing spaces). "
-            "'<key>>=<value>' / '<key><=<value>' filter the top-level price map. "
-            "'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price "
-            "(id-only checks any key is set; id+key checks that key is set; +op adds a range). "
-            "'region:<code>[:<key>[<op><value>]]' does the same for region_price. "
-            "Example: 'USD>=10 USD<=50 loc:LOC1:retail>=5 region:US:retail'"
-        ),
-    ),
+    pagination: Annotated[PaginationParams, Depends()],
+    filters: BundleFilters,
 ) -> PaginatedResponse[Bundle]:
     """List all bundles for a specific store."""
-    filters = {
-        **build_attribute_filter(attrs),
-        **build_price_search_filter(shlex.split(price) if price else []),
-    }
-    result = await service.list_bundles(store_id, after=after, before=before, limit=limit, filters=filters or None)
+    result = await service.list_bundles(
+        store_id, after=pagination.after, before=pagination.before, limit=pagination.limit, filters=filters
+    )
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
