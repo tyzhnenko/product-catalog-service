@@ -4,15 +4,32 @@ from fastapi import Depends, HTTPException, Query, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
+from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
 from src.core.utils import build_attribute_filter
 from src.domain.categories import CategoriesService
 from src.domain.types.categories import Category, CategoryRef, NewCategory, UpdateCategory
 from src.domain.types.stores import StoreRef
-from src.settings import load_settings
 
-_settings = load_settings()
 router = APIRouter()
+
+
+def category_filters(
+    attrs: Annotated[
+        list[str],
+        Query(
+            default_factory=list,
+            description=(
+                "Attribute filters in 'key:value' format. Repeat for multiple values. "
+                "Same key = OR, different keys = AND."
+            ),
+        ),
+    ],
+) -> dict | None:
+    return build_attribute_filter(attrs) or None
+
+
+CategoryFilters = Annotated[dict | None, Depends(category_filters)]
 
 
 @router.get(
@@ -25,18 +42,12 @@ router = APIRouter()
 async def list_categories(
     store_id: StoreRef,
     service: Annotated[CategoriesService, Depends(CategoriesService)],
-    after: str | None = Query(None, description="Cursor for forward pagination"),
-    before: str | None = Query(None, description="Cursor for backward pagination"),
-    limit: int = Query(_settings.pagination.default_limit, ge=1, le=_settings.pagination.max_limit),
-    attrs: list[str] = Query(
-        default=[],
-        description=(
-            "Attribute filters in 'key:value' format. Repeat for multiple values. Same key = OR, different keys = AND."
-        ),
-    ),
+    pagination: Annotated[PaginationParams, Depends()],
+    filters: CategoryFilters,
 ) -> PaginatedResponse[Category]:
-    filters = build_attribute_filter(attrs)
-    result = await service.list_categories(store_id, after=after, before=before, limit=limit, filters=filters or None)
+    result = await service.list_categories(
+        store_id, after=pagination.after, before=pagination.before, limit=pagination.limit, filters=filters
+    )
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

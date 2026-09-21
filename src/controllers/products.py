@@ -1,19 +1,86 @@
 import shlex
+from dataclasses import dataclass
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Query, Response, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
+from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
 from src.core.utils import build_attribute_filter, build_availability_filter, build_price_search_filter
 from src.domain.products import ProductsService
 from src.domain.types.products import NewProduct, Product, ProductRef, UpdateProduct
 from src.domain.types.stores import StoreRef
-from src.settings import load_settings
 
-_settings = load_settings()
 router = APIRouter()
+
+
+@dataclass
+class ProductFilters:
+    filters: dict | None
+    variant_filters: dict | None
+
+
+def product_filters(
+    attrs: Annotated[
+        list[str],
+        Query(
+            default_factory=list,
+            description=(
+                "Product attribute filters in 'key:value' format. Repeat for multiple values. "
+                "Same key = OR, different keys = AND."
+            ),
+        ),
+    ],
+    variants_attrs: Annotated[
+        list[str],
+        Query(
+            default_factory=list,
+            description=(
+                "Variant attribute filters in 'key:value' format. Returns products that have at least one "
+                "variant matching all filters. Same key = OR, different keys = AND."
+            ),
+        ),
+    ],
+    price: Annotated[
+        str | None,
+        Query(
+            description=(
+                "Whitespace-separated variant price search tokens (shlex-quoted for values containing spaces). "
+                "Returns products with at least one matching variant. "
+                "'<key>>=<value>' / '<key><=<value>' filter the top-level price map. "
+                "'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price "
+                "(id-only checks any key is set; id+key checks that key is set; +op adds a range). "
+                "'region:<code>[:<key>[<op><value>]]' does the same for region_price. "
+                "Example: 'USD>=10 USD<=50 loc:LOC1:retail>=5 region:US:retail'"
+            ),
+        ),
+    ] = None,
+    variants_availability: Annotated[
+        str | None,
+        Query(
+            description=(
+                "Variant stock availability filter. Returns products that have at least one variant matching, "
+                "on the same variant as 'variants_attrs' and 'price'. A variant is in stock at a location unless its "
+                "'locations_availability' attribute marks that location 'out_of_stock'; only locations where the "
+                "variant has a price are considered. 'in_stock': in stock at any priced location. "
+                "'out_of_stock': has a priced location and none is in stock. "
+                "'loc:<id>' / 'loc:<id>:in_stock' / 'loc:<id>:out_of_stock' restrict this to one location. "
+                "Any other value returns 422."
+            ),
+        ),
+    ] = None,
+) -> ProductFilters:
+    variant_filters = {
+        **build_attribute_filter(variants_attrs),
+        **build_price_search_filter(shlex.split(price) if price else []),
+        **build_availability_filter(variants_availability),
+    }
+    return ProductFilters(
+        filters=build_attribute_filter(attrs) or None,
+        variant_filters=variant_filters or None,
+    )
 
 
 @router.get(
@@ -26,62 +93,17 @@ router = APIRouter()
 async def list_products(
     store_id: StoreRef,
     service: Annotated[ProductsService, Depends(ProductsService)],
-    after: str | None = Query(None, description="Cursor for forward pagination"),
-    before: str | None = Query(None, description="Cursor for backward pagination"),
-    limit: int = Query(_settings.pagination.default_limit, ge=1, le=_settings.pagination.max_limit),
-    attrs: list[str] = Query(
-        default=[],
-        description=(
-            "Product attribute filters in 'key:value' format. Repeat for multiple values. "
-            "Same key = OR, different keys = AND."
-        ),
-    ),
-    variants_attrs: list[str] = Query(
-        default=[],
-        description=(
-            "Variant attribute filters in 'key:value' format. Returns products that have at least one "
-            "variant matching all filters. Same key = OR, different keys = AND."
-        ),
-    ),
-    price: str | None = Query(
-        None,
-        description=(
-            "Whitespace-separated variant price search tokens (shlex-quoted for values containing spaces). "
-            "Returns products with at least one matching variant. "
-            "'<key>>=<value>' / '<key><=<value>' filter the top-level price map. "
-            "'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price "
-            "(id-only checks any key is set; id+key checks that key is set; +op adds a range). "
-            "'region:<code>[:<key>[<op><value>]]' does the same for region_price. "
-            "Example: 'USD>=10 USD<=50 loc:LOC1:retail>=5 region:US:retail'"
-        ),
-    ),
-    variants_availability: str | None = Query(
-        None,
-        description=(
-            "Variant stock availability filter. Returns products that have at least one variant matching, "
-            "on the same variant as 'variants_attrs' and 'price'. A variant is in stock at a location unless its "
-            "'locations_availability' attribute marks that location 'out_of_stock'; only locations where the "
-            "variant has a price are considered. 'in_stock': in stock at any priced location. "
-            "'out_of_stock': has a priced location and none is in stock. "
-            "'loc:<id>' / 'loc:<id>:in_stock' / 'loc:<id>:out_of_stock' restrict this to one location. "
-            "Any other value returns 422."
-        ),
-    ),
+    pagination: Annotated[PaginationParams, Depends()],
+    filters: Annotated[ProductFilters, Depends(product_filters)],
 ) -> PaginatedResponse[Product]:
     """List all products for a specific store."""
-    filters = build_attribute_filter(attrs)
-    variant_filters = {
-        **build_attribute_filter(variants_attrs),
-        **build_price_search_filter(shlex.split(price) if price else []),
-        **build_availability_filter(variants_availability),
-    }
     result = await service.list_products(
         store_id,
-        after=after,
-        before=before,
-        limit=limit,
-        filters=filters or None,
-        variant_filters=variant_filters or None,
+        after=pagination.after,
+        before=pagination.before,
+        limit=pagination.limit,
+        filters=filters.filters,
+        variant_filters=filters.variant_filters,
     )
     if result is None:
         raise HTTPException(
