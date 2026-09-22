@@ -13,6 +13,7 @@ from src.core.utils import build_attribute_filter, build_availability_filter, bu
 from src.domain.products import ProductsService
 from src.domain.types.products import NewProduct, PartialProduct, Product, ProductRef, UpdateProduct
 from src.domain.types.stores import StoreRef
+from src.domain.types.variants import PartialProductWithVariants, ProductWithVariants
 
 router = APIRouter()
 
@@ -84,13 +85,38 @@ def product_filters(
     )
 
 
+SUPPORTED_INCLUDES = frozenset({"variants"})
+
+
+@dataclass
+class IncludeParams:
+    include: str | None = Query(
+        None,
+        description="Comma-separated relations to embed in the response. Supported: `variants`.",
+    )
+
+    def resolve(self) -> frozenset[str]:
+        """Validate the raw param and return the set of relations to embed; empty when `include` was omitted."""
+        if self.include is None:
+            return frozenset()
+        values = [value.strip() for value in self.include.split(",")]
+        if not values or not all(values):
+            raise HTTPException(status_code=422, detail="Empty relation name in `include`")
+        value_set = frozenset(values)
+        if unknown := value_set - SUPPORTED_INCLUDES:
+            raise HTTPException(status_code=422, detail=f"Unsupported include value(s): {sorted(unknown)}")
+        return value_set
+
+
 @router.get(
     "/{store_id}",
     name="List Products",
     description="Retrieve a list of all products for a specific store.",
     operation_id="list_products",
     dependencies=[Security(ro_access)],
-    response_model=sparse_response(Product, PartialProduct, paginated=True),
+    response_model=sparse_response(
+        Product, PartialProduct, ProductWithVariants, PartialProductWithVariants, paginated=True
+    ),
     response_model_exclude_unset=True,
 )
 async def list_products(
@@ -99,7 +125,13 @@ async def list_products(
     pagination: Annotated[PaginationParams, Depends()],
     filters: Annotated[ProductFilters, Depends(product_filters)],
     fields: Annotated[FieldsParams, Depends()],
-) -> PaginatedResponse[Product] | PaginatedResponse[PartialProduct]:
+    include: Annotated[IncludeParams, Depends()],
+) -> (
+    PaginatedResponse[Product]
+    | PaginatedResponse[PartialProduct]
+    | PaginatedResponse[ProductWithVariants]
+    | PaginatedResponse[PartialProductWithVariants]
+):
     """List all products for a specific store."""
     result = await service.list_products(
         store_id,
@@ -107,6 +139,7 @@ async def list_products(
         filters=filters.filters,
         variant_filters=filters.variant_filters,
         fields=fields.resolve(Product),
+        include_variants="variants" in include.resolve(),
     )
     if result is None:
         raise HTTPException(
@@ -144,7 +177,7 @@ async def create_product(
     description="Retrieve a specific product by its unique identifier.",
     operation_id="get_product",
     dependencies=[Security(ro_access)],
-    response_model=sparse_response(Product, PartialProduct),
+    response_model=sparse_response(Product, PartialProduct, ProductWithVariants, PartialProductWithVariants),
     response_model_exclude_unset=True,
 )
 async def get_product(
@@ -152,9 +185,12 @@ async def get_product(
     product_id: ProductRef,
     service: Annotated[ProductsService, Depends(ProductsService)],
     fields: Annotated[FieldsParams, Depends()],
-) -> Product | PartialProduct:
+    include: Annotated[IncludeParams, Depends()],
+) -> Product | PartialProduct | ProductWithVariants | PartialProductWithVariants:
     """Get a specific product by ID."""
-    product = await service.get_product(store_id, product_id, fields=fields.resolve(Product))
+    product = await service.get_product(
+        store_id, product_id, fields=fields.resolve(Product), include_variants="variants" in include.resolve()
+    )
     if not product:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -21,6 +21,7 @@ from src.domain.types.products import (
     UpdateProduct,
 )
 from src.domain.types.stores import StoreID
+from src.domain.types.variants import PartialProductWithVariants, ProductVariant, ProductWithVariants
 from src.models.categories import CategoryModel
 from src.models.products import ProductModel
 from src.models.stores import StoreModel
@@ -56,6 +57,29 @@ class ProductsService:
             )
 
         return valid_ids
+
+    async def _fetch_variants_by_product(
+        self, store_id: StoreID, product_ids: list[ProductID]
+    ) -> dict[ProductID, list[ProductVariant]]:
+        """Batch-fetch non-deleted variants for a set of products, grouped by product_id."""
+        if not product_ids:
+            return {}
+
+        variants = await VariantModel.find(
+            {"store_id": store_id, "product_id": {"$in": product_ids}, "deleted_at": None}
+        ).to_list()
+
+        grouped: dict[ProductID, list[ProductVariant]] = {}
+        for variant in variants:
+            grouped.setdefault(variant.product_id, []).append(ProductVariant.model_validate(variant))
+        return grouped
+
+    def _with_variants(
+        self, product: Product | PartialProduct, variants: list[ProductVariant]
+    ) -> ProductWithVariants | PartialProductWithVariants:
+        """Attach embedded variants to a `Product`/`PartialProduct`, preserving `fields`-narrowed unset tracking."""
+        target_cls = PartialProductWithVariants if isinstance(product, PartialProduct) else ProductWithVariants
+        return target_cls.model_validate({**product.model_dump(exclude_unset=True), "variants": variants})
 
     async def create_product(self, store_id: str, new_product: NewProduct) -> Product | None:
         # Check if store exists
@@ -95,6 +119,7 @@ class ProductsService:
         filters: dict | None = None,
         variant_filters: dict | None = None,
         fields: None = None,
+        include_variants: bool = False,
     ) -> PaginatedResponse[Product] | None: ...
 
     @overload
@@ -105,6 +130,7 @@ class ProductsService:
         filters: dict | None = None,
         variant_filters: dict | None = None,
         fields: FieldSelection = ...,
+        include_variants: bool = False,
     ) -> PaginatedResponse[PartialProduct] | None: ...
 
     async def list_products(
@@ -114,6 +140,7 @@ class ProductsService:
         filters: dict | None = None,
         variant_filters: dict | None = None,
         fields: FieldSelection | None = None,
+        include_variants: bool = False,
     ) -> PaginatedResponse[Product] | PaginatedResponse[PartialProduct] | None:
         store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
@@ -128,33 +155,57 @@ class ProductsService:
             product_ids = list({variant.product_id for variant in variants})
             query_filter["_id"] = {"$in": product_ids}
 
+        result: PaginatedResponse[Product] | PaginatedResponse[PartialProduct]
         if fields:
-            return await paginate(
+            result = await paginate(
                 ProductModel.find(query_filter).project(projection_model(Product, fields.fetch_names(Product))),
                 pagination.after,
                 pagination.before,
                 pagination.limit,
                 transform=lambda doc: to_partial(PartialProduct, doc, fields),
             )
+        else:
+            result = await paginate(
+                ProductModel.find(query_filter),
+                pagination.after,
+                pagination.before,
+                pagination.limit,
+                transform=Product.model_validate,
+            )
 
-        return await paginate(
-            ProductModel.find(query_filter),
-            pagination.after,
-            pagination.before,
-            pagination.limit,
-            transform=Product.model_validate,
+        if not include_variants or not result.items:
+            return result
+
+        variants_by_product = await self._fetch_variants_by_product(
+            cast(StoreID, store.id), [item.id for item in result.items]
+        )
+        new_items = [self._with_variants(item, variants_by_product.get(item.id, [])) for item in result.items]
+        item_type = type(new_items[0])
+        return PaginatedResponse[item_type](  # type: ignore[valid-type]
+            items=new_items,
+            start_cursor=result.start_cursor,
+            end_cursor=result.end_cursor,
+            has_next=result.has_next,
+            has_prev=result.has_prev,
+            total=result.total,
         )
 
     @overload
-    async def get_product(self, store_id: str, product_id: str, fields: None = None) -> Product | None: ...
+    async def get_product(
+        self, store_id: str, product_id: str, fields: None = None, include_variants: bool = False
+    ) -> Product | None: ...
 
     @overload
     async def get_product(
-        self, store_id: str, product_id: str, fields: FieldSelection = ...
+        self, store_id: str, product_id: str, fields: FieldSelection = ..., include_variants: bool = False
     ) -> PartialProduct | None: ...
 
     async def get_product(
-        self, store_id: str, product_id: str, fields: FieldSelection | None = None
+        self,
+        store_id: str,
+        product_id: str,
+        fields: FieldSelection | None = None,
+        include_variants: bool = False,
     ) -> Product | PartialProduct | None:
         # Check if store exists
         store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
@@ -163,16 +214,25 @@ class ProductsService:
             return None
 
         query = ProductModel.find({**parse_ref(product_id), "store_id": store.id, "deleted_at": None})
+        product: Product | PartialProduct | None = None
         if fields:
-            product = await query.project(projection_model(Product, fields.fetch_names(Product))).first_or_none()
-            if product:
-                return to_partial(PartialProduct, product, fields)
+            doc = await query.project(projection_model(Product, fields.fetch_names(Product))).first_or_none()
+            if doc:
+                product = to_partial(PartialProduct, doc, fields)
         else:
-            product = await query.first_or_none()
-            if product:
-                return Product.model_validate(product)
-        logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
-        return None
+            doc = await query.first_or_none()
+            if doc:
+                product = Product.model_validate(doc)
+
+        if product is None:
+            logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
+            return None
+
+        if not include_variants:
+            return product
+
+        variants_by_product = await self._fetch_variants_by_product(cast(StoreID, store.id), [product.id])
+        return self._with_variants(product, variants_by_product.get(product.id, []))
 
     async def update_product(
         self,

@@ -62,20 +62,24 @@ from .paginated_response_partial_category import PaginatedResponsePartialCategor
 from .paginated_response_partial_location import PaginatedResponsePartialLocation
 from .paginated_response_partial_product import PaginatedResponsePartialProduct
 from .paginated_response_partial_product_variant import PaginatedResponsePartialProductVariant
+from .paginated_response_partial_product_with_variants import PaginatedResponsePartialProductWithVariants
 from .paginated_response_partial_store import PaginatedResponsePartialStore
 from .paginated_response_product import PaginatedResponseProduct
 from .paginated_response_product_variant import PaginatedResponseProductVariant
+from .paginated_response_product_with_variants import PaginatedResponseProductWithVariants
 from .paginated_response_store import PaginatedResponseStore
 from .partial_bundle import PartialBundle
 from .partial_category import PartialCategory
 from .partial_location import PartialLocation
 from .partial_product import PartialProduct
 from .partial_product_variant import PartialProductVariant
+from .partial_product_with_variants import PartialProductWithVariants
 from .partial_store import PartialStore
 from .price_map import PriceMap
 from .product import Product
 from .product_status_enum import ProductStatusEnum
 from .product_variant import ProductVariant
+from .product_with_variants import ProductWithVariants
 from .region_price_map import RegionPriceMap
 from .seo import SEO
 from .store import Store
@@ -156,20 +160,24 @@ __all__ = (
     "PaginatedResponsePartialLocation",
     "PaginatedResponsePartialProduct",
     "PaginatedResponsePartialProductVariant",
+    "PaginatedResponsePartialProductWithVariants",
     "PaginatedResponsePartialStore",
     "PaginatedResponseProduct",
     "PaginatedResponseProductVariant",
+    "PaginatedResponseProductWithVariants",
     "PaginatedResponseStore",
     "PartialBundle",
     "PartialCategory",
     "PartialLocation",
     "PartialProduct",
     "PartialProductVariant",
+    "PartialProductWithVariants",
     "PartialStore",
     "PriceMap",
     "Product",
     "ProductStatusEnum",
     "ProductVariant",
+    "ProductWithVariants",
     "RegionPriceMap",
     "SEO",
     "Store",

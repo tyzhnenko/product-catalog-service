@@ -8,7 +8,9 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
 from ...models.partial_product import PartialProduct
+from ...models.partial_product_with_variants import PartialProductWithVariants
 from ...models.product import Product
+from ...models.product_with_variants import ProductWithVariants
 from ...types import UNSET, Response, Unset
 
 
@@ -17,6 +19,7 @@ def _get_kwargs(
     product_id: str,
     *,
     fields: None | str | Unset = UNSET,
+    include: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -27,6 +30,13 @@ def _get_kwargs(
     else:
         json_fields = fields
     params["fields"] = json_fields
+
+    json_include: None | str | Unset
+    if isinstance(include, Unset):
+        json_include = UNSET
+    else:
+        json_include = include
+    params["include"] = json_include
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -44,10 +54,12 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | PartialProduct | Product | None:
+) -> HTTPValidationError | PartialProduct | PartialProductWithVariants | Product | ProductWithVariants | None:
     if response.status_code == 200:
 
-        def _parse_response_200(data: object) -> PartialProduct | Product:
+        def _parse_response_200(
+            data: object,
+        ) -> PartialProduct | PartialProductWithVariants | Product | ProductWithVariants:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
@@ -56,11 +68,27 @@ def _parse_response(
                 return response_200_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                response_200_type_1 = PartialProduct.from_dict(data)
+
+                return response_200_type_1
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                response_200_type_2 = ProductWithVariants.from_dict(data)
+
+                return response_200_type_2
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
             if not isinstance(data, dict):
                 raise TypeError()
-            response_200_type_1 = PartialProduct.from_dict(data)
+            response_200_type_3 = PartialProductWithVariants.from_dict(data)
 
-            return response_200_type_1
+            return response_200_type_3
 
         response_200 = _parse_response_200(response.json())
 
@@ -79,7 +107,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | PartialProduct | Product]:
+) -> Response[HTTPValidationError | PartialProduct | PartialProductWithVariants | Product | ProductWithVariants]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -94,7 +122,8 @@ def sync_detailed(
     *,
     client: AuthenticatedClient,
     fields: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | PartialProduct | Product]:
+    include: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | PartialProduct | PartialProductWithVariants | Product | ProductWithVariants]:
     """Get Product
 
      Retrieve a specific product by its unique identifier.
@@ -108,19 +137,22 @@ def sync_detailed(
             `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
             `location_price` and `region_price` are not validated, since they aren't part of the fixed
             schema. `id` is always returned.
+        include (None | str | Unset): Comma-separated relations to embed in the response.
+            Supported: `variants`.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | PartialProduct | Product]
+        Response[HTTPValidationError | PartialProduct | PartialProductWithVariants | Product | ProductWithVariants]
     """
 
     kwargs = _get_kwargs(
         store_id=store_id,
         product_id=product_id,
         fields=fields,
+        include=include,
     )
 
     response = client.get_httpx_client().request(
@@ -136,7 +168,8 @@ def sync(
     *,
     client: AuthenticatedClient,
     fields: None | str | Unset = UNSET,
-) -> HTTPValidationError | PartialProduct | Product | None:
+    include: None | str | Unset = UNSET,
+) -> HTTPValidationError | PartialProduct | PartialProductWithVariants | Product | ProductWithVariants | None:
     """Get Product
 
      Retrieve a specific product by its unique identifier.
@@ -150,13 +183,15 @@ def sync(
             `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
             `location_price` and `region_price` are not validated, since they aren't part of the fixed
             schema. `id` is always returned.
+        include (None | str | Unset): Comma-separated relations to embed in the response.
+            Supported: `variants`.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | PartialProduct | Product
+        HTTPValidationError | PartialProduct | PartialProductWithVariants | Product | ProductWithVariants
     """
 
     return sync_detailed(
@@ -164,6 +199,7 @@ def sync(
         product_id=product_id,
         client=client,
         fields=fields,
+        include=include,
     ).parsed
 
 
@@ -173,7 +209,8 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
     fields: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | PartialProduct | Product]:
+    include: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | PartialProduct | PartialProductWithVariants | Product | ProductWithVariants]:
     """Get Product
 
      Retrieve a specific product by its unique identifier.
@@ -187,19 +224,22 @@ async def asyncio_detailed(
             `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
             `location_price` and `region_price` are not validated, since they aren't part of the fixed
             schema. `id` is always returned.
+        include (None | str | Unset): Comma-separated relations to embed in the response.
+            Supported: `variants`.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | PartialProduct | Product]
+        Response[HTTPValidationError | PartialProduct | PartialProductWithVariants | Product | ProductWithVariants]
     """
 
     kwargs = _get_kwargs(
         store_id=store_id,
         product_id=product_id,
         fields=fields,
+        include=include,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -213,7 +253,8 @@ async def asyncio(
     *,
     client: AuthenticatedClient,
     fields: None | str | Unset = UNSET,
-) -> HTTPValidationError | PartialProduct | Product | None:
+    include: None | str | Unset = UNSET,
+) -> HTTPValidationError | PartialProduct | PartialProductWithVariants | Product | ProductWithVariants | None:
     """Get Product
 
      Retrieve a specific product by its unique identifier.
@@ -227,13 +268,15 @@ async def asyncio(
             `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
             `location_price` and `region_price` are not validated, since they aren't part of the fixed
             schema. `id` is always returned.
+        include (None | str | Unset): Comma-separated relations to embed in the response.
+            Supported: `variants`.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | PartialProduct | Product
+        HTTPValidationError | PartialProduct | PartialProductWithVariants | Product | ProductWithVariants
     """
 
     return (
@@ -242,5 +285,6 @@ async def asyncio(
             product_id=product_id,
             client=client,
             fields=fields,
+            include=include,
         )
     ).parsed
