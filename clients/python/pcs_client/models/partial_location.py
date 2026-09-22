@@ -1,0 +1,175 @@
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, cast
+
+from attrs import define as _attrs_define
+from attrs import field as _attrs_field
+
+from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.attributes_map import AttributesMap
+    from ..models.seo import SEO
+
+
+T = TypeVar("T", bound="PartialLocation")
+
+
+@_attrs_define
+class PartialLocation:
+    """Sparse `Location` returned when the `fields` query param narrows the response.
+
+    Attributes:
+        id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+        name (None | str | Unset):
+        store_id (None | str | Unset):
+        attributes (AttributesMap | None | Unset):
+        seo (None | SEO | Unset):
+    """
+
+    id: str
+    name: None | str | Unset = UNSET
+    store_id: None | str | Unset = UNSET
+    attributes: AttributesMap | None | Unset = UNSET
+    seo: None | SEO | Unset = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        from ..models.attributes_map import AttributesMap
+        from ..models.seo import SEO
+
+        id = self.id
+
+        name: None | str | Unset
+        if isinstance(self.name, Unset):
+            name = UNSET
+        else:
+            name = self.name
+
+        store_id: None | str | Unset
+        if isinstance(self.store_id, Unset):
+            store_id = UNSET
+        else:
+            store_id = self.store_id
+
+        attributes: dict[str, Any] | None | Unset
+        if isinstance(self.attributes, Unset):
+            attributes = UNSET
+        elif isinstance(self.attributes, AttributesMap):
+            attributes = self.attributes.to_dict()
+        else:
+            attributes = self.attributes
+
+        seo: dict[str, Any] | None | Unset
+        if isinstance(self.seo, Unset):
+            seo = UNSET
+        elif isinstance(self.seo, SEO):
+            seo = self.seo.to_dict()
+        else:
+            seo = self.seo
+
+        field_dict: dict[str, Any] = {}
+        field_dict.update(self.additional_properties)
+        field_dict.update(
+            {
+                "id": id,
+            }
+        )
+        if name is not UNSET:
+            field_dict["name"] = name
+        if store_id is not UNSET:
+            field_dict["store_id"] = store_id
+        if attributes is not UNSET:
+            field_dict["attributes"] = attributes
+        if seo is not UNSET:
+            field_dict["seo"] = seo
+
+        return field_dict
+
+    @classmethod
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.attributes_map import AttributesMap
+        from ..models.seo import SEO
+
+        d = dict(src_dict)
+        id = d.pop("id")
+
+        def _parse_name(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        name = _parse_name(d.pop("name", UNSET))
+
+        def _parse_store_id(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        store_id = _parse_store_id(d.pop("store_id", UNSET))
+
+        def _parse_attributes(data: object) -> AttributesMap | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                attributes_type_0 = AttributesMap.from_dict(data)
+
+                return attributes_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(AttributesMap | None | Unset, data)
+
+        attributes = _parse_attributes(d.pop("attributes", UNSET))
+
+        def _parse_seo(data: object) -> None | SEO | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                seo_type_0 = SEO.from_dict(data)
+
+                return seo_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | SEO | Unset, data)
+
+        seo = _parse_seo(d.pop("seo", UNSET))
+
+        partial_location = cls(
+            id=id,
+            name=name,
+            store_id=store_id,
+            attributes=attributes,
+            seo=seo,
+        )
+
+        partial_location.additional_properties = d
+        return partial_location
+
+    @property
+    def additional_keys(self) -> list[str]:
+        return list(self.additional_properties.keys())
+
+    def __getitem__(self, key: str) -> Any:
+        return self.additional_properties[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.additional_properties[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self.additional_properties[key]
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.additional_properties

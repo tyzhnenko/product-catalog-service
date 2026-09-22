@@ -58,6 +58,21 @@ class Location(BaseModel):
     seo: SEO | None = None
 
 
+class PartialLocation(BaseModel):
+    """Sparse `Location` returned when the `fields` query param narrows the response."""
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        title="PartialLocation",
+    )
+
+    id: LocationID
+    name: LocationName | None = None
+    store_id: StoreID | None = None
+    attributes: AttributesMap | None = None
+    seo: SEO | None = None
+
+
 class UpdateLocation(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,

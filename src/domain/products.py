@@ -1,17 +1,20 @@
 # from uuid import uuid7
 
-from typing import cast
+from typing import cast, overload
 
 import pendulum
 from pydantic import BaseModel
 from pymongo.errors import DuplicateKeyError
 
+from src.core.fields import FieldSelection, projection_model, to_partial
 from src.core.logging import logger
+from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
 from src.core.utils import paginate, parse_ref, raise_for_duplicate_key
 from src.domain.types.categories import CategoryID
 from src.domain.types.products import (
     NewProduct,
+    PartialProduct,
     Product,
     ProductID,
     ProductStatusEnum,
@@ -84,15 +87,34 @@ class ProductsService:
 
         return Product.model_validate(product)
 
+    @overload
     async def list_products(
         self,
         store_id: str,
-        after: str | None,
-        before: str | None,
-        limit: int,
+        pagination: PaginationParams,
         filters: dict | None = None,
         variant_filters: dict | None = None,
-    ) -> PaginatedResponse[Product] | None:
+        fields: None = None,
+    ) -> PaginatedResponse[Product] | None: ...
+
+    @overload
+    async def list_products(
+        self,
+        store_id: str,
+        pagination: PaginationParams,
+        filters: dict | None = None,
+        variant_filters: dict | None = None,
+        fields: FieldSelection = ...,
+    ) -> PaginatedResponse[PartialProduct] | None: ...
+
+    async def list_products(
+        self,
+        store_id: str,
+        pagination: PaginationParams,
+        filters: dict | None = None,
+        variant_filters: dict | None = None,
+        fields: FieldSelection | None = None,
+    ) -> PaginatedResponse[Product] | PaginatedResponse[PartialProduct] | None:
         store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
@@ -106,26 +128,49 @@ class ProductsService:
             product_ids = list({variant.product_id for variant in variants})
             query_filter["_id"] = {"$in": product_ids}
 
+        if fields:
+            return await paginate(
+                ProductModel.find(query_filter).project(projection_model(Product, fields.fetch_names(Product))),
+                pagination.after,
+                pagination.before,
+                pagination.limit,
+                transform=lambda doc: to_partial(PartialProduct, doc, fields),
+            )
+
         return await paginate(
             ProductModel.find(query_filter),
-            after,
-            before,
-            limit,
+            pagination.after,
+            pagination.before,
+            pagination.limit,
             transform=Product.model_validate,
         )
 
-    async def get_product(self, store_id: str, product_id: str) -> Product | None:
+    @overload
+    async def get_product(self, store_id: str, product_id: str, fields: None = None) -> Product | None: ...
+
+    @overload
+    async def get_product(
+        self, store_id: str, product_id: str, fields: FieldSelection = ...
+    ) -> PartialProduct | None: ...
+
+    async def get_product(
+        self, store_id: str, product_id: str, fields: FieldSelection | None = None
+    ) -> Product | PartialProduct | None:
         # Check if store exists
         store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             logger.warning(f"Store not found: {store_id}")
             return None
 
-        product = await ProductModel.find(
-            {**parse_ref(product_id), "store_id": store.id, "deleted_at": None}
-        ).first_or_none()
-        if product:
-            return Product.model_validate(product)
+        query = ProductModel.find({**parse_ref(product_id), "store_id": store.id, "deleted_at": None})
+        if fields:
+            product = await query.project(projection_model(Product, fields.fetch_names(Product))).first_or_none()
+            if product:
+                return to_partial(PartialProduct, product, fields)
+        else:
+            product = await query.first_or_none()
+            if product:
+                return Product.model_validate(product)
         logger.warning(f"Product not found or access denied: product_id={product_id}, store_id={store_id}")
         return None
 

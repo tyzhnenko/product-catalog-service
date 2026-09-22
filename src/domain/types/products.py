@@ -137,6 +137,30 @@ class Product(BaseModel):
     created_at: DateTime
 
 
+class PartialProduct(BaseModel):
+    """Sparse `Product` returned when the `fields` query param narrows the response."""
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        title="PartialProduct",
+        json_schema_extra={
+            "description": "Product information, limited to the fields requested via the `fields` query param",
+        },
+    )
+
+    id: ProductID
+    name: ProductName | None = None
+    description: ProductDescription | None = None
+    brand: ProductBrand | None = None
+    tags: ProductTags | None = None
+    seo: SEO | None = None
+    status: ProductStatus | None = None
+    categories: ProductCategories | None = None
+    attributes: AttributesMap | None = None
+    updated_at: DateTime | None = None
+    created_at: DateTime | None = None
+
+
 class UpdateProduct(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,

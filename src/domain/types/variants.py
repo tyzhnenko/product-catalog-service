@@ -180,6 +180,34 @@ class ProductVariant(BaseModel):
     seo: SEO | None = None
 
 
+class PartialProductVariant(BaseModel):
+    """Sparse `ProductVariant` returned when the `fields` query param narrows the response."""
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        title="PartialProductVariant",
+        json_schema_extra={
+            "description": "Product variant information, limited to the fields requested via the `fields` query param",
+        },
+    )
+
+    id: VariantID
+    product_id: ProductID | None = None
+    title: VariantTitle | None = None
+    sku: VariantSKU | None = None
+    upc: VariantUPC | None = None
+    ean: VariantEAN | None = None
+    jan: VariantJAN | None = None
+    isbn: VariantISBN | None = None
+    options: VariantOptions | None = None
+    attributes: AttributesMap | None = None
+    price: PriceMap | None = None
+    location_price: LocationPriceMap | None = None
+    region_price: RegionPriceMap | None = None
+    images: VariantImages | None = None
+    seo: SEO | None = None
+
+
 class UpdateProductVariant(BaseModel):
     model_config = ConfigDict(
         title="UpdateProductVariant",

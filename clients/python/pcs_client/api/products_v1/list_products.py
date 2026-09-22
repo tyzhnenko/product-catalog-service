@@ -7,6 +7,7 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
+from ...models.paginated_response_partial_product import PaginatedResponsePartialProduct
 from ...models.paginated_response_product import PaginatedResponseProduct
 from ...types import UNSET, Response, Unset
 
@@ -21,6 +22,7 @@ def _get_kwargs(
     variants_attrs: list[str] | Unset = UNSET,
     price: None | str | Unset = UNSET,
     variants_availability: None | str | Unset = UNSET,
+    fields: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -67,6 +69,13 @@ def _get_kwargs(
         json_variants_availability = variants_availability
     params["variants_availability"] = json_variants_availability
 
+    json_fields: None | str | Unset
+    if isinstance(fields, Unset):
+        json_fields = UNSET
+    else:
+        json_fields = fields
+    params["fields"] = json_fields
+
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
@@ -82,9 +91,25 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | PaginatedResponseProduct | None:
+) -> HTTPValidationError | PaginatedResponsePartialProduct | PaginatedResponseProduct | None:
     if response.status_code == 200:
-        response_200 = PaginatedResponseProduct.from_dict(response.json())
+
+        def _parse_response_200(data: object) -> PaginatedResponsePartialProduct | PaginatedResponseProduct:
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                response_200_type_0 = PaginatedResponseProduct.from_dict(data)
+
+                return response_200_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            if not isinstance(data, dict):
+                raise TypeError()
+            response_200_type_1 = PaginatedResponsePartialProduct.from_dict(data)
+
+            return response_200_type_1
+
+        response_200 = _parse_response_200(response.json())
 
         return response_200
 
@@ -101,7 +126,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | PaginatedResponseProduct]:
+) -> Response[HTTPValidationError | PaginatedResponsePartialProduct | PaginatedResponseProduct]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -121,7 +146,8 @@ def sync_detailed(
     variants_attrs: list[str] | Unset = UNSET,
     price: None | str | Unset = UNSET,
     variants_availability: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | PaginatedResponseProduct]:
+    fields: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | PaginatedResponsePartialProduct | PaginatedResponseProduct]:
     """List Products
 
      Retrieve a list of all products for a specific store.
@@ -150,13 +176,19 @@ def sync_detailed(
             are considered. 'in_stock': in stock at any priced location. 'out_of_stock': has a priced
             location and none is in stock. 'loc:<id>' / 'loc:<id>:in_stock' / 'loc:<id>:out_of_stock'
             restrict this to one location. Any other value returns 422.
+        fields (None | str | Unset): Comma-separated response fields. Bare names include only
+            those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
+            both is not allowed. Dotted paths address nested fields (`seo.slug`,
+            `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
+            `location_price` and `region_price` are not validated, since they aren't part of the fixed
+            schema. `id` is always returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | PaginatedResponseProduct]
+        Response[HTTPValidationError | PaginatedResponsePartialProduct | PaginatedResponseProduct]
     """
 
     kwargs = _get_kwargs(
@@ -168,6 +200,7 @@ def sync_detailed(
         variants_attrs=variants_attrs,
         price=price,
         variants_availability=variants_availability,
+        fields=fields,
     )
 
     response = client.get_httpx_client().request(
@@ -188,7 +221,8 @@ def sync(
     variants_attrs: list[str] | Unset = UNSET,
     price: None | str | Unset = UNSET,
     variants_availability: None | str | Unset = UNSET,
-) -> HTTPValidationError | PaginatedResponseProduct | None:
+    fields: None | str | Unset = UNSET,
+) -> HTTPValidationError | PaginatedResponsePartialProduct | PaginatedResponseProduct | None:
     """List Products
 
      Retrieve a list of all products for a specific store.
@@ -217,13 +251,19 @@ def sync(
             are considered. 'in_stock': in stock at any priced location. 'out_of_stock': has a priced
             location and none is in stock. 'loc:<id>' / 'loc:<id>:in_stock' / 'loc:<id>:out_of_stock'
             restrict this to one location. Any other value returns 422.
+        fields (None | str | Unset): Comma-separated response fields. Bare names include only
+            those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
+            both is not allowed. Dotted paths address nested fields (`seo.slug`,
+            `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
+            `location_price` and `region_price` are not validated, since they aren't part of the fixed
+            schema. `id` is always returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | PaginatedResponseProduct
+        HTTPValidationError | PaginatedResponsePartialProduct | PaginatedResponseProduct
     """
 
     return sync_detailed(
@@ -236,6 +276,7 @@ def sync(
         variants_attrs=variants_attrs,
         price=price,
         variants_availability=variants_availability,
+        fields=fields,
     ).parsed
 
 
@@ -250,7 +291,8 @@ async def asyncio_detailed(
     variants_attrs: list[str] | Unset = UNSET,
     price: None | str | Unset = UNSET,
     variants_availability: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | PaginatedResponseProduct]:
+    fields: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | PaginatedResponsePartialProduct | PaginatedResponseProduct]:
     """List Products
 
      Retrieve a list of all products for a specific store.
@@ -279,13 +321,19 @@ async def asyncio_detailed(
             are considered. 'in_stock': in stock at any priced location. 'out_of_stock': has a priced
             location and none is in stock. 'loc:<id>' / 'loc:<id>:in_stock' / 'loc:<id>:out_of_stock'
             restrict this to one location. Any other value returns 422.
+        fields (None | str | Unset): Comma-separated response fields. Bare names include only
+            those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
+            both is not allowed. Dotted paths address nested fields (`seo.slug`,
+            `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
+            `location_price` and `region_price` are not validated, since they aren't part of the fixed
+            schema. `id` is always returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | PaginatedResponseProduct]
+        Response[HTTPValidationError | PaginatedResponsePartialProduct | PaginatedResponseProduct]
     """
 
     kwargs = _get_kwargs(
@@ -297,6 +345,7 @@ async def asyncio_detailed(
         variants_attrs=variants_attrs,
         price=price,
         variants_availability=variants_availability,
+        fields=fields,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -315,7 +364,8 @@ async def asyncio(
     variants_attrs: list[str] | Unset = UNSET,
     price: None | str | Unset = UNSET,
     variants_availability: None | str | Unset = UNSET,
-) -> HTTPValidationError | PaginatedResponseProduct | None:
+    fields: None | str | Unset = UNSET,
+) -> HTTPValidationError | PaginatedResponsePartialProduct | PaginatedResponseProduct | None:
     """List Products
 
      Retrieve a list of all products for a specific store.
@@ -344,13 +394,19 @@ async def asyncio(
             are considered. 'in_stock': in stock at any priced location. 'out_of_stock': has a priced
             location and none is in stock. 'loc:<id>' / 'loc:<id>:in_stock' / 'loc:<id>:out_of_stock'
             restrict this to one location. Any other value returns 422.
+        fields (None | str | Unset): Comma-separated response fields. Bare names include only
+            those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
+            both is not allowed. Dotted paths address nested fields (`seo.slug`,
+            `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
+            `location_price` and `region_price` are not validated, since they aren't part of the fixed
+            schema. `id` is always returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | PaginatedResponseProduct
+        HTTPValidationError | PaginatedResponsePartialProduct | PaginatedResponseProduct
     """
 
     return (
@@ -364,5 +420,6 @@ async def asyncio(
             variants_attrs=variants_attrs,
             price=price,
             variants_availability=variants_availability,
+            fields=fields,
         )
     ).parsed

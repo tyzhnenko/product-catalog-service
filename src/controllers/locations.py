@@ -4,10 +4,11 @@ from fastapi import Depends, HTTPException, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
+from src.core.fields import FieldsParams, sparse_response
 from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
 from src.domain.locations import LocationsService
-from src.domain.types.locations import Location, LocationRef, NewLocation, UpdateLocation
+from src.domain.types.locations import Location, LocationRef, NewLocation, PartialLocation, UpdateLocation
 from src.domain.types.stores import StoreRef
 
 router = APIRouter()
@@ -19,15 +20,16 @@ router = APIRouter()
     description="Retrieve a list of all locations for a specific store.",
     operation_id="list_locations",
     dependencies=[Security(ro_access)],
+    response_model=sparse_response(Location, PartialLocation, paginated=True),
+    response_model_exclude_unset=True,
 )
 async def list_locations(
     store_id: StoreRef,
     service: Annotated[LocationsService, Depends(LocationsService)],
     pagination: Annotated[PaginationParams, Depends()],
-) -> PaginatedResponse[Location]:
-    result = await service.list_locations(
-        store_id, after=pagination.after, before=pagination.before, limit=pagination.limit
-    )
+    fields: Annotated[FieldsParams, Depends()],
+) -> PaginatedResponse[Location] | PaginatedResponse[PartialLocation]:
+    result = await service.list_locations(store_id, pagination, fields=fields.resolve(Location))
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -63,13 +65,16 @@ async def create_location(
     description="Retrieve details of a specific location by its ID for a specific store.",
     operation_id="get_location",
     dependencies=[Security(ro_access)],
+    response_model=sparse_response(Location, PartialLocation),
+    response_model_exclude_unset=True,
 )
 async def get_location(
     store_id: StoreRef,
     location_id: LocationRef,
     service: Annotated[LocationsService, Depends(LocationsService)],
-) -> Location:
-    location = await service.get_location(store_id, location_id)
+    fields: Annotated[FieldsParams, Depends()],
+) -> Location | PartialLocation:
+    location = await service.get_location(store_id, location_id, fields=fields.resolve(Location))
     if not location:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -5,6 +5,7 @@ from fastapi import Depends, HTTPException, Query, Response, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
+from src.core.fields import FieldsParams, sparse_response
 from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
 from src.core.utils import build_attribute_filter, build_availability_filter, build_price_search_filter
@@ -12,6 +13,7 @@ from src.domain.types.products import ProductRef
 from src.domain.types.stores import StoreRef
 from src.domain.types.variants import (
     NewProductVariant,
+    PartialProductVariant,
     ProductVariant,
     UpdateProductVariant,
     VariantRef,
@@ -76,6 +78,8 @@ VariantFilters = Annotated[dict | None, Depends(variant_filters)]
     description="Retrieve a list of all variants for a specific product.",
     operation_id="list_variants",
     dependencies=[Security(ro_access)],
+    response_model=sparse_response(ProductVariant, PartialProductVariant, paginated=True),
+    response_model_exclude_unset=True,
 )
 async def list_variants(
     store_id: StoreRef,
@@ -83,15 +87,15 @@ async def list_variants(
     service: Annotated[VariantsService, Depends(VariantsService)],
     pagination: Annotated[PaginationParams, Depends()],
     filters: VariantFilters,
-) -> PaginatedResponse[ProductVariant]:
+    fields: Annotated[FieldsParams, Depends()],
+) -> PaginatedResponse[ProductVariant] | PaginatedResponse[PartialProductVariant]:
     """List all variants for a specific product."""
     result = await service.list_variants(
         store_id,
         product_id,
-        after=pagination.after,
-        before=pagination.before,
-        limit=pagination.limit,
+        pagination,
         filters=filters,
+        fields=fields.resolve(ProductVariant),
     )
     if result is None:
         raise HTTPException(
@@ -136,15 +140,18 @@ async def create_variant(
     description="Retrieve a specific variant by its unique identifier.",
     operation_id="get_variant",
     dependencies=[Security(ro_access)],
+    response_model=sparse_response(ProductVariant, PartialProductVariant),
+    response_model_exclude_unset=True,
 )
 async def get_variant(
     store_id: StoreRef,
     product_id: ProductRef,
     variant_id: VariantRef,
     service: Annotated[VariantsService, Depends(VariantsService)],
-) -> ProductVariant:
+    fields: Annotated[FieldsParams, Depends()],
+) -> ProductVariant | PartialProductVariant:
     """Get a specific variant by ID."""
-    variant = await service.get_variant(store_id, product_id, variant_id)
+    variant = await service.get_variant(store_id, product_id, variant_id, fields=fields.resolve(ProductVariant))
     if not variant:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

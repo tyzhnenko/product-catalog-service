@@ -57,6 +57,20 @@ class Store(BaseModel):
     seo: SEO | None = None
 
 
+class PartialStore(BaseModel):
+    """Sparse `Store` returned when the `fields` query param narrows the response."""
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        title="PartialStore",
+    )
+
+    id: StoreID
+    name: StoreName | None = None
+    url: HTTPURLField | None = None
+    seo: SEO | None = None
+
+
 class UpdateStore(BaseModel):
     model_config = ConfigDict(
         from_attributes=True,

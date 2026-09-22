@@ -5,11 +5,12 @@ from fastapi import Depends, HTTPException, Query, Response, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
+from src.core.fields import FieldsParams, sparse_response
 from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
 from src.core.utils import build_attribute_filter, build_price_search_filter
 from src.domain.bundles import BundlesService
-from src.domain.types.bundles import Bundle, BundleRef, NewBundle, UpdateBundle
+from src.domain.types.bundles import Bundle, BundleRef, NewBundle, PartialBundle, UpdateBundle
 from src.domain.types.stores import StoreRef
 
 router = APIRouter()
@@ -56,16 +57,22 @@ BundleFilters = Annotated[dict | None, Depends(bundle_filters)]
     description="List all bundles for a specific store.",
     operation_id="list_bundles",
     dependencies=[Security(ro_access)],
+    response_model=sparse_response(Bundle, PartialBundle, paginated=True),
+    response_model_exclude_unset=True,
 )
 async def list_bundles(
     store_id: StoreRef,
     service: Annotated[BundlesService, Depends(BundlesService)],
     pagination: Annotated[PaginationParams, Depends()],
     filters: BundleFilters,
-) -> PaginatedResponse[Bundle]:
+    fields: Annotated[FieldsParams, Depends()],
+) -> PaginatedResponse[Bundle] | PaginatedResponse[PartialBundle]:
     """List all bundles for a specific store."""
     result = await service.list_bundles(
-        store_id, after=pagination.after, before=pagination.before, limit=pagination.limit, filters=filters
+        store_id,
+        pagination,
+        filters=filters,
+        fields=fields.resolve(Bundle),
     )
     if result is None:
         raise HTTPException(
@@ -103,14 +110,17 @@ async def create_bundle(
     description="Get a specific bundle by ID.",
     operation_id="get_bundle",
     dependencies=[Security(ro_access)],
+    response_model=sparse_response(Bundle, PartialBundle),
+    response_model_exclude_unset=True,
 )
 async def get_bundle(
     store_id: StoreRef,
     bundle_id: BundleRef,
     service: Annotated[BundlesService, Depends(BundlesService)],
-) -> Bundle:
+    fields: Annotated[FieldsParams, Depends()],
+) -> Bundle | PartialBundle:
     """Get a specific bundle by ID."""
-    bundle = await service.get_bundle(store_id, bundle_id)
+    bundle = await service.get_bundle(store_id, bundle_id, fields=fields.resolve(Bundle))
     if not bundle:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

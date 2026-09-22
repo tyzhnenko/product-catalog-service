@@ -1,12 +1,16 @@
 # from uuid import uuid7
 
+from typing import overload
+
 import pendulum
 from pymongo.errors import DuplicateKeyError
 
+from src.core.fields import FieldSelection, projection_model, to_partial
 from src.core.logging import logger
+from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
 from src.core.utils import paginate, parse_ref, raise_for_duplicate_key
-from src.domain.types.stores import NewStore, Store, UpdateStore
+from src.domain.types.stores import NewStore, PartialStore, Store, UpdateStore
 from src.models.bundles import BundleModel
 from src.models.categories import CategoryModel
 from src.models.locations import LocationModel
@@ -29,23 +33,50 @@ class StoresService:
 
         return Store.model_validate(store)
 
+    @overload
+    async def list_stores(self, pagination: PaginationParams, fields: None = None) -> PaginatedResponse[Store]: ...
+
+    @overload
+    async def list_stores(
+        self, pagination: PaginationParams, fields: FieldSelection = ...
+    ) -> PaginatedResponse[PartialStore]: ...
+
     async def list_stores(
         self,
-        after: str | None,
-        before: str | None,
-        limit: int,
-    ) -> PaginatedResponse[Store]:
+        pagination: PaginationParams,
+        fields: FieldSelection | None = None,
+    ) -> PaginatedResponse[Store] | PaginatedResponse[PartialStore]:
         base_filter: dict = {"deleted_at": None}
+        if fields:
+            return await paginate(
+                StoreModel.find(base_filter).project(projection_model(Store, fields.fetch_names(Store))),
+                pagination.after,
+                pagination.before,
+                pagination.limit,
+                transform=lambda doc: to_partial(PartialStore, doc, fields),
+            )
+
         return await paginate(
             StoreModel.find(base_filter),
-            after,
-            before,
-            limit,
+            pagination.after,
+            pagination.before,
+            pagination.limit,
             transform=Store.model_validate,
         )
 
-    async def get_store(self, store_id: str) -> Store | None:
-        store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
+    @overload
+    async def get_store(self, store_id: str, fields: None = None) -> Store | None: ...
+
+    @overload
+    async def get_store(self, store_id: str, fields: FieldSelection = ...) -> PartialStore | None: ...
+
+    async def get_store(self, store_id: str, fields: FieldSelection | None = None) -> Store | PartialStore | None:
+        query = StoreModel.find({**parse_ref(store_id), "deleted_at": None})
+        if fields:
+            store = await query.project(projection_model(Store, fields.fetch_names(Store))).first_or_none()
+            return to_partial(PartialStore, store, fields) if store else None
+
+        store = await query.first_or_none()
         if store:
             return Store.model_validate(store)
         return None

@@ -57,9 +57,21 @@ from .object_id_attribute import ObjectIdAttribute
 from .paginated_response_bundle import PaginatedResponseBundle
 from .paginated_response_category import PaginatedResponseCategory
 from .paginated_response_location import PaginatedResponseLocation
+from .paginated_response_partial_bundle import PaginatedResponsePartialBundle
+from .paginated_response_partial_category import PaginatedResponsePartialCategory
+from .paginated_response_partial_location import PaginatedResponsePartialLocation
+from .paginated_response_partial_product import PaginatedResponsePartialProduct
+from .paginated_response_partial_product_variant import PaginatedResponsePartialProductVariant
+from .paginated_response_partial_store import PaginatedResponsePartialStore
 from .paginated_response_product import PaginatedResponseProduct
 from .paginated_response_product_variant import PaginatedResponseProductVariant
 from .paginated_response_store import PaginatedResponseStore
+from .partial_bundle import PartialBundle
+from .partial_category import PartialCategory
+from .partial_location import PartialLocation
+from .partial_product import PartialProduct
+from .partial_product_variant import PartialProductVariant
+from .partial_store import PartialStore
 from .price_map import PriceMap
 from .product import Product
 from .product_status_enum import ProductStatusEnum
@@ -139,9 +151,21 @@ __all__ = (
     "PaginatedResponseBundle",
     "PaginatedResponseCategory",
     "PaginatedResponseLocation",
+    "PaginatedResponsePartialBundle",
+    "PaginatedResponsePartialCategory",
+    "PaginatedResponsePartialLocation",
+    "PaginatedResponsePartialProduct",
+    "PaginatedResponsePartialProductVariant",
+    "PaginatedResponsePartialStore",
     "PaginatedResponseProduct",
     "PaginatedResponseProductVariant",
     "PaginatedResponseStore",
+    "PartialBundle",
+    "PartialCategory",
+    "PartialLocation",
+    "PartialProduct",
+    "PartialProductVariant",
+    "PartialStore",
     "PriceMap",
     "Product",
     "ProductStatusEnum",
