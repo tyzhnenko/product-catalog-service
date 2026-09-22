@@ -6,7 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from src.domain.types.attributes import AttributesMap
 from src.domain.types.media import Image
 from src.domain.types.prices import LocationPriceMap, PriceMap, RegionPriceMap
-from src.domain.types.products import ProductID
+from src.domain.types.products import PartialProduct, Product, ProductID
 from src.domain.types.refs import ObjectIdRef, SlugRef
 from src.domain.types.seo import SEO
 
@@ -206,6 +206,35 @@ class PartialProductVariant(BaseModel):
     region_price: RegionPriceMap | None = None
     images: VariantImages | None = None
     seo: SEO | None = None
+
+
+class ProductWithVariants(Product):
+    """`Product` with its variants embedded, returned when `include=variants` is requested."""
+
+    model_config = ConfigDict(
+        title="ProductWithVariants",
+        json_schema_extra={
+            "description": "Product information, including its variants (requested via `include=variants`)",
+        },
+    )
+
+    variants: list[ProductVariant] = []
+
+
+class PartialProductWithVariants(PartialProduct):
+    """`PartialProduct` with its variants embedded, returned when `include=variants` and `fields` are combined."""
+
+    model_config = ConfigDict(
+        title="PartialProductWithVariants",
+        json_schema_extra={
+            "description": (
+                "Product information, including its variants (requested via `include=variants`), "
+                "limited to the fields requested via the `fields` query param"
+            ),
+        },
+    )
+
+    variants: list[ProductVariant] | None = None
 
 
 class UpdateProductVariant(BaseModel):

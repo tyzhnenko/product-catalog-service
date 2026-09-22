@@ -1,0 +1,391 @@
+from __future__ import annotations
+
+import datetime
+from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any, TypeVar, cast
+
+from attrs import define as _attrs_define
+from attrs import field as _attrs_field
+
+from ..models.product_status_enum import ProductStatusEnum
+from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.attributes_map import AttributesMap
+    from ..models.product_variant import ProductVariant
+    from ..models.seo import SEO
+
+
+T = TypeVar("T", bound="PartialProductWithVariants")
+
+
+@_attrs_define
+class PartialProductWithVariants:
+    """Product information, including its variants (requested via `include=variants`), limited to the fields requested via
+    the `fields` query param
+
+        Attributes:
+            id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+            name (None | str | Unset):
+            description (None | str | Unset):
+            brand (None | str | Unset):
+            tags (list[str] | None | Unset):
+            seo (None | SEO | Unset):
+            status (None | ProductStatusEnum | Unset):
+            categories (list[str] | None | Unset):
+            attributes (AttributesMap | None | Unset):
+            updated_at (datetime.datetime | None | Unset):
+            created_at (datetime.datetime | None | Unset):
+            variants (list[ProductVariant] | None | Unset):
+    """
+
+    id: str
+    name: None | str | Unset = UNSET
+    description: None | str | Unset = UNSET
+    brand: None | str | Unset = UNSET
+    tags: list[str] | None | Unset = UNSET
+    seo: None | SEO | Unset = UNSET
+    status: None | ProductStatusEnum | Unset = UNSET
+    categories: list[str] | None | Unset = UNSET
+    attributes: AttributesMap | None | Unset = UNSET
+    updated_at: datetime.datetime | None | Unset = UNSET
+    created_at: datetime.datetime | None | Unset = UNSET
+    variants: list[ProductVariant] | None | Unset = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        from ..models.attributes_map import AttributesMap
+        from ..models.seo import SEO
+
+        id = self.id
+
+        name: None | str | Unset
+        if isinstance(self.name, Unset):
+            name = UNSET
+        else:
+            name = self.name
+
+        description: None | str | Unset
+        if isinstance(self.description, Unset):
+            description = UNSET
+        else:
+            description = self.description
+
+        brand: None | str | Unset
+        if isinstance(self.brand, Unset):
+            brand = UNSET
+        else:
+            brand = self.brand
+
+        tags: list[str] | None | Unset
+        if isinstance(self.tags, Unset):
+            tags = UNSET
+        elif isinstance(self.tags, list):
+            tags = self.tags
+
+        else:
+            tags = self.tags
+
+        seo: dict[str, Any] | None | Unset
+        if isinstance(self.seo, Unset):
+            seo = UNSET
+        elif isinstance(self.seo, SEO):
+            seo = self.seo.to_dict()
+        else:
+            seo = self.seo
+
+        status: None | str | Unset
+        if isinstance(self.status, Unset):
+            status = UNSET
+        elif isinstance(self.status, ProductStatusEnum):
+            status = self.status.value
+        else:
+            status = self.status
+
+        categories: list[str] | None | Unset
+        if isinstance(self.categories, Unset):
+            categories = UNSET
+        elif isinstance(self.categories, list):
+            categories = self.categories
+
+        else:
+            categories = self.categories
+
+        attributes: dict[str, Any] | None | Unset
+        if isinstance(self.attributes, Unset):
+            attributes = UNSET
+        elif isinstance(self.attributes, AttributesMap):
+            attributes = self.attributes.to_dict()
+        else:
+            attributes = self.attributes
+
+        updated_at: None | str | Unset
+        if isinstance(self.updated_at, Unset):
+            updated_at = UNSET
+        elif isinstance(self.updated_at, datetime.datetime):
+            updated_at = self.updated_at.isoformat()
+        else:
+            updated_at = self.updated_at
+
+        created_at: None | str | Unset
+        if isinstance(self.created_at, Unset):
+            created_at = UNSET
+        elif isinstance(self.created_at, datetime.datetime):
+            created_at = self.created_at.isoformat()
+        else:
+            created_at = self.created_at
+
+        variants: list[dict[str, Any]] | None | Unset
+        if isinstance(self.variants, Unset):
+            variants = UNSET
+        elif isinstance(self.variants, list):
+            variants = []
+            for variants_type_0_item_data in self.variants:
+                variants_type_0_item = variants_type_0_item_data.to_dict()
+                variants.append(variants_type_0_item)
+
+        else:
+            variants = self.variants
+
+        field_dict: dict[str, Any] = {}
+        field_dict.update(self.additional_properties)
+        field_dict.update(
+            {
+                "id": id,
+            }
+        )
+        if name is not UNSET:
+            field_dict["name"] = name
+        if description is not UNSET:
+            field_dict["description"] = description
+        if brand is not UNSET:
+            field_dict["brand"] = brand
+        if tags is not UNSET:
+            field_dict["tags"] = tags
+        if seo is not UNSET:
+            field_dict["seo"] = seo
+        if status is not UNSET:
+            field_dict["status"] = status
+        if categories is not UNSET:
+            field_dict["categories"] = categories
+        if attributes is not UNSET:
+            field_dict["attributes"] = attributes
+        if updated_at is not UNSET:
+            field_dict["updated_at"] = updated_at
+        if created_at is not UNSET:
+            field_dict["created_at"] = created_at
+        if variants is not UNSET:
+            field_dict["variants"] = variants
+
+        return field_dict
+
+    @classmethod
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.attributes_map import AttributesMap
+        from ..models.product_variant import ProductVariant
+        from ..models.seo import SEO
+
+        d = dict(src_dict)
+        id = d.pop("id")
+
+        def _parse_name(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        name = _parse_name(d.pop("name", UNSET))
+
+        def _parse_description(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        description = _parse_description(d.pop("description", UNSET))
+
+        def _parse_brand(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        brand = _parse_brand(d.pop("brand", UNSET))
+
+        def _parse_tags(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                tags_type_0 = cast(list[str], data)
+
+                return tags_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        tags = _parse_tags(d.pop("tags", UNSET))
+
+        def _parse_seo(data: object) -> None | SEO | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                seo_type_0 = SEO.from_dict(data)
+
+                return seo_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | SEO | Unset, data)
+
+        seo = _parse_seo(d.pop("seo", UNSET))
+
+        def _parse_status(data: object) -> None | ProductStatusEnum | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                status_type_0 = ProductStatusEnum(data)
+
+                return status_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(None | ProductStatusEnum | Unset, data)
+
+        status = _parse_status(d.pop("status", UNSET))
+
+        def _parse_categories(data: object) -> list[str] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                categories_type_0 = cast(list[str], data)
+
+                return categories_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[str] | None | Unset, data)
+
+        categories = _parse_categories(d.pop("categories", UNSET))
+
+        def _parse_attributes(data: object) -> AttributesMap | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                attributes_type_0 = AttributesMap.from_dict(data)
+
+                return attributes_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(AttributesMap | None | Unset, data)
+
+        attributes = _parse_attributes(d.pop("attributes", UNSET))
+
+        def _parse_updated_at(data: object) -> datetime.datetime | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                updated_at_type_0 = datetime.datetime.fromisoformat(data)
+
+                return updated_at_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None | Unset, data)
+
+        updated_at = _parse_updated_at(d.pop("updated_at", UNSET))
+
+        def _parse_created_at(data: object) -> datetime.datetime | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                created_at_type_0 = datetime.datetime.fromisoformat(data)
+
+                return created_at_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(datetime.datetime | None | Unset, data)
+
+        created_at = _parse_created_at(d.pop("created_at", UNSET))
+
+        def _parse_variants(data: object) -> list[ProductVariant] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                variants_type_0 = []
+                _variants_type_0 = data
+                for variants_type_0_item_data in _variants_type_0:
+                    variants_type_0_item = ProductVariant.from_dict(variants_type_0_item_data)
+
+                    variants_type_0.append(variants_type_0_item)
+
+                return variants_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[ProductVariant] | None | Unset, data)
+
+        variants = _parse_variants(d.pop("variants", UNSET))
+
+        partial_product_with_variants = cls(
+            id=id,
+            name=name,
+            description=description,
+            brand=brand,
+            tags=tags,
+            seo=seo,
+            status=status,
+            categories=categories,
+            attributes=attributes,
+            updated_at=updated_at,
+            created_at=created_at,
+            variants=variants,
+        )
+
+        partial_product_with_variants.additional_properties = d
+        return partial_product_with_variants
+
+    @property
+    def additional_keys(self) -> list[str]:
+        return list(self.additional_properties.keys())
+
+    def __getitem__(self, key: str) -> Any:
+        return self.additional_properties[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.additional_properties[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self.additional_properties[key]
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.additional_properties

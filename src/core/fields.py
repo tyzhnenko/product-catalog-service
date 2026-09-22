@@ -1,4 +1,6 @@
+import operator
 from dataclasses import dataclass
+from functools import reduce
 from typing import Annotated, Any, Literal, TypeAliasType, TypeVar, cast, get_args, get_origin
 
 from beanie import PydanticObjectId
@@ -230,8 +232,15 @@ def to_partial(partial: type[T], doc: BaseModel, selection: FieldSelection | Non
     return partial.model_validate(data)
 
 
-def sparse_response(model: type[BaseModel], partial: type[BaseModel], *, paginated: bool = False) -> Any:
-    """FastAPI `response_model` for handlers supporting `fields`: the full schema or its `PartialX` variant."""
+def sparse_response(*models: type[BaseModel], paginated: bool = False) -> Any:
+    """FastAPI `response_model` for handlers whose response shape depends on request params.
+
+    Takes two or more candidate response schemas (e.g. the full schema and its `fields`-narrowed `PartialX`
+    variant) and unions them, since the actual return value's runtime type determines which one it validates
+    against. For `paginated`, each candidate is unioned as its own fully-parametrized `PaginatedResponse[X]`
+    (not a single `PaginatedResponse[X | Y]`), so a page's `items` stay one homogeneous shape — matching how
+    `paginate()` always parametrizes its result on the single runtime type shared by every item in the page.
+    """
     if paginated:
-        return PaginatedResponse[model] | PaginatedResponse[partial]  # type: ignore[valid-type]
-    return model | partial
+        return reduce(operator.or_, (PaginatedResponse[model] for model in models))  # type: ignore[valid-type]
+    return reduce(operator.or_, models)
