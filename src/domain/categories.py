@@ -1,11 +1,15 @@
 # from uuid import uuid7
 
+from typing import overload
+
 import pendulum
 from pymongo.errors import DuplicateKeyError
 
+from src.core.fields import FieldSelection, projection_model, to_partial
+from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
 from src.core.utils import paginate, parse_ref, raise_for_duplicate_key
-from src.domain.types.categories import Category, NewCategory, UpdateCategory
+from src.domain.types.categories import Category, NewCategory, PartialCategory, UpdateCategory
 from src.models.categories import CategoryModel
 from src.models.stores import StoreModel
 
@@ -36,36 +40,75 @@ class CategoriesService:
 
         return Category.model_validate(category.model_dump())
 
+    @overload
     async def list_categories(
         self,
         store_id: str,
-        after: str | None,
-        before: str | None,
-        limit: int,
+        pagination: PaginationParams,
         filters: dict | None = None,
-    ) -> PaginatedResponse[Category] | None:
+        fields: None = None,
+    ) -> PaginatedResponse[Category] | None: ...
+
+    @overload
+    async def list_categories(
+        self,
+        store_id: str,
+        pagination: PaginationParams,
+        filters: dict | None = None,
+        fields: FieldSelection = ...,
+    ) -> PaginatedResponse[PartialCategory] | None: ...
+
+    async def list_categories(
+        self,
+        store_id: str,
+        pagination: PaginationParams,
+        filters: dict | None = None,
+        fields: FieldSelection | None = None,
+    ) -> PaginatedResponse[Category] | PaginatedResponse[PartialCategory] | None:
         store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             return None
 
         query_filter = {"store_id": store.id, "deleted_at": None, **(filters or {})}
+        if fields:
+            return await paginate(
+                CategoryModel.find(query_filter).project(projection_model(Category, fields.fetch_names(Category))),
+                pagination.after,
+                pagination.before,
+                pagination.limit,
+                transform=lambda doc: to_partial(PartialCategory, doc, fields),
+            )
+
         return await paginate(
             CategoryModel.find(query_filter),
-            after,
-            before,
-            limit,
+            pagination.after,
+            pagination.before,
+            pagination.limit,
             transform=Category.model_validate,
         )
 
-    async def get_category(self, store_id: str, category_id: str) -> Category | None:
+    @overload
+    async def get_category(self, store_id: str, category_id: str, fields: None = None) -> Category | None: ...
+
+    @overload
+    async def get_category(
+        self, store_id: str, category_id: str, fields: FieldSelection = ...
+    ) -> PartialCategory | None: ...
+
+    async def get_category(
+        self, store_id: str, category_id: str, fields: FieldSelection | None = None
+    ) -> Category | PartialCategory | None:
         # Check if store exists
         store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             return None
 
-        category = await CategoryModel.find(
-            {**parse_ref(category_id), "store_id": store.id, "deleted_at": None}
-        ).first_or_none()
+        query = CategoryModel.find({**parse_ref(category_id), "store_id": store.id, "deleted_at": None})
+        if fields:
+            category = await query.project(projection_model(Category, fields.fetch_names(Category))).first_or_none()
+            return to_partial(PartialCategory, category, fields) if category else None
+
+        category = await query.first_or_none()
         if category:
             return Category.model_validate(category.model_dump())
         return None

@@ -128,6 +128,29 @@ class Category(BaseModel):
     created_at: DateTime
 
 
+class PartialCategory(BaseModel):
+    """Sparse `Category` returned when the `fields` query param narrows the response."""
+
+    model_config = ConfigDict(
+        title="PartialCategory",
+        from_attributes=True,
+        json_schema_extra={
+            "description": "Category information, limited to the fields requested via the `fields` query param",
+        },
+    )
+
+    id: CategoryID
+    name: CategoryName | None = None
+    description: CategoryDescription | None = None
+    status: CategoryStatus | None = None
+    path: CategoryPath | None = None
+    seo: SEO | None = None
+    attributes: AttributesMap | None = None
+    images: CategoryImages | None = None
+    updated_at: DateTime | None = None
+    created_at: DateTime | None = None
+
+
 class UpdateCategory(BaseModel):
     """Data required to update a category."""
 

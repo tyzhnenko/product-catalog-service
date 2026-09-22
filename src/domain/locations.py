@@ -1,11 +1,15 @@
 # from uuid import uuid7
 
+from typing import overload
+
 import pendulum
 from pymongo.errors import DuplicateKeyError
 
+from src.core.fields import FieldSelection, projection_model, to_partial
+from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
 from src.core.utils import paginate, parse_ref, raise_for_duplicate_key
-from src.domain.types.locations import Location, NewLocation, UpdateLocation
+from src.domain.types.locations import Location, NewLocation, PartialLocation, UpdateLocation
 from src.models.locations import LocationModel
 from src.models.stores import StoreModel
 
@@ -31,34 +35,66 @@ class LocationsService:
 
         return Location.model_validate(location)
 
+    @overload
+    async def list_locations(
+        self, store_id: str, pagination: PaginationParams, fields: None = None
+    ) -> PaginatedResponse[Location] | None: ...
+
+    @overload
+    async def list_locations(
+        self, store_id: str, pagination: PaginationParams, fields: FieldSelection = ...
+    ) -> PaginatedResponse[PartialLocation] | None: ...
+
     async def list_locations(
         self,
         store_id: str,
-        after: str | None,
-        before: str | None,
-        limit: int,
-    ) -> PaginatedResponse[Location] | None:
+        pagination: PaginationParams,
+        fields: FieldSelection | None = None,
+    ) -> PaginatedResponse[Location] | PaginatedResponse[PartialLocation] | None:
         store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             return None
 
+        query_filter = {"store_id": store.id, "deleted_at": None}
+        if fields:
+            return await paginate(
+                LocationModel.find(query_filter).project(projection_model(Location, fields.fetch_names(Location))),
+                pagination.after,
+                pagination.before,
+                pagination.limit,
+                transform=lambda doc: to_partial(PartialLocation, doc, fields),
+            )
+
         return await paginate(
-            LocationModel.find({"store_id": store.id, "deleted_at": None}),
-            after,
-            before,
-            limit,
+            LocationModel.find(query_filter),
+            pagination.after,
+            pagination.before,
+            pagination.limit,
             transform=Location.model_validate,
         )
 
-    async def get_location(self, store_id: str, location_id: str) -> Location | None:
+    @overload
+    async def get_location(self, store_id: str, location_id: str, fields: None = None) -> Location | None: ...
+
+    @overload
+    async def get_location(
+        self, store_id: str, location_id: str, fields: FieldSelection = ...
+    ) -> PartialLocation | None: ...
+
+    async def get_location(
+        self, store_id: str, location_id: str, fields: FieldSelection | None = None
+    ) -> Location | PartialLocation | None:
         # Check if store exists
         store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             return None
 
-        location = await LocationModel.find(
-            {**parse_ref(location_id), "store_id": store.id, "deleted_at": None}
-        ).first_or_none()
+        query = LocationModel.find({**parse_ref(location_id), "store_id": store.id, "deleted_at": None})
+        if fields:
+            location = await query.project(projection_model(Location, fields.fetch_names(Location))).first_or_none()
+            return to_partial(PartialLocation, location, fields) if location else None
+
+        location = await query.first_or_none()
         if location:
             return Location.model_validate(location)
         return None

@@ -1,13 +1,15 @@
-from typing import cast
+from typing import cast, overload
 
 # from uuid import uuid7
 import pendulum
 from pymongo.errors import DuplicateKeyError
 
+from src.core.fields import FieldSelection, projection_model, to_partial
 from src.core.logging import logger
+from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
 from src.core.utils import paginate, parse_ref, raise_for_duplicate_key
-from src.domain.types.bundles import Bundle, NewBundle, UpdateBundle
+from src.domain.types.bundles import Bundle, NewBundle, PartialBundle, UpdateBundle
 from src.domain.types.categories import CategoryID
 from src.domain.types.locations import LocationID
 from src.domain.types.prices import LocationPriceMap
@@ -156,14 +158,31 @@ class BundlesService:
 
         return Bundle.model_validate(bundle.model_dump())
 
+    @overload
     async def list_bundles(
         self,
         store_id: str,
-        after: str | None,
-        before: str | None,
-        limit: int,
+        pagination: PaginationParams,
         filters: dict | None = None,
-    ) -> PaginatedResponse[Bundle] | None:
+        fields: None = None,
+    ) -> PaginatedResponse[Bundle] | None: ...
+
+    @overload
+    async def list_bundles(
+        self,
+        store_id: str,
+        pagination: PaginationParams,
+        filters: dict | None = None,
+        fields: FieldSelection = ...,
+    ) -> PaginatedResponse[PartialBundle] | None: ...
+
+    async def list_bundles(
+        self,
+        store_id: str,
+        pagination: PaginationParams,
+        filters: dict | None = None,
+        fields: FieldSelection | None = None,
+    ) -> PaginatedResponse[Bundle] | PaginatedResponse[PartialBundle] | None:
         """List all non-deleted bundles for a specific store."""
         store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
@@ -171,20 +190,38 @@ class BundlesService:
             return None
 
         query_filter = {"store_id": store.id, "deleted_at": None, **(filters or {})}
+        if fields:
+            return await paginate(
+                BundleModel.find(query_filter).project(projection_model(Bundle, fields.fetch_names(Bundle))),
+                pagination.after,
+                pagination.before,
+                pagination.limit,
+                transform=lambda doc: to_partial(PartialBundle, doc, fields),
+            )
+
         return await paginate(
             BundleModel.find(query_filter),
-            after,
-            before,
-            limit,
+            pagination.after,
+            pagination.before,
+            pagination.limit,
             transform=Bundle.model_validate,
         )
 
-    async def get_bundle(self, store_id: str, bundle_id: str) -> Bundle | None:
+    @overload
+    async def get_bundle(self, store_id: str, bundle_id: str, fields: None = None) -> Bundle | None: ...
+
+    @overload
+    async def get_bundle(self, store_id: str, bundle_id: str, fields: FieldSelection = ...) -> PartialBundle | None: ...
+
+    async def get_bundle(
+        self, store_id: str, bundle_id: str, fields: FieldSelection | None = None
+    ) -> Bundle | PartialBundle | None:
         """Get a specific bundle by ID from a store.
 
         Args:
             store_id: The UUID or slug ref of the store.
             bundle_id: The UUID or slug ref of the bundle to retrieve.
+            fields: Optional `fields` selection narrowing the response.
 
         Returns:
             The Bundle object if found and belongs to the store, None otherwise.
@@ -196,11 +233,15 @@ class BundlesService:
             logger.warning(f"Store not found: {store_id}")
             return None
 
-        bundle = await BundleModel.find(
-            {**parse_ref(bundle_id), "store_id": store.id, "deleted_at": None}
-        ).first_or_none()
-        if bundle:
-            return Bundle.model_validate(bundle.model_dump())
+        query = BundleModel.find({**parse_ref(bundle_id), "store_id": store.id, "deleted_at": None})
+        if fields:
+            bundle = await query.project(projection_model(Bundle, fields.fetch_names(Bundle))).first_or_none()
+            if bundle:
+                return to_partial(PartialBundle, bundle, fields)
+        else:
+            bundle = await query.first_or_none()
+            if bundle:
+                return Bundle.model_validate(bundle.model_dump())
         logger.warning(f"Bundle not found or access denied: bundle_id={bundle_id}, store_id={store_id}")
         return None
 

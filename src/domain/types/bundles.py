@@ -121,6 +121,26 @@ class Bundle(BaseModel):
     created_at: DateTime
 
 
+class PartialBundle(BaseModel):
+    """Sparse `Bundle` returned when the `fields` query param narrows the response."""
+
+    model_config = ConfigDict(from_attributes=True, title="PartialBundle")
+
+    id: BundleID
+    name: BundleName | None = None
+    description: BundleDescription | None = None
+    components: BundleComponents | None = None
+    attributes: AttributesMap | None = None
+    categories: BundleCategories | None = None
+    price: PriceMap | None = None
+    location_price: LocationPriceMap | None = None
+    region_price: RegionPriceMap | None = None
+    images: BundleImages | None = None
+    seo: SEO | None = None
+    updated_at: DateTime | None = None
+    created_at: DateTime | None = None
+
+
 class UpdateBundle(BaseModel):
     name: BundleName | None = None
     description: BundleDescription | None = None

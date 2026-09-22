@@ -4,10 +4,11 @@ from fastapi import Depends, HTTPException, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
+from src.core.fields import FieldsParams, sparse_response
 from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
 from src.domain.stores import StoresService
-from src.domain.types.stores import NewStore, Store, StoreRef, UpdateStore
+from src.domain.types.stores import NewStore, PartialStore, Store, StoreRef, UpdateStore
 
 router = APIRouter()
 
@@ -18,12 +19,15 @@ router = APIRouter()
     description="Retrieve a list of all stores in the system.",
     operation_id="list_stores",
     dependencies=[Security(ro_access)],
+    response_model=sparse_response(Store, PartialStore, paginated=True),
+    response_model_exclude_unset=True,
 )
 async def list_stores(
     service: Annotated[StoresService, Depends(StoresService)],
     pagination: Annotated[PaginationParams, Depends()],
-) -> PaginatedResponse[Store]:
-    return await service.list_stores(after=pagination.after, before=pagination.before, limit=pagination.limit)
+    fields: Annotated[FieldsParams, Depends()],
+) -> PaginatedResponse[Store] | PaginatedResponse[PartialStore]:
+    return await service.list_stores(pagination, fields=fields.resolve(Store))
 
 
 @router.post(
@@ -47,12 +51,15 @@ async def create_store(
     description="Retrieve a store by its unique identifier.",
     operation_id="get_store",
     dependencies=[Security(ro_access)],
+    response_model=sparse_response(Store, PartialStore),
+    response_model_exclude_unset=True,
 )
 async def get_store(
     store_id: StoreRef,
     service: Annotated[StoresService, Depends(StoresService)],
-) -> Store:
-    store = await service.get_store(store_id)
+    fields: Annotated[FieldsParams, Depends()],
+) -> Store | PartialStore:
+    store = await service.get_store(store_id, fields=fields.resolve(Store))
     if not store:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -7,19 +7,34 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
+from ...models.partial_store import PartialStore
 from ...models.store import Store
-from ...types import Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     store_id: str,
+    *,
+    fields: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
+
+    params: dict[str, Any] = {}
+
+    json_fields: None | str | Unset
+    if isinstance(fields, Unset):
+        json_fields = UNSET
+    else:
+        json_fields = fields
+    params["fields"] = json_fields
+
+    params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
         "method": "get",
         "url": "/api/v1/stores/{store_id}".format(
             store_id=quote(str(store_id), safe=""),
         ),
+        "params": params,
     }
 
     return _kwargs
@@ -27,9 +42,25 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | Store | None:
+) -> HTTPValidationError | PartialStore | Store | None:
     if response.status_code == 200:
-        response_200 = Store.from_dict(response.json())
+
+        def _parse_response_200(data: object) -> PartialStore | Store:
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                response_200_type_0 = Store.from_dict(data)
+
+                return response_200_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            if not isinstance(data, dict):
+                raise TypeError()
+            response_200_type_1 = PartialStore.from_dict(data)
+
+            return response_200_type_1
+
+        response_200 = _parse_response_200(response.json())
 
         return response_200
 
@@ -46,7 +77,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | Store]:
+) -> Response[HTTPValidationError | PartialStore | Store]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -59,24 +90,32 @@ def sync_detailed(
     store_id: str,
     *,
     client: AuthenticatedClient,
-) -> Response[HTTPValidationError | Store]:
+    fields: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | PartialStore | Store]:
     """Get Store
 
      Retrieve a store by its unique identifier.
 
     Args:
         store_id (str): Store ID or slug ref (prefixed 's-')
+        fields (None | str | Unset): Comma-separated response fields. Bare names include only
+            those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
+            both is not allowed. Dotted paths address nested fields (`seo.slug`,
+            `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
+            `location_price` and `region_price` are not validated, since they aren't part of the fixed
+            schema. `id` is always returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | Store]
+        Response[HTTPValidationError | PartialStore | Store]
     """
 
     kwargs = _get_kwargs(
         store_id=store_id,
+        fields=fields,
     )
 
     response = client.get_httpx_client().request(
@@ -90,25 +129,33 @@ def sync(
     store_id: str,
     *,
     client: AuthenticatedClient,
-) -> HTTPValidationError | Store | None:
+    fields: None | str | Unset = UNSET,
+) -> HTTPValidationError | PartialStore | Store | None:
     """Get Store
 
      Retrieve a store by its unique identifier.
 
     Args:
         store_id (str): Store ID or slug ref (prefixed 's-')
+        fields (None | str | Unset): Comma-separated response fields. Bare names include only
+            those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
+            both is not allowed. Dotted paths address nested fields (`seo.slug`,
+            `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
+            `location_price` and `region_price` are not validated, since they aren't part of the fixed
+            schema. `id` is always returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | Store
+        HTTPValidationError | PartialStore | Store
     """
 
     return sync_detailed(
         store_id=store_id,
         client=client,
+        fields=fields,
     ).parsed
 
 
@@ -116,24 +163,32 @@ async def asyncio_detailed(
     store_id: str,
     *,
     client: AuthenticatedClient,
-) -> Response[HTTPValidationError | Store]:
+    fields: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | PartialStore | Store]:
     """Get Store
 
      Retrieve a store by its unique identifier.
 
     Args:
         store_id (str): Store ID or slug ref (prefixed 's-')
+        fields (None | str | Unset): Comma-separated response fields. Bare names include only
+            those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
+            both is not allowed. Dotted paths address nested fields (`seo.slug`,
+            `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
+            `location_price` and `region_price` are not validated, since they aren't part of the fixed
+            schema. `id` is always returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | Store]
+        Response[HTTPValidationError | PartialStore | Store]
     """
 
     kwargs = _get_kwargs(
         store_id=store_id,
+        fields=fields,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -145,25 +200,33 @@ async def asyncio(
     store_id: str,
     *,
     client: AuthenticatedClient,
-) -> HTTPValidationError | Store | None:
+    fields: None | str | Unset = UNSET,
+) -> HTTPValidationError | PartialStore | Store | None:
     """Get Store
 
      Retrieve a store by its unique identifier.
 
     Args:
         store_id (str): Store ID or slug ref (prefixed 's-')
+        fields (None | str | Unset): Comma-separated response fields. Bare names include only
+            those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
+            both is not allowed. Dotted paths address nested fields (`seo.slug`,
+            `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
+            `location_price` and `region_price` are not validated, since they aren't part of the fixed
+            schema. `id` is always returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | Store
+        HTTPValidationError | PartialStore | Store
     """
 
     return (
         await asyncio_detailed(
             store_id=store_id,
             client=client,
+            fields=fields,
         )
     ).parsed

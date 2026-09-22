@@ -6,11 +6,12 @@ from fastapi import Depends, HTTPException, Query, Response, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
+from src.core.fields import FieldsParams, sparse_response
 from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
 from src.core.utils import build_attribute_filter, build_availability_filter, build_price_search_filter
 from src.domain.products import ProductsService
-from src.domain.types.products import NewProduct, Product, ProductRef, UpdateProduct
+from src.domain.types.products import NewProduct, PartialProduct, Product, ProductRef, UpdateProduct
 from src.domain.types.stores import StoreRef
 
 router = APIRouter()
@@ -89,21 +90,23 @@ def product_filters(
     description="Retrieve a list of all products for a specific store.",
     operation_id="list_products",
     dependencies=[Security(ro_access)],
+    response_model=sparse_response(Product, PartialProduct, paginated=True),
+    response_model_exclude_unset=True,
 )
 async def list_products(
     store_id: StoreRef,
     service: Annotated[ProductsService, Depends(ProductsService)],
     pagination: Annotated[PaginationParams, Depends()],
     filters: Annotated[ProductFilters, Depends(product_filters)],
-) -> PaginatedResponse[Product]:
+    fields: Annotated[FieldsParams, Depends()],
+) -> PaginatedResponse[Product] | PaginatedResponse[PartialProduct]:
     """List all products for a specific store."""
     result = await service.list_products(
         store_id,
-        after=pagination.after,
-        before=pagination.before,
-        limit=pagination.limit,
+        pagination,
         filters=filters.filters,
         variant_filters=filters.variant_filters,
+        fields=fields.resolve(Product),
     )
     if result is None:
         raise HTTPException(
@@ -141,14 +144,17 @@ async def create_product(
     description="Retrieve a specific product by its unique identifier.",
     operation_id="get_product",
     dependencies=[Security(ro_access)],
+    response_model=sparse_response(Product, PartialProduct),
+    response_model_exclude_unset=True,
 )
 async def get_product(
     store_id: StoreRef,
     product_id: ProductRef,
     service: Annotated[ProductsService, Depends(ProductsService)],
-) -> Product:
+    fields: Annotated[FieldsParams, Depends()],
+) -> Product | PartialProduct:
     """Get a specific product by ID."""
-    product = await service.get_product(store_id, product_id)
+    product = await service.get_product(store_id, product_id, fields=fields.resolve(Product))
     if not product:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

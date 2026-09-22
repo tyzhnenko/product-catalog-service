@@ -8,6 +8,7 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
 from ...models.paginated_response_location import PaginatedResponseLocation
+from ...models.paginated_response_partial_location import PaginatedResponsePartialLocation
 from ...types import UNSET, Response, Unset
 
 
@@ -17,6 +18,7 @@ def _get_kwargs(
     after: None | str | Unset = UNSET,
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
+    fields: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -37,6 +39,13 @@ def _get_kwargs(
 
     params["limit"] = limit
 
+    json_fields: None | str | Unset
+    if isinstance(fields, Unset):
+        json_fields = UNSET
+    else:
+        json_fields = fields
+    params["fields"] = json_fields
+
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
@@ -52,9 +61,25 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | PaginatedResponseLocation | None:
+) -> HTTPValidationError | PaginatedResponseLocation | PaginatedResponsePartialLocation | None:
     if response.status_code == 200:
-        response_200 = PaginatedResponseLocation.from_dict(response.json())
+
+        def _parse_response_200(data: object) -> PaginatedResponseLocation | PaginatedResponsePartialLocation:
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                response_200_type_0 = PaginatedResponseLocation.from_dict(data)
+
+                return response_200_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            if not isinstance(data, dict):
+                raise TypeError()
+            response_200_type_1 = PaginatedResponsePartialLocation.from_dict(data)
+
+            return response_200_type_1
+
+        response_200 = _parse_response_200(response.json())
 
         return response_200
 
@@ -71,7 +96,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | PaginatedResponseLocation]:
+) -> Response[HTTPValidationError | PaginatedResponseLocation | PaginatedResponsePartialLocation]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -87,7 +112,8 @@ def sync_detailed(
     after: None | str | Unset = UNSET,
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
-) -> Response[HTTPValidationError | PaginatedResponseLocation]:
+    fields: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | PaginatedResponseLocation | PaginatedResponsePartialLocation]:
     """List Locations
 
      Retrieve a list of all locations for a specific store.
@@ -97,13 +123,19 @@ def sync_detailed(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
+        fields (None | str | Unset): Comma-separated response fields. Bare names include only
+            those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
+            both is not allowed. Dotted paths address nested fields (`seo.slug`,
+            `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
+            `location_price` and `region_price` are not validated, since they aren't part of the fixed
+            schema. `id` is always returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | PaginatedResponseLocation]
+        Response[HTTPValidationError | PaginatedResponseLocation | PaginatedResponsePartialLocation]
     """
 
     kwargs = _get_kwargs(
@@ -111,6 +143,7 @@ def sync_detailed(
         after=after,
         before=before,
         limit=limit,
+        fields=fields,
     )
 
     response = client.get_httpx_client().request(
@@ -127,7 +160,8 @@ def sync(
     after: None | str | Unset = UNSET,
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
-) -> HTTPValidationError | PaginatedResponseLocation | None:
+    fields: None | str | Unset = UNSET,
+) -> HTTPValidationError | PaginatedResponseLocation | PaginatedResponsePartialLocation | None:
     """List Locations
 
      Retrieve a list of all locations for a specific store.
@@ -137,13 +171,19 @@ def sync(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
+        fields (None | str | Unset): Comma-separated response fields. Bare names include only
+            those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
+            both is not allowed. Dotted paths address nested fields (`seo.slug`,
+            `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
+            `location_price` and `region_price` are not validated, since they aren't part of the fixed
+            schema. `id` is always returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | PaginatedResponseLocation
+        HTTPValidationError | PaginatedResponseLocation | PaginatedResponsePartialLocation
     """
 
     return sync_detailed(
@@ -152,6 +192,7 @@ def sync(
         after=after,
         before=before,
         limit=limit,
+        fields=fields,
     ).parsed
 
 
@@ -162,7 +203,8 @@ async def asyncio_detailed(
     after: None | str | Unset = UNSET,
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
-) -> Response[HTTPValidationError | PaginatedResponseLocation]:
+    fields: None | str | Unset = UNSET,
+) -> Response[HTTPValidationError | PaginatedResponseLocation | PaginatedResponsePartialLocation]:
     """List Locations
 
      Retrieve a list of all locations for a specific store.
@@ -172,13 +214,19 @@ async def asyncio_detailed(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
+        fields (None | str | Unset): Comma-separated response fields. Bare names include only
+            those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
+            both is not allowed. Dotted paths address nested fields (`seo.slug`,
+            `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
+            `location_price` and `region_price` are not validated, since they aren't part of the fixed
+            schema. `id` is always returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | PaginatedResponseLocation]
+        Response[HTTPValidationError | PaginatedResponseLocation | PaginatedResponsePartialLocation]
     """
 
     kwargs = _get_kwargs(
@@ -186,6 +234,7 @@ async def asyncio_detailed(
         after=after,
         before=before,
         limit=limit,
+        fields=fields,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -200,7 +249,8 @@ async def asyncio(
     after: None | str | Unset = UNSET,
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
-) -> HTTPValidationError | PaginatedResponseLocation | None:
+    fields: None | str | Unset = UNSET,
+) -> HTTPValidationError | PaginatedResponseLocation | PaginatedResponsePartialLocation | None:
     """List Locations
 
      Retrieve a list of all locations for a specific store.
@@ -210,13 +260,19 @@ async def asyncio(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
+        fields (None | str | Unset): Comma-separated response fields. Bare names include only
+            those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
+            both is not allowed. Dotted paths address nested fields (`seo.slug`,
+            `-attributes.roast_level`); keys inside store-defined maps such as `attributes`,
+            `location_price` and `region_price` are not validated, since they aren't part of the fixed
+            schema. `id` is always returned.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | PaginatedResponseLocation
+        HTTPValidationError | PaginatedResponseLocation | PaginatedResponsePartialLocation
     """
 
     return (
@@ -226,5 +282,6 @@ async def asyncio(
             after=after,
             before=before,
             limit=limit,
+            fields=fields,
         )
     ).parsed

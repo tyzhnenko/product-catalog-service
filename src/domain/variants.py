@@ -1,10 +1,12 @@
-from typing import cast
+from typing import cast, overload
 
 # from uuid import uuid7
 import pendulum
 from pymongo.errors import DuplicateKeyError
 
+from src.core.fields import FieldSelection, projection_model, to_partial
 from src.core.logging import logger
+from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
 from src.core.utils import paginate, parse_ref, raise_for_duplicate_key
 from src.domain.types.locations import LocationID
@@ -13,6 +15,7 @@ from src.domain.types.products import ProductID
 from src.domain.types.stores import StoreID
 from src.domain.types.variants import (
     NewProductVariant,
+    PartialProductVariant,
     ProductVariant,
     UpdateProductVariant,
     VariantID,
@@ -174,15 +177,34 @@ class VariantsService:
 
         return ProductVariant.model_validate(variant)
 
+    @overload
     async def list_variants(
         self,
         store_id: str,
         product_id: str,
-        after: str | None,
-        before: str | None,
-        limit: int,
+        pagination: PaginationParams,
         filters: dict | None = None,
-    ) -> PaginatedResponse[ProductVariant] | None:
+        fields: None = None,
+    ) -> PaginatedResponse[ProductVariant] | None: ...
+
+    @overload
+    async def list_variants(
+        self,
+        store_id: str,
+        product_id: str,
+        pagination: PaginationParams,
+        filters: dict | None = None,
+        fields: FieldSelection = ...,
+    ) -> PaginatedResponse[PartialProductVariant] | None: ...
+
+    async def list_variants(
+        self,
+        store_id: str,
+        product_id: str,
+        pagination: PaginationParams,
+        filters: dict | None = None,
+        fields: FieldSelection | None = None,
+    ) -> PaginatedResponse[ProductVariant] | PaginatedResponse[PartialProductVariant] | None:
         product = await self._resolve_product(store_id, product_id)
         if not product or product.id is None:
             return None
@@ -193,24 +215,55 @@ class VariantsService:
             "deleted_at": None,
             **(filters or {}),
         }
+        if fields:
+            return await paginate(
+                VariantModel.find(query_filter).project(
+                    projection_model(ProductVariant, fields.fetch_names(ProductVariant))
+                ),
+                pagination.after,
+                pagination.before,
+                pagination.limit,
+                transform=lambda doc: to_partial(PartialProductVariant, doc, fields),
+            )
+
         return await paginate(
             VariantModel.find(query_filter),
-            after,
-            before,
-            limit,
+            pagination.after,
+            pagination.before,
+            pagination.limit,
             transform=ProductVariant.model_validate,
         )
 
-    async def get_variant(self, store_id: str, product_id: str, variant_id: str) -> ProductVariant | None:
+    @overload
+    async def get_variant(
+        self, store_id: str, product_id: str, variant_id: str, fields: None = None
+    ) -> ProductVariant | None: ...
+
+    @overload
+    async def get_variant(
+        self, store_id: str, product_id: str, variant_id: str, fields: FieldSelection = ...
+    ) -> PartialProductVariant | None: ...
+
+    async def get_variant(
+        self, store_id: str, product_id: str, variant_id: str, fields: FieldSelection | None = None
+    ) -> ProductVariant | PartialProductVariant | None:
         product = await self._resolve_product(store_id, product_id)
         if not product or product.id is None:
             return None
 
-        variant = await VariantModel.find(
+        query = VariantModel.find(
             {**parse_ref(variant_id), "product_id": product.id, "store_id": product.store_id, "deleted_at": None}
-        ).first_or_none()
-        if variant:
-            return ProductVariant.model_validate(variant)
+        )
+        if fields:
+            variant = await query.project(
+                projection_model(ProductVariant, fields.fetch_names(ProductVariant))
+            ).first_or_none()
+            if variant:
+                return to_partial(PartialProductVariant, variant, fields)
+        else:
+            variant = await query.first_or_none()
+            if variant:
+                return ProductVariant.model_validate(variant)
         logger.warning(f"Variant not found or access denied: variant_id={variant_id}, product_id={product_id}")
         return None
 

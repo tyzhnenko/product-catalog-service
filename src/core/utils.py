@@ -143,7 +143,14 @@ async def paginate(
     if docs and docs[-1].id is not None:
         end_cursor = encode_cursor(docs[-1].id)
 
-    return PaginatedResponse(
+    # Parametrize on the items' actual runtime type (all items share one, since `transform` is applied
+    # uniformly) rather than returning a bare, unparametrized PaginatedResponse. Handlers whose response_model
+    # is a union of PaginatedResponse[X] | PaginatedResponse[PartialX] rely on this: an unparametrized instance
+    # isn't an exact match for either union member, so FastAPI falls back to structurally coercing `items` into
+    # whichever member validates first — which can silently be the wrong one whenever the fields a partial
+    # response omitted happen to be optional on the full model too, defeating `fields` for that response.
+    item_type: type[Any] = type(items[0]) if items else object
+    return PaginatedResponse[item_type](  # type: ignore[valid-type]
         items=items,
         start_cursor=start_cursor,
         end_cursor=end_cursor,
