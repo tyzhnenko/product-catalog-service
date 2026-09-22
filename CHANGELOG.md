@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.9.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.8.0...v0.9.0) (2026-09-22)
+
+
+### Features
+
+* add fields param to narrow list and get responses ([#67](https://github.com/tyzhnenko/product-catalog-service/issues/67)) ([3509df5](https://github.com/tyzhnenko/product-catalog-service/commit/3509df5f94b805bec8a4b40c937692d0cf41f90f))
+* embed product variants via include=variants param ([#68](https://github.com/tyzhnenko/product-catalog-service/issues/68)) ([a945034](https://github.com/tyzhnenko/product-catalog-service/commit/a945034c5efb65806402b6ef90cc68904b28993d))
+
+
+### Refactors
+
+* extract pagination and filter params into list handler dependencies ([#65](https://github.com/tyzhnenko/product-catalog-service/issues/65)) ([44c4439](https://github.com/tyzhnenko/product-catalog-service/commit/44c443983921ccf0988f55eea6a2aa47bdb471c5))
+
 ## [0.8.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.7.4...v0.8.0) (2026-09-20)
 
 
