@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1](https://github.com/tyzhnenko/product-catalog-service/compare/v0.9.0...v0.9.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* make generated client parse include=variants responses as ProductWithVariants ([#69](https://github.com/tyzhnenko/product-catalog-service/issues/69)) ([125f868](https://github.com/tyzhnenko/product-catalog-service/commit/125f8684aa01cda5a07b70d6e8d08fa84860970e))
+
 ## [0.9.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.8.0...v0.9.0) (2026-09-22)
 
 
