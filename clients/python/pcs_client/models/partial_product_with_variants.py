@@ -26,6 +26,7 @@ class PartialProductWithVariants:
 
         Attributes:
             id (str):  Example: 5eb7cf5a86d9755df3a6c593.
+            variants (list[ProductVariant]):
             name (None | str | Unset):
             description (None | str | Unset):
             brand (None | str | Unset):
@@ -36,10 +37,10 @@ class PartialProductWithVariants:
             attributes (AttributesMap | None | Unset):
             updated_at (datetime.datetime | None | Unset):
             created_at (datetime.datetime | None | Unset):
-            variants (list[ProductVariant] | None | Unset):
     """
 
     id: str
+    variants: list[ProductVariant]
     name: None | str | Unset = UNSET
     description: None | str | Unset = UNSET
     brand: None | str | Unset = UNSET
@@ -50,7 +51,6 @@ class PartialProductWithVariants:
     attributes: AttributesMap | None | Unset = UNSET
     updated_at: datetime.datetime | None | Unset = UNSET
     created_at: datetime.datetime | None | Unset = UNSET
-    variants: list[ProductVariant] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -58,6 +58,11 @@ class PartialProductWithVariants:
         from ..models.seo import SEO
 
         id = self.id
+
+        variants = []
+        for variants_item_data in self.variants:
+            variants_item = variants_item_data.to_dict()
+            variants.append(variants_item)
 
         name: None | str | Unset
         if isinstance(self.name, Unset):
@@ -135,23 +140,12 @@ class PartialProductWithVariants:
         else:
             created_at = self.created_at
 
-        variants: list[dict[str, Any]] | None | Unset
-        if isinstance(self.variants, Unset):
-            variants = UNSET
-        elif isinstance(self.variants, list):
-            variants = []
-            for variants_type_0_item_data in self.variants:
-                variants_type_0_item = variants_type_0_item_data.to_dict()
-                variants.append(variants_type_0_item)
-
-        else:
-            variants = self.variants
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "id": id,
+                "variants": variants,
             }
         )
         if name is not UNSET:
@@ -174,8 +168,6 @@ class PartialProductWithVariants:
             field_dict["updated_at"] = updated_at
         if created_at is not UNSET:
             field_dict["created_at"] = created_at
-        if variants is not UNSET:
-            field_dict["variants"] = variants
 
         return field_dict
 
@@ -187,6 +179,13 @@ class PartialProductWithVariants:
 
         d = dict(src_dict)
         id = d.pop("id")
+
+        variants = []
+        _variants = d.pop("variants")
+        for variants_item_data in _variants:
+            variants_item = ProductVariant.from_dict(variants_item_data)
+
+            variants.append(variants_item)
 
         def _parse_name(data: object) -> None | str | Unset:
             if data is None:
@@ -334,30 +333,9 @@ class PartialProductWithVariants:
 
         created_at = _parse_created_at(d.pop("created_at", UNSET))
 
-        def _parse_variants(data: object) -> list[ProductVariant] | None | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            try:
-                if not isinstance(data, list):
-                    raise TypeError()
-                variants_type_0 = []
-                _variants_type_0 = data
-                for variants_type_0_item_data in _variants_type_0:
-                    variants_type_0_item = ProductVariant.from_dict(variants_type_0_item_data)
-
-                    variants_type_0.append(variants_type_0_item)
-
-                return variants_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(list[ProductVariant] | None | Unset, data)
-
-        variants = _parse_variants(d.pop("variants", UNSET))
-
         partial_product_with_variants = cls(
             id=id,
+            variants=variants,
             name=name,
             description=description,
             brand=brand,
@@ -368,7 +346,6 @@ class PartialProductWithVariants:
             attributes=attributes,
             updated_at=updated_at,
             created_at=created_at,
-            variants=variants,
         )
 
         partial_product_with_variants.additional_properties = d

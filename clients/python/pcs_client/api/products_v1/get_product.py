@@ -63,7 +63,7 @@ def _parse_response(
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                response_200_type_0 = Product.from_dict(data)
+                response_200_type_0 = ProductWithVariants.from_dict(data)
 
                 return response_200_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
@@ -71,7 +71,7 @@ def _parse_response(
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                response_200_type_1 = PartialProduct.from_dict(data)
+                response_200_type_1 = PartialProductWithVariants.from_dict(data)
 
                 return response_200_type_1
             except (TypeError, ValueError, AttributeError, KeyError):
@@ -79,14 +79,14 @@ def _parse_response(
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                response_200_type_2 = ProductWithVariants.from_dict(data)
+                response_200_type_2 = Product.from_dict(data)
 
                 return response_200_type_2
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             if not isinstance(data, dict):
                 raise TypeError()
-            response_200_type_3 = PartialProductWithVariants.from_dict(data)
+            response_200_type_3 = PartialProduct.from_dict(data)
 
             return response_200_type_3
 

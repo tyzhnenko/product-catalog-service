@@ -122,7 +122,7 @@ def _parse_response(
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                response_200_type_0 = PaginatedResponseProduct.from_dict(data)
+                response_200_type_0 = PaginatedResponseProductWithVariants.from_dict(data)
 
                 return response_200_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
@@ -130,7 +130,7 @@ def _parse_response(
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                response_200_type_1 = PaginatedResponsePartialProduct.from_dict(data)
+                response_200_type_1 = PaginatedResponsePartialProductWithVariants.from_dict(data)
 
                 return response_200_type_1
             except (TypeError, ValueError, AttributeError, KeyError):
@@ -138,14 +138,14 @@ def _parse_response(
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                response_200_type_2 = PaginatedResponseProductWithVariants.from_dict(data)
+                response_200_type_2 = PaginatedResponseProduct.from_dict(data)
 
                 return response_200_type_2
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             if not isinstance(data, dict):
                 raise TypeError()
-            response_200_type_3 = PaginatedResponsePartialProductWithVariants.from_dict(data)
+            response_200_type_3 = PaginatedResponsePartialProduct.from_dict(data)
 
             return response_200_type_3
 

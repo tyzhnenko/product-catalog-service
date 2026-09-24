@@ -28,6 +28,7 @@ class ProductWithVariants:
         name (str): Name of the product
         updated_at (datetime.datetime):
         created_at (datetime.datetime):
+        variants (list[ProductVariant]):
         description (None | str | Unset):
         brand (None | str | Unset):
         tags (list[str] | Unset): Tags associated with the product
@@ -35,13 +36,13 @@ class ProductWithVariants:
         status (ProductStatusEnum | Unset):
         categories (list[str] | Unset): List of category identifiers for the product
         attributes (AttributesMap | Unset): Map of attribute name to attribute
-        variants (list[ProductVariant] | Unset):
     """
 
     id: str
     name: str
     updated_at: datetime.datetime
     created_at: datetime.datetime
+    variants: list[ProductVariant]
     description: None | str | Unset = UNSET
     brand: None | str | Unset = UNSET
     tags: list[str] | Unset = UNSET
@@ -49,7 +50,6 @@ class ProductWithVariants:
     status: ProductStatusEnum | Unset = UNSET
     categories: list[str] | Unset = UNSET
     attributes: AttributesMap | Unset = UNSET
-    variants: list[ProductVariant] | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -62,6 +62,11 @@ class ProductWithVariants:
         updated_at = self.updated_at.isoformat()
 
         created_at = self.created_at.isoformat()
+
+        variants = []
+        for variants_item_data in self.variants:
+            variants_item = variants_item_data.to_dict()
+            variants.append(variants_item)
 
         description: None | str | Unset
         if isinstance(self.description, Unset):
@@ -99,13 +104,6 @@ class ProductWithVariants:
         if not isinstance(self.attributes, Unset):
             attributes = self.attributes.to_dict()
 
-        variants: list[dict[str, Any]] | Unset = UNSET
-        if not isinstance(self.variants, Unset):
-            variants = []
-            for variants_item_data in self.variants:
-                variants_item = variants_item_data.to_dict()
-                variants.append(variants_item)
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -114,6 +112,7 @@ class ProductWithVariants:
                 "name": name,
                 "updated_at": updated_at,
                 "created_at": created_at,
+                "variants": variants,
             }
         )
         if description is not UNSET:
@@ -130,8 +129,6 @@ class ProductWithVariants:
             field_dict["categories"] = categories
         if attributes is not UNSET:
             field_dict["attributes"] = attributes
-        if variants is not UNSET:
-            field_dict["variants"] = variants
 
         return field_dict
 
@@ -149,6 +146,13 @@ class ProductWithVariants:
         updated_at = datetime.datetime.fromisoformat(d.pop("updated_at"))
 
         created_at = datetime.datetime.fromisoformat(d.pop("created_at"))
+
+        variants = []
+        _variants = d.pop("variants")
+        for variants_item_data in _variants:
+            variants_item = ProductVariant.from_dict(variants_item_data)
+
+            variants.append(variants_item)
 
         def _parse_description(data: object) -> None | str | Unset:
             if data is None:
@@ -203,20 +207,12 @@ class ProductWithVariants:
         else:
             attributes = AttributesMap.from_dict(_attributes)
 
-        _variants = d.pop("variants", UNSET)
-        variants: list[ProductVariant] | Unset = UNSET
-        if _variants is not UNSET:
-            variants = []
-            for variants_item_data in _variants:
-                variants_item = ProductVariant.from_dict(variants_item_data)
-
-                variants.append(variants_item)
-
         product_with_variants = cls(
             id=id,
             name=name,
             updated_at=updated_at,
             created_at=created_at,
+            variants=variants,
             description=description,
             brand=brand,
             tags=tags,
@@ -224,7 +220,6 @@ class ProductWithVariants:
             status=status,
             categories=categories,
             attributes=attributes,
-            variants=variants,
         )
 
         product_with_variants.additional_properties = d

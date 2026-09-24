@@ -115,7 +115,7 @@ class IncludeParams:
     operation_id="list_products",
     dependencies=[Security(ro_access)],
     response_model=sparse_response(
-        Product, PartialProduct, ProductWithVariants, PartialProductWithVariants, paginated=True
+        ProductWithVariants, PartialProductWithVariants, Product, PartialProduct, paginated=True
     ),
     response_model_exclude_unset=True,
 )
@@ -127,10 +127,10 @@ async def list_products(
     fields: Annotated[FieldsParams, Depends()],
     include: Annotated[IncludeParams, Depends()],
 ) -> (
-    PaginatedResponse[Product]
-    | PaginatedResponse[PartialProduct]
-    | PaginatedResponse[ProductWithVariants]
+    PaginatedResponse[ProductWithVariants]
     | PaginatedResponse[PartialProductWithVariants]
+    | PaginatedResponse[Product]
+    | PaginatedResponse[PartialProduct]
 ):
     """List all products for a specific store."""
     result = await service.list_products(
@@ -177,7 +177,7 @@ async def create_product(
     description="Retrieve a specific product by its unique identifier.",
     operation_id="get_product",
     dependencies=[Security(ro_access)],
-    response_model=sparse_response(Product, PartialProduct, ProductWithVariants, PartialProductWithVariants),
+    response_model=sparse_response(ProductWithVariants, PartialProductWithVariants, Product, PartialProduct),
     response_model_exclude_unset=True,
 )
 async def get_product(
@@ -186,7 +186,7 @@ async def get_product(
     service: Annotated[ProductsService, Depends(ProductsService)],
     fields: Annotated[FieldsParams, Depends()],
     include: Annotated[IncludeParams, Depends()],
-) -> Product | PartialProduct | ProductWithVariants | PartialProductWithVariants:
+) -> ProductWithVariants | PartialProductWithVariants | Product | PartialProduct:
     """Get a specific product by ID."""
     product = await service.get_product(
         store_id, product_id, fields=fields.resolve(Product), include_variants="variants" in include.resolve()

@@ -218,7 +218,7 @@ class ProductWithVariants(Product):
         },
     )
 
-    variants: list[ProductVariant] = []
+    variants: list[ProductVariant]
 
 
 class PartialProductWithVariants(PartialProduct):
@@ -234,7 +234,7 @@ class PartialProductWithVariants(PartialProduct):
         },
     )
 
-    variants: list[ProductVariant] | None = None
+    variants: list[ProductVariant]
 
 
 class UpdateProductVariant(BaseModel):
