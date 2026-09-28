@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.9.1...v0.10.0) (2026-09-28)
+
+
+### Features
+
+* support range operators in attrs filters and add attrs filter to locations ([#71](https://github.com/tyzhnenko/product-catalog-service/issues/71)) ([e5b6c19](https://github.com/tyzhnenko/product-catalog-service/commit/e5b6c19c8c02688fc8bc06c6462c3b3a0179bd87))
+
 ## [0.9.1](https://github.com/tyzhnenko/product-catalog-service/compare/v0.9.0...v0.9.1) (2026-09-24)
 
 
