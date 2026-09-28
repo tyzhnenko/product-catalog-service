@@ -23,7 +23,8 @@ def bundle_filters(
             default_factory=list,
             description=(
                 "Attribute filters in 'key:value' format. Repeat for multiple values. "
-                "Same key = OR, different keys = AND."
+                "Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<=' for a "
+                "numeric or ISO 8601 date range, e.g. 'weight:>=200'."
             ),
         ),
     ],

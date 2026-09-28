@@ -31,7 +31,8 @@ def product_filters(
             default_factory=list,
             description=(
                 "Product attribute filters in 'key:value' format. Repeat for multiple values. "
-                "Same key = OR, different keys = AND."
+                "Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<=' for a "
+                "numeric or ISO 8601 date range, e.g. 'weight:>=200'."
             ),
         ),
     ],
@@ -41,7 +42,8 @@ def product_filters(
             default_factory=list,
             description=(
                 "Variant attribute filters in 'key:value' format. Returns products that have at least one "
-                "variant matching all filters. Same key = OR, different keys = AND."
+                "variant matching all filters. Same key = OR, different keys = AND. Prefix the value with '>', '>=', "
+                "'<' or '<=' for a numeric or ISO 8601 date range, e.g. 'weight:>=200'."
             ),
         ),
     ],

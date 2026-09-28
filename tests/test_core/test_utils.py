@@ -2,6 +2,7 @@
 """Tests for core.utils module."""
 
 import base64
+from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
 
 import pytest
@@ -168,10 +169,60 @@ class TestBuildAttributeFilter:
                     "attributes.size.value": 42,
                 },
             ),
+            (
+                ["weight:>=200"],
+                {"attributes.weight.value": {"$gte": 200}},
+            ),
+            (
+                ["weight:>1.5", "size:<10", "stock:<=3"],
+                {
+                    "attributes.weight.value": {"$gt": 1.5},
+                    "attributes.size.value": {"$lt": 10},
+                    "attributes.stock.value": {"$lte": 3},
+                },
+            ),
+            (
+                ["weight:>=200", "weight:<500"],
+                {"attributes.weight.value": {"$gte": 200, "$lt": 500}},
+            ),
+            (
+                ["released:>=2025-01-01"],
+                {"attributes.released.value": {"$gte": datetime(2025, 1, 1, tzinfo=UTC)}},
+            ),
+            (
+                ["released:<2025-01-01T10:30:00+02:00"],
+                {
+                    "attributes.released.value": {
+                        "$lt": datetime(2025, 1, 1, 10, 30, tzinfo=timezone(timedelta(hours=2))),
+                    }
+                },
+            ),
+            (
+                ["label:>m"],
+                {"attributes.label.value": {"$gt": "m"}},
+            ),
+            (
+                ["size:42", "size:>=40"],
+                {"attributes.size.value": {"$eq": 42, "$gte": 40}},
+            ),
+            (
+                ["color:red", "color:blue", "color:>a"],
+                {"attributes.color.value": {"$in": ["red", "blue"], "$gt": "a"}},
+            ),
+            (
+                ["released:2025-01-01T10:30"],
+                {"attributes.released.value": "2025-01-01T10:30"},
+            ),
         ],
     )
     def test_builds_expected_filter(self, attrs, expected):
         assert build_attribute_filter(attrs) == expected
+
+    @pytest.mark.parametrize("attrs", [["flag:>=true"], ["weight:>="], ["weight:<"]])
+    def test_invalid_range_value_raises_400(self, attrs):
+        with pytest.raises(HTTPException) as exc_info:
+            build_attribute_filter(attrs)
+        assert exc_info.value.status_code == 400
 
 
 class TestBuildPriceSearchFilter:

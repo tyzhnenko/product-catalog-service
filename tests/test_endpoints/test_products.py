@@ -1063,6 +1063,41 @@ class TestListProductsByAttributes:
         assert len(items) == 1
         assert items[0]["attributes"]["weight_grams"]["value"] == 250
 
+    def test_filter_by_attribute_ranges(self, api_client, sample_product_data, sample_store):
+        """>, >=, <, <= work on integer, decimal and date attributes stored in Mongo."""
+        url = f"/api/v1/products/{sample_store['id']}"
+        specs = [("a", 100, "1.5", "2025-01-01"), ("b", 250, "2.5", "2025-06-15"), ("c", 400, "10.0", "2026-03-01")]
+        for slug, grams, rating, harvested in specs:
+            data = {
+                **sample_product_data,
+                "name": f"Product {slug}",
+                "seo": {**sample_product_data["seo"], "slug": f"product-{slug}"},
+                "attributes": {
+                    "weight_grams": {"type": "integer", "name": "weight_grams", "value": grams},
+                    "rating": {"type": "decimal", "name": "rating", "value": rating},
+                    "harvested": {"type": "date", "name": "harvested", "value": harvested},
+                },
+            }
+            assert api_client.post(url, json=data).status_code == 200
+
+        def names(*attrs):
+            response = api_client.get(url, params=[("attrs", attr) for attr in attrs])
+            assert response.status_code == 200
+            return sorted(item["name"] for item in response.json()["items"])
+
+        assert names("weight_grams:>=250") == ["Product b", "Product c"]
+        assert names("weight_grams:>250") == ["Product c"]
+        assert names("weight_grams:<250") == ["Product a"]
+        assert names("weight_grams:>=100", "weight_grams:<=250") == ["Product a", "Product b"]
+        assert names("rating:>2") == ["Product b", "Product c"]
+        assert names("harvested:>=2025-06-15") == ["Product b", "Product c"]
+        assert names("harvested:<2025-06-15T00:00:00Z") == ["Product a"]
+        assert names("weight_grams:>=250", "harvested:<2026-01-01") == ["Product b"]
+
+    def test_filter_invalid_range_value_returns_400(self, api_client, sample_store):
+        response = api_client.get(f"/api/v1/products/{sample_store['id']}", params={"attrs": "weight_grams:>=true"})
+        assert response.status_code == 400
+
     def test_filter_malformed_attrs_ignored(self, api_client, sample_product_data, sample_store):
         """Attrs entries without a colon are silently ignored (no filter applied)."""
         api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)

@@ -2,6 +2,7 @@ import asyncio
 import base64
 import os
 import re
+from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from itertools import accumulate
 from pathlib import Path
@@ -160,7 +161,7 @@ async def paginate(
     )
 
 
-def _coerce_attr_value(raw: str) -> bool | int | float | str:
+def _parse_attr_value(raw: str) -> bool | int | float | str:
     lower = raw.lower()
     if lower == "true":
         return True
@@ -177,24 +178,55 @@ def _coerce_attr_value(raw: str) -> bool | int | float | str:
     return raw
 
 
+_ATTR_RANGE_OPS = {">=": "$gte", "<=": "$lte", ">": "$gt", "<": "$lt"}
+
+
+def _parse_range_value(raw: str, entry: str) -> int | float | datetime | str:
+    """Parse the value of a range attribute filter: number, ISO 8601 date/datetime (UTC if naive), else string."""
+    if not raw or raw.lower() in ("true", "false"):
+        raise HTTPException(status_code=400, detail=f"Invalid attribute filter '{entry}'")
+    for number_type in (int, float):
+        try:
+            return number_type(raw)
+        except ValueError:
+            pass
+    try:
+        parsed = datetime.fromisoformat(raw)
+    except ValueError:
+        return raw
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
+
+
 def build_attribute_filter(attrs: list[str]) -> dict:
     """Build a MongoDB filter dict from a list of 'key:value' attribute filter strings.
 
     Same key with multiple values → OR via $in.
     Different keys → AND (implicit MongoDB dict merge).
+    A value prefixed with '>=', '<=', '>' or '<' (e.g. 'weight:>=200') is a range condition on a number or an
+    ISO 8601 date/datetime; range conditions on the same key merge with each other and with any equality values.
     Entries without a colon are silently ignored.
     """
     grouped: dict[str, list] = {}
+    ranges: dict[str, dict] = {}
     for entry in attrs:
         if ":" not in entry:
             continue
         key, _, raw_value = entry.partition(":")
-        grouped.setdefault(key, []).append(_coerce_attr_value(raw_value))
+        op = next((op for op in _ATTR_RANGE_OPS if raw_value.startswith(op)), None)
+        if op is None:
+            grouped.setdefault(key, []).append(_parse_attr_value(raw_value))
+        else:
+            ranges.setdefault(key, {})[_ATTR_RANGE_OPS[op]] = _parse_range_value(raw_value[len(op) :], entry)
 
     result: dict = {}
     for key, values in grouped.items():
+        result[f"attributes.{key}.value"] = values[0] if len(values) == 1 else {"$in": values}
+    for key, conditions in ranges.items():
         mongo_key = f"attributes.{key}.value"
-        result[mongo_key] = values[0] if len(values) == 1 else {"$in": values}
+        if mongo_key in result:
+            equality = result[mongo_key]
+            conditions = {**(equality if isinstance(equality, dict) else {"$eq": equality}), **conditions}
+        result[mongo_key] = conditions
     return result
 
 

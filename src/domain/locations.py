@@ -37,25 +37,34 @@ class LocationsService:
 
     @overload
     async def list_locations(
-        self, store_id: str, pagination: PaginationParams, fields: None = None
+        self,
+        store_id: str,
+        pagination: PaginationParams,
+        filters: dict | None = None,
+        fields: None = None,
     ) -> PaginatedResponse[Location] | None: ...
 
     @overload
     async def list_locations(
-        self, store_id: str, pagination: PaginationParams, fields: FieldSelection = ...
+        self,
+        store_id: str,
+        pagination: PaginationParams,
+        filters: dict | None = None,
+        fields: FieldSelection = ...,
     ) -> PaginatedResponse[PartialLocation] | None: ...
 
     async def list_locations(
         self,
         store_id: str,
         pagination: PaginationParams,
+        filters: dict | None = None,
         fields: FieldSelection | None = None,
     ) -> PaginatedResponse[Location] | PaginatedResponse[PartialLocation] | None:
         store = await StoreModel.find({**parse_ref(store_id), "deleted_at": None}).first_or_none()
         if not store:
             return None
 
-        query_filter = {"store_id": store.id, "deleted_at": None}
+        query_filter = {"store_id": store.id, "deleted_at": None, **(filters or {})}
         if fields:
             return await paginate(
                 LocationModel.find(query_filter).project(projection_model(Location, fields.fetch_names(Location))),

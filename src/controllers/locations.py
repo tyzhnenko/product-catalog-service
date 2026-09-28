@@ -1,17 +1,37 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Security, status
+from fastapi import Depends, HTTPException, Query, Security, status
 from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.core.fields import FieldsParams, sparse_response
 from src.core.pagination import PaginationParams
 from src.core.types import PaginatedResponse
+from src.core.utils import build_attribute_filter
 from src.domain.locations import LocationsService
 from src.domain.types.locations import Location, LocationRef, NewLocation, PartialLocation, UpdateLocation
 from src.domain.types.stores import StoreRef
 
 router = APIRouter()
+
+
+def location_filters(
+    attrs: Annotated[
+        list[str],
+        Query(
+            default_factory=list,
+            description=(
+                "Attribute filters in 'key:value' format. Repeat for multiple values. "
+                "Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<=' for a "
+                "numeric or ISO 8601 date range, e.g. 'seats:>=20'."
+            ),
+        ),
+    ],
+) -> dict | None:
+    return build_attribute_filter(attrs) or None
+
+
+LocationFilters = Annotated[dict | None, Depends(location_filters)]
 
 
 @router.get(
@@ -27,9 +47,10 @@ async def list_locations(
     store_id: StoreRef,
     service: Annotated[LocationsService, Depends(LocationsService)],
     pagination: Annotated[PaginationParams, Depends()],
+    filters: LocationFilters,
     fields: Annotated[FieldsParams, Depends()],
 ) -> PaginatedResponse[Location] | PaginatedResponse[PartialLocation]:
-    result = await service.list_locations(store_id, pagination, fields=fields.resolve(Location))
+    result = await service.list_locations(store_id, pagination, filters=filters, fields=fields.resolve(Location))
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
