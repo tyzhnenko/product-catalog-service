@@ -839,3 +839,46 @@ class TestListLocationsPagination:
         """Limit > max_limit returns 422."""
         response = api_client.get(f"/api/v1/locations/{sample_store['id']}", params={"limit": 999})
         assert response.status_code == 422
+
+
+class TestListLocationsByAttributes:
+    """Tests for GET /api/v1/locations/{store_id}?attrs= filtering."""
+
+    @pytest.fixture
+    def locations(self, api_client, sample_store):
+        specs = [("A", 10, "2024-01-01", "cafe"), ("B", 25, "2025-06-15", "cafe"), ("C", 40, "2026-03-01", "kiosk")]
+        for name, capacity, opened, kind in specs:
+            response = api_client.post(
+                f"/api/v1/locations/{sample_store['id']}",
+                json={
+                    "name": f"Location {name}",
+                    "attributes": {
+                        "capacity": {"type": "integer", "name": "capacity", "value": capacity},
+                        "opened": {"type": "date", "name": "opened", "value": opened},
+                        "kind": {"type": "string", "name": "kind", "value": kind},
+                    },
+                },
+            )
+            assert response.status_code == 200
+
+    def _names(self, api_client, sample_store, *attrs):
+        response = api_client.get(f"/api/v1/locations/{sample_store['id']}", params=[("attrs", a) for a in attrs])
+        assert response.status_code == 200
+        return sorted(item["name"] for item in response.json()["items"])
+
+    def test_equality(self, api_client, sample_store, locations):
+        assert self._names(api_client, sample_store, "kind:cafe") == ["Location A", "Location B"]
+
+    def test_numeric_range(self, api_client, sample_store, locations):
+        assert self._names(api_client, sample_store, "capacity:>=25") == ["Location B", "Location C"]
+        assert self._names(api_client, sample_store, "capacity:>10", "capacity:<40") == ["Location B"]
+
+    def test_date_range(self, api_client, sample_store, locations):
+        assert self._names(api_client, sample_store, "opened:>=2025-01-01") == ["Location B", "Location C"]
+
+    def test_combined_with_equality(self, api_client, sample_store, locations):
+        assert self._names(api_client, sample_store, "kind:cafe", "capacity:>15") == ["Location B"]
+
+    def test_invalid_range_value_returns_400(self, api_client, sample_store):
+        response = api_client.get(f"/api/v1/locations/{sample_store['id']}", params={"attrs": "capacity:>=true"})
+        assert response.status_code == 400
