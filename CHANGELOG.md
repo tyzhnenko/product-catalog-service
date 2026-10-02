@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.11.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.10.0...v0.11.0) (2026-10-02)
+
+
+### Features
+
+* add sort param with keyset pagination to list endpoints ([#73](https://github.com/tyzhnenko/product-catalog-service/issues/73)) ([418d063](https://github.com/tyzhnenko/product-catalog-service/commit/418d0631de45b29c2a3d901535e2d87d83e3b02a))
+
+
+### Chores
+
+* regenerate python client for sort param and bump to 0.11.0 ([#75](https://github.com/tyzhnenko/product-catalog-service/issues/75)) ([a5430ef](https://github.com/tyzhnenko/product-catalog-service/commit/a5430ef90cfcd0a246e78432b2319f18419172ed))
+
 ## [0.10.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.9.1...v0.10.0) (2026-09-28)
 
 
