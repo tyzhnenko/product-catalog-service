@@ -158,11 +158,14 @@ class ProductsService:
         result: PaginatedResponse[Product] | PaginatedResponse[PartialProduct]
         if fields:
             result = await paginate(
-                ProductModel.find(query_filter).project(projection_model(Product, fields.fetch_names(Product))),
+                ProductModel.find(query_filter).project(
+                    projection_model(Product, fields.fetch_names(Product, pagination.sort.fields))
+                ),
                 pagination.after,
                 pagination.before,
                 pagination.limit,
                 transform=lambda doc: to_partial(PartialProduct, doc, fields),
+                sort=pagination.sort,
             )
         else:
             result = await paginate(
@@ -171,6 +174,7 @@ class ProductsService:
                 pagination.before,
                 pagination.limit,
                 transform=Product.model_validate,
+                sort=pagination.sort,
             )
 
         if not include_variants or not result.items:

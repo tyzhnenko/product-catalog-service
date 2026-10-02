@@ -192,11 +192,14 @@ class BundlesService:
         query_filter = {"store_id": store.id, "deleted_at": None, **(filters or {})}
         if fields:
             return await paginate(
-                BundleModel.find(query_filter).project(projection_model(Bundle, fields.fetch_names(Bundle))),
+                BundleModel.find(query_filter).project(
+                    projection_model(Bundle, fields.fetch_names(Bundle, pagination.sort.fields))
+                ),
                 pagination.after,
                 pagination.before,
                 pagination.limit,
                 transform=lambda doc: to_partial(PartialBundle, doc, fields),
+                sort=pagination.sort,
             )
 
         return await paginate(
@@ -205,6 +208,7 @@ class BundlesService:
             pagination.before,
             pagination.limit,
             transform=Bundle.model_validate,
+            sort=pagination.sort,
         )
 
     @overload

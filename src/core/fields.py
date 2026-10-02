@@ -1,4 +1,5 @@
 import operator
+from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import reduce
 from typing import Annotated, Any, Literal, TypeAliasType, TypeVar, cast, get_args, get_origin
@@ -105,14 +106,26 @@ class FieldSelection:
     mode: Literal["include", "exclude"]
     paths: frozenset[FieldPath]
 
-    def fetch_names(self, model: type[BaseModel]) -> frozenset[str]:
-        """Top-level field names to fetch from Mongo; nested selection is applied after fetching."""
+    def fetch_names(self, model: type[BaseModel], extra: Iterable[str] = ()) -> frozenset[str]:
+        """Top-level field names to fetch from Mongo; nested selection is applied after fetching.
+
+        `extra` names (e.g. sort fields, needed to build cursors) are fetched even when not selected;
+        `to_partial` drops them from the response again.
+        """
         if self.mode == "include":
             names = {path[0] for path in self.paths}
         else:
             whole_excludes = {path[0] for path in self.paths if len(path) == 1}
             names = set(model.model_fields) - whole_excludes
-        return frozenset(names | {ID_FIELD})
+        return frozenset(names | {ID_FIELD, *extra})
+
+    def selects(self, name: str) -> bool:
+        """Whether the top-level field `name` is part of the response."""
+        if name == ID_FIELD:
+            return True
+        if self.mode == "include":
+            return any(path[0] == name for path in self.paths)
+        return not any(path == (name,) for path in self.paths)
 
     def nested_paths(self, name: str) -> list[FieldPath]:
         """Sub-paths to trim within a fetched top-level field; empty if it should be kept/dropped whole."""
@@ -225,6 +238,7 @@ def to_partial(partial: type[T], doc: BaseModel, selection: FieldSelection | Non
     """
     data = doc.model_dump(exclude_unset=True)
     if selection is not None:
+        data = {name: value for name, value in data.items() if selection.selects(name)}
         for name, value in list(data.items()):
             nested = selection.nested_paths(name)
             if nested:

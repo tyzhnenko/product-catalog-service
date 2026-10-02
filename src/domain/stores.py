@@ -49,11 +49,14 @@ class StoresService:
         base_filter: dict = {"deleted_at": None}
         if fields:
             return await paginate(
-                StoreModel.find(base_filter).project(projection_model(Store, fields.fetch_names(Store))),
+                StoreModel.find(base_filter).project(
+                    projection_model(Store, fields.fetch_names(Store, pagination.sort.fields))
+                ),
                 pagination.after,
                 pagination.before,
                 pagination.limit,
                 transform=lambda doc: to_partial(PartialStore, doc, fields),
+                sort=pagination.sort,
             )
 
         return await paginate(
@@ -62,6 +65,7 @@ class StoresService:
             pagination.before,
             pagination.limit,
             transform=Store.model_validate,
+            sort=pagination.sort,
         )
 
     @overload

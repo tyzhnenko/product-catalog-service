@@ -5,7 +5,7 @@ from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.core.fields import FieldsParams, sparse_response
-from src.core.pagination import PaginationParams
+from src.core.pagination import PaginationParams, pagination_with_sort
 from src.core.types import PaginatedResponse
 from src.core.utils import build_attribute_filter
 from src.domain.locations import LocationsService
@@ -13,6 +13,9 @@ from src.domain.types.locations import Location, LocationRef, NewLocation, Parti
 from src.domain.types.stores import StoreRef
 
 router = APIRouter()
+
+SORT_FIELDS = ("name", "created_at", "updated_at")
+SORT_KEYS = ("attr",)
 
 
 def location_filters(
@@ -46,7 +49,7 @@ LocationFilters = Annotated[dict | None, Depends(location_filters)]
 async def list_locations(
     store_id: StoreRef,
     service: Annotated[LocationsService, Depends(LocationsService)],
-    pagination: Annotated[PaginationParams, Depends()],
+    pagination: Annotated[PaginationParams, Depends(pagination_with_sort(SORT_FIELDS, SORT_KEYS))],
     filters: LocationFilters,
     fields: Annotated[FieldsParams, Depends()],
 ) -> PaginatedResponse[Location] | PaginatedResponse[PartialLocation]:

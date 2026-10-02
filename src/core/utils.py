@@ -14,6 +14,7 @@ from bson.errors import InvalidId
 from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
+from src.core.sorting import DEFAULT_SORT, SortSpec, decode_sort_cursor, encode_sort_cursor, keyset_filter
 from src.core.types import PaginatedResponse
 
 DocT = TypeVar("DocT", bound=Document)
@@ -88,6 +89,7 @@ async def paginate(
     before: str | None,
     limit: int,
     transform: Callable[[DocT], T],
+    sort: SortSpec = ...,
 ) -> PaginatedResponse[T]: ...
 
 
@@ -98,6 +100,7 @@ async def paginate(
     before: str | None,
     limit: int,
     transform: None = None,
+    sort: SortSpec = ...,
 ) -> PaginatedResponse[DocT]: ...
 
 
@@ -107,20 +110,35 @@ async def paginate(
     before: str | None,
     limit: int,
     transform: Callable[[DocT], T] | None = None,
+    sort: SortSpec = DEFAULT_SORT,
 ) -> PaginatedResponse[Any]:
+    """Keyset-paginate `query` in `sort` order (default: `_id` ascending).
+
+    Docs must expose every sort field as an attribute, since cursors are built from the first/last doc.
+    """
     count_query = query.document_model.find(query.get_filter_query())
 
     if after is not None:
-        cursor_id = decode_cursor(after)
-        docs_coro = query.find({"_id": {"$gt": cursor_id}}).sort("+_id").limit(limit + 1).to_list()
+        values, cursor_id = decode_sort_cursor(after, sort)
+        docs_coro = (
+            query.find(keyset_filter(sort, values, cursor_id, forward=True))
+            .sort(*sort.sort_args())
+            .limit(limit + 1)
+            .to_list()
+        )
         total, docs = await asyncio.gather(count_query.count(), docs_coro)
         has_next = len(docs) > limit
         has_prev = True
         if has_next:
             docs = docs[:limit]
     elif before is not None:
-        cursor_id = decode_cursor(before)
-        docs_coro = query.find({"_id": {"$lt": cursor_id}}).sort("-_id").limit(limit + 1).to_list()
+        values, cursor_id = decode_sort_cursor(before, sort)
+        docs_coro = (
+            query.find(keyset_filter(sort, values, cursor_id, forward=False))
+            .sort(*sort.sort_args(reverse=True))
+            .limit(limit + 1)
+            .to_list()
+        )
         total, docs = await asyncio.gather(count_query.count(), docs_coro)
         has_prev = len(docs) > limit
         has_next = True
@@ -128,7 +146,7 @@ async def paginate(
             docs = docs[:limit]
         docs.reverse()
     else:
-        docs_coro = query.sort("+_id").limit(limit + 1).to_list()
+        docs_coro = query.sort(*sort.sort_args()).limit(limit + 1).to_list()
         total, docs = await asyncio.gather(count_query.count(), docs_coro)
         has_next = len(docs) > limit
         has_prev = False
@@ -140,9 +158,9 @@ async def paginate(
     start_cursor = None
     end_cursor = None
     if docs and docs[0].id is not None:
-        start_cursor = encode_cursor(docs[0].id)
+        start_cursor = encode_sort_cursor(sort, docs[0])
     if docs and docs[-1].id is not None:
-        end_cursor = encode_cursor(docs[-1].id)
+        end_cursor = encode_sort_cursor(sort, docs[-1])
 
     # Parametrize on the items' actual runtime type (all items share one, since `transform` is applied
     # uniformly) rather than returning a bare, unparametrized PaginatedResponse. Handlers whose response_model

@@ -6,7 +6,7 @@ from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.core.fields import FieldsParams, sparse_response
-from src.core.pagination import PaginationParams
+from src.core.pagination import PaginationParams, pagination_with_sort
 from src.core.types import PaginatedResponse
 from src.core.utils import build_attribute_filter, build_availability_filter, build_price_search_filter
 from src.domain.types.products import ProductRef
@@ -21,6 +21,9 @@ from src.domain.types.variants import (
 from src.domain.variants import DuplicateVariantOptionsError, VariantsService
 
 router = APIRouter()
+
+SORT_FIELDS = ("title", "created_at", "updated_at")
+SORT_KEYS = ("attr", "price", "region", "loc")
 
 
 def variant_filters(
@@ -86,7 +89,7 @@ async def list_variants(
     store_id: StoreRef,
     product_id: ProductRef,
     service: Annotated[VariantsService, Depends(VariantsService)],
-    pagination: Annotated[PaginationParams, Depends()],
+    pagination: Annotated[PaginationParams, Depends(pagination_with_sort(SORT_FIELDS, SORT_KEYS))],
     filters: VariantFilters,
     fields: Annotated[FieldsParams, Depends()],
 ) -> PaginatedResponse[ProductVariant] | PaginatedResponse[PartialProductVariant]:

@@ -72,11 +72,14 @@ class CategoriesService:
         query_filter = {"store_id": store.id, "deleted_at": None, **(filters or {})}
         if fields:
             return await paginate(
-                CategoryModel.find(query_filter).project(projection_model(Category, fields.fetch_names(Category))),
+                CategoryModel.find(query_filter).project(
+                    projection_model(Category, fields.fetch_names(Category, pagination.sort.fields))
+                ),
                 pagination.after,
                 pagination.before,
                 pagination.limit,
                 transform=lambda doc: to_partial(PartialCategory, doc, fields),
+                sort=pagination.sort,
             )
 
         return await paginate(
@@ -85,6 +88,7 @@ class CategoriesService:
             pagination.before,
             pagination.limit,
             transform=Category.model_validate,
+            sort=pagination.sort,
         )
 
     @overload

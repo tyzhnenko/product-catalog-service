@@ -7,7 +7,7 @@ from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.core.fields import FieldsParams, sparse_response
-from src.core.pagination import PaginationParams
+from src.core.pagination import PaginationParams, pagination_with_sort
 from src.core.types import PaginatedResponse
 from src.core.utils import build_attribute_filter, build_availability_filter, build_price_search_filter
 from src.domain.products import ProductsService
@@ -16,6 +16,9 @@ from src.domain.types.stores import StoreRef
 from src.domain.types.variants import PartialProductWithVariants, ProductWithVariants
 
 router = APIRouter()
+
+SORT_FIELDS = ("name", "status", "created_at", "updated_at")
+SORT_KEYS = ("attr",)
 
 
 @dataclass
@@ -124,7 +127,7 @@ class IncludeParams:
 async def list_products(
     store_id: StoreRef,
     service: Annotated[ProductsService, Depends(ProductsService)],
-    pagination: Annotated[PaginationParams, Depends()],
+    pagination: Annotated[PaginationParams, Depends(pagination_with_sort(SORT_FIELDS, SORT_KEYS))],
     filters: Annotated[ProductFilters, Depends(product_filters)],
     fields: Annotated[FieldsParams, Depends()],
     include: Annotated[IncludeParams, Depends()],
