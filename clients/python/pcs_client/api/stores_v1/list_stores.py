@@ -16,6 +16,7 @@ def _get_kwargs(
     after: None | str | Unset = UNSET,
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
+    sort: None | str | Unset = UNSET,
     fields: None | str | Unset = UNSET,
 ) -> dict[str, Any]:
 
@@ -36,6 +37,13 @@ def _get_kwargs(
     params["before"] = json_before
 
     params["limit"] = limit
+
+    json_sort: None | str | Unset
+    if isinstance(sort, Unset):
+        json_sort = UNSET
+    else:
+        json_sort = sort
+    params["sort"] = json_sort
 
     json_fields: None | str | Unset
     if isinstance(fields, Unset):
@@ -107,6 +115,7 @@ def sync_detailed(
     after: None | str | Unset = UNSET,
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
+    sort: None | str | Unset = UNSET,
     fields: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | PaginatedResponsePartialStore | PaginatedResponseStore]:
     """List Stores
@@ -117,6 +126,9 @@ def sync_detailed(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
+        sort (None | str | Unset): Comma-separated sort fields, up to 3; a `-` prefix sorts
+            descending (`-created_at,name`). Allowed: name, created_at, updated_at. Defaults to
+            creation order. A cursor is only valid with the `sort` it was issued for.
         fields (None | str | Unset): Comma-separated response fields. Bare names include only
             those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
             both is not allowed. Dotted paths address nested fields (`seo.slug`,
@@ -136,6 +148,7 @@ def sync_detailed(
         after=after,
         before=before,
         limit=limit,
+        sort=sort,
         fields=fields,
     )
 
@@ -152,6 +165,7 @@ def sync(
     after: None | str | Unset = UNSET,
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
+    sort: None | str | Unset = UNSET,
     fields: None | str | Unset = UNSET,
 ) -> HTTPValidationError | PaginatedResponsePartialStore | PaginatedResponseStore | None:
     """List Stores
@@ -162,6 +176,9 @@ def sync(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
+        sort (None | str | Unset): Comma-separated sort fields, up to 3; a `-` prefix sorts
+            descending (`-created_at,name`). Allowed: name, created_at, updated_at. Defaults to
+            creation order. A cursor is only valid with the `sort` it was issued for.
         fields (None | str | Unset): Comma-separated response fields. Bare names include only
             those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
             both is not allowed. Dotted paths address nested fields (`seo.slug`,
@@ -182,6 +199,7 @@ def sync(
         after=after,
         before=before,
         limit=limit,
+        sort=sort,
         fields=fields,
     ).parsed
 
@@ -192,6 +210,7 @@ async def asyncio_detailed(
     after: None | str | Unset = UNSET,
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
+    sort: None | str | Unset = UNSET,
     fields: None | str | Unset = UNSET,
 ) -> Response[HTTPValidationError | PaginatedResponsePartialStore | PaginatedResponseStore]:
     """List Stores
@@ -202,6 +221,9 @@ async def asyncio_detailed(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
+        sort (None | str | Unset): Comma-separated sort fields, up to 3; a `-` prefix sorts
+            descending (`-created_at,name`). Allowed: name, created_at, updated_at. Defaults to
+            creation order. A cursor is only valid with the `sort` it was issued for.
         fields (None | str | Unset): Comma-separated response fields. Bare names include only
             those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
             both is not allowed. Dotted paths address nested fields (`seo.slug`,
@@ -221,6 +243,7 @@ async def asyncio_detailed(
         after=after,
         before=before,
         limit=limit,
+        sort=sort,
         fields=fields,
     )
 
@@ -235,6 +258,7 @@ async def asyncio(
     after: None | str | Unset = UNSET,
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
+    sort: None | str | Unset = UNSET,
     fields: None | str | Unset = UNSET,
 ) -> HTTPValidationError | PaginatedResponsePartialStore | PaginatedResponseStore | None:
     """List Stores
@@ -245,6 +269,9 @@ async def asyncio(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
+        sort (None | str | Unset): Comma-separated sort fields, up to 3; a `-` prefix sorts
+            descending (`-created_at,name`). Allowed: name, created_at, updated_at. Defaults to
+            creation order. A cursor is only valid with the `sort` it was issued for.
         fields (None | str | Unset): Comma-separated response fields. Bare names include only
             those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
             both is not allowed. Dotted paths address nested fields (`seo.slug`,
@@ -266,6 +293,7 @@ async def asyncio(
             after=after,
             before=before,
             limit=limit,
+            sort=sort,
             fields=fields,
         )
     ).parsed
