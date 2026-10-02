@@ -19,6 +19,7 @@ def _get_kwargs(
     after: None | str | Unset = UNSET,
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
+    sort: None | str | Unset = UNSET,
     attrs: list[str] | Unset = UNSET,
     price: None | str | Unset = UNSET,
     availability: None | str | Unset = UNSET,
@@ -42,6 +43,13 @@ def _get_kwargs(
     params["before"] = json_before
 
     params["limit"] = limit
+
+    json_sort: None | str | Unset
+    if isinstance(sort, Unset):
+        json_sort = UNSET
+    else:
+        json_sort = sort
+    params["sort"] = json_sort
 
     json_attrs: list[str] | Unset = UNSET
     if not isinstance(attrs, Unset):
@@ -140,6 +148,7 @@ def sync_detailed(
     after: None | str | Unset = UNSET,
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
+    sort: None | str | Unset = UNSET,
     attrs: list[str] | Unset = UNSET,
     price: None | str | Unset = UNSET,
     availability: None | str | Unset = UNSET,
@@ -155,8 +164,16 @@ def sync_detailed(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
+        sort (None | str | Unset): Comma-separated sort fields, up to 3; a `-` prefix sorts
+            descending (`-created_at,name`). Allowed: title, created_at, updated_at, attr:<key>,
+            price:<key>, region:<code>:<key>, loc:<id>:<key>. Defaults to creation order. A cursor is
+            only valid with the `sort` it was issued for. `attr:`/`price:`/`region:`/`loc:` keys sort
+            by a store-defined value (e.g. `-price:retail`, `attr:weight`, `region:US:retail`);
+            documents without it count as lowest, so come first ascending and last descending. Such
+            sorts are not index-backed, and a key should hold a single value type.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
-            values. Same key = OR, different keys = AND.
+            values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<='
+            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
         price (None | str | Unset): Whitespace-separated price search tokens (shlex-quoted for
             values containing spaces). '<key>>=<value>' / '<key><=<value>' filter the top-level price
             map. 'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-
@@ -190,6 +207,7 @@ def sync_detailed(
         after=after,
         before=before,
         limit=limit,
+        sort=sort,
         attrs=attrs,
         price=price,
         availability=availability,
@@ -211,6 +229,7 @@ def sync(
     after: None | str | Unset = UNSET,
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
+    sort: None | str | Unset = UNSET,
     attrs: list[str] | Unset = UNSET,
     price: None | str | Unset = UNSET,
     availability: None | str | Unset = UNSET,
@@ -226,8 +245,16 @@ def sync(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
+        sort (None | str | Unset): Comma-separated sort fields, up to 3; a `-` prefix sorts
+            descending (`-created_at,name`). Allowed: title, created_at, updated_at, attr:<key>,
+            price:<key>, region:<code>:<key>, loc:<id>:<key>. Defaults to creation order. A cursor is
+            only valid with the `sort` it was issued for. `attr:`/`price:`/`region:`/`loc:` keys sort
+            by a store-defined value (e.g. `-price:retail`, `attr:weight`, `region:US:retail`);
+            documents without it count as lowest, so come first ascending and last descending. Such
+            sorts are not index-backed, and a key should hold a single value type.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
-            values. Same key = OR, different keys = AND.
+            values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<='
+            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
         price (None | str | Unset): Whitespace-separated price search tokens (shlex-quoted for
             values containing spaces). '<key>>=<value>' / '<key><=<value>' filter the top-level price
             map. 'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-
@@ -262,6 +289,7 @@ def sync(
         after=after,
         before=before,
         limit=limit,
+        sort=sort,
         attrs=attrs,
         price=price,
         availability=availability,
@@ -277,6 +305,7 @@ async def asyncio_detailed(
     after: None | str | Unset = UNSET,
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
+    sort: None | str | Unset = UNSET,
     attrs: list[str] | Unset = UNSET,
     price: None | str | Unset = UNSET,
     availability: None | str | Unset = UNSET,
@@ -292,8 +321,16 @@ async def asyncio_detailed(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
+        sort (None | str | Unset): Comma-separated sort fields, up to 3; a `-` prefix sorts
+            descending (`-created_at,name`). Allowed: title, created_at, updated_at, attr:<key>,
+            price:<key>, region:<code>:<key>, loc:<id>:<key>. Defaults to creation order. A cursor is
+            only valid with the `sort` it was issued for. `attr:`/`price:`/`region:`/`loc:` keys sort
+            by a store-defined value (e.g. `-price:retail`, `attr:weight`, `region:US:retail`);
+            documents without it count as lowest, so come first ascending and last descending. Such
+            sorts are not index-backed, and a key should hold a single value type.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
-            values. Same key = OR, different keys = AND.
+            values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<='
+            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
         price (None | str | Unset): Whitespace-separated price search tokens (shlex-quoted for
             values containing spaces). '<key>>=<value>' / '<key><=<value>' filter the top-level price
             map. 'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-
@@ -327,6 +364,7 @@ async def asyncio_detailed(
         after=after,
         before=before,
         limit=limit,
+        sort=sort,
         attrs=attrs,
         price=price,
         availability=availability,
@@ -346,6 +384,7 @@ async def asyncio(
     after: None | str | Unset = UNSET,
     before: None | str | Unset = UNSET,
     limit: int | Unset = 20,
+    sort: None | str | Unset = UNSET,
     attrs: list[str] | Unset = UNSET,
     price: None | str | Unset = UNSET,
     availability: None | str | Unset = UNSET,
@@ -361,8 +400,16 @@ async def asyncio(
         after (None | str | Unset): Cursor for forward pagination
         before (None | str | Unset): Cursor for backward pagination
         limit (int | Unset):  Default: 20.
+        sort (None | str | Unset): Comma-separated sort fields, up to 3; a `-` prefix sorts
+            descending (`-created_at,name`). Allowed: title, created_at, updated_at, attr:<key>,
+            price:<key>, region:<code>:<key>, loc:<id>:<key>. Defaults to creation order. A cursor is
+            only valid with the `sort` it was issued for. `attr:`/`price:`/`region:`/`loc:` keys sort
+            by a store-defined value (e.g. `-price:retail`, `attr:weight`, `region:US:retail`);
+            documents without it count as lowest, so come first ascending and last descending. Such
+            sorts are not index-backed, and a key should hold a single value type.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
-            values. Same key = OR, different keys = AND.
+            values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<='
+            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
         price (None | str | Unset): Whitespace-separated price search tokens (shlex-quoted for
             values containing spaces). '<key>>=<value>' / '<key><=<value>' filter the top-level price
             map. 'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-
@@ -398,6 +445,7 @@ async def asyncio(
             after=after,
             before=before,
             limit=limit,
+            sort=sort,
             attrs=attrs,
             price=price,
             availability=availability,
