@@ -31,6 +31,9 @@ class BundleModel(BaseAppDocument):
         name = "bundles"
         indexes: list[IndexModel] = [
             IndexModel(["store_id", "deleted_at"]),
+            # Serve the `sort` param (created_at / name); _id is the implicit tie-breaker
+            IndexModel(["store_id", "deleted_at", "created_at"]),
+            IndexModel(["store_id", "deleted_at", "name"]),
             IndexModel(
                 ["attributes.$**"],
                 name="attributes_wildcard_idx",

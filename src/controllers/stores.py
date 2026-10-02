@@ -5,12 +5,14 @@ from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.core.fields import FieldsParams, sparse_response
-from src.core.pagination import PaginationParams
+from src.core.pagination import PaginationParams, pagination_with_sort
 from src.core.types import PaginatedResponse
 from src.domain.stores import StoresService
 from src.domain.types.stores import NewStore, PartialStore, Store, StoreRef, UpdateStore
 
 router = APIRouter()
+
+SORT_FIELDS = ("name", "created_at", "updated_at")
 
 
 @router.get(
@@ -24,7 +26,7 @@ router = APIRouter()
 )
 async def list_stores(
     service: Annotated[StoresService, Depends(StoresService)],
-    pagination: Annotated[PaginationParams, Depends()],
+    pagination: Annotated[PaginationParams, Depends(pagination_with_sort(SORT_FIELDS))],
     fields: Annotated[FieldsParams, Depends()],
 ) -> PaginatedResponse[Store] | PaginatedResponse[PartialStore]:
     return await service.list_stores(pagination, fields=fields.resolve(Store))

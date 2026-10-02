@@ -67,11 +67,14 @@ class LocationsService:
         query_filter = {"store_id": store.id, "deleted_at": None, **(filters or {})}
         if fields:
             return await paginate(
-                LocationModel.find(query_filter).project(projection_model(Location, fields.fetch_names(Location))),
+                LocationModel.find(query_filter).project(
+                    projection_model(Location, fields.fetch_names(Location, pagination.sort.fields))
+                ),
                 pagination.after,
                 pagination.before,
                 pagination.limit,
                 transform=lambda doc: to_partial(PartialLocation, doc, fields),
+                sort=pagination.sort,
             )
 
         return await paginate(
@@ -80,6 +83,7 @@ class LocationsService:
             pagination.before,
             pagination.limit,
             transform=Location.model_validate,
+            sort=pagination.sort,
         )
 
     @overload

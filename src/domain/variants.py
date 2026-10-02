@@ -218,12 +218,13 @@ class VariantsService:
         if fields:
             return await paginate(
                 VariantModel.find(query_filter).project(
-                    projection_model(ProductVariant, fields.fetch_names(ProductVariant))
+                    projection_model(ProductVariant, fields.fetch_names(ProductVariant, pagination.sort.fields))
                 ),
                 pagination.after,
                 pagination.before,
                 pagination.limit,
                 transform=lambda doc: to_partial(PartialProductVariant, doc, fields),
+                sort=pagination.sort,
             )
 
         return await paginate(
@@ -232,6 +233,7 @@ class VariantsService:
             pagination.before,
             pagination.limit,
             transform=ProductVariant.model_validate,
+            sort=pagination.sort,
         )
 
     @overload

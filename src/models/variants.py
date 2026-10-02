@@ -39,6 +39,9 @@ class VariantModel(BaseAppDocument):
         name = "variants"
         indexes: list[IndexModel] = [
             IndexModel(["store_id", "product_id", "deleted_at"]),
+            # Serve the `sort` param (created_at / title); _id is the implicit tie-breaker
+            IndexModel(["store_id", "product_id", "deleted_at", "created_at"]),
+            IndexModel(["store_id", "product_id", "deleted_at", "title"]),
             IndexModel(
                 ["attributes.$**"],
                 name="attributes_wildcard_idx",

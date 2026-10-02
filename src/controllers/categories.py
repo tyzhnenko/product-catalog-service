@@ -5,7 +5,7 @@ from fastapi.routing import APIRouter
 
 from src.core.auth import ro_access, rw_access
 from src.core.fields import FieldsParams, sparse_response
-from src.core.pagination import PaginationParams
+from src.core.pagination import PaginationParams, pagination_with_sort
 from src.core.types import PaginatedResponse
 from src.core.utils import build_attribute_filter
 from src.domain.categories import CategoriesService
@@ -13,6 +13,9 @@ from src.domain.types.categories import Category, CategoryRef, NewCategory, Part
 from src.domain.types.stores import StoreRef
 
 router = APIRouter()
+
+SORT_FIELDS = ("name", "path", "created_at", "updated_at")
+SORT_KEYS = ("attr",)
 
 
 def category_filters(
@@ -46,7 +49,7 @@ CategoryFilters = Annotated[dict | None, Depends(category_filters)]
 async def list_categories(
     store_id: StoreRef,
     service: Annotated[CategoriesService, Depends(CategoriesService)],
-    pagination: Annotated[PaginationParams, Depends()],
+    pagination: Annotated[PaginationParams, Depends(pagination_with_sort(SORT_FIELDS, SORT_KEYS))],
     filters: CategoryFilters,
     fields: Annotated[FieldsParams, Depends()],
 ) -> PaginatedResponse[Category] | PaginatedResponse[PartialCategory]:
