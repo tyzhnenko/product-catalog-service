@@ -2848,6 +2848,37 @@ class TestListVariantsByAttributes:
         assert response.status_code == 200
         assert len(response.json()["items"]) == 2
 
+    def test_filter_by_exclusion(
+        self, api_client, sample_variant_data, another_variant_data, sample_store, sample_product
+    ):
+        """'!' excludes matching variants; several exclusions on one key are combined."""
+        url = f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}"
+        another_variant_data["attributes"] = {"origin": {"type": "string", "name": "origin", "value": "Huila"}}
+        api_client.post(url, json=sample_variant_data)
+        another = api_client.post(url, json=another_variant_data).json()
+
+        response = api_client.get(url, params={"attrs": "origin:!Yirgacheffe"})
+        assert response.status_code == 200
+        assert [item["id"] for item in response.json()["items"]] == [another["id"]]
+
+        response = api_client.get(url, params=[("attrs", "origin:!Yirgacheffe"), ("attrs", "origin:!Huila")])
+        assert response.status_code == 200
+        assert response.json()["items"] == []
+
+    def test_exclusion_on_integer_attribute(
+        self, api_client, sample_variant_data, another_variant_data, sample_store, sample_product
+    ):
+        """Excluded values are typed, so an integer attribute is excluded correctly."""
+        url = f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}"
+        another_variant_data["attributes"] = {"altitude": {"type": "integer", "name": "altitude", "value": 2000}}
+        api_client.post(url, json=sample_variant_data)
+        another = api_client.post(url, json=another_variant_data).json()
+
+        response = api_client.get(url, params={"attrs": "altitude:!1800"})
+
+        assert response.status_code == 200
+        assert [item["id"] for item in response.json()["items"]] == [another["id"]]
+
     def test_empty_attrs_returns_all(
         self, api_client, sample_variant_data, another_variant_data, sample_store, sample_product
     ):

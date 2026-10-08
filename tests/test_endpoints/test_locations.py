@@ -879,6 +879,19 @@ class TestListLocationsByAttributes:
     def test_combined_with_equality(self, api_client, sample_store, locations):
         assert self._names(api_client, sample_store, "kind:cafe", "capacity:>15") == ["Location B"]
 
+    def test_exclusion(self, api_client, sample_store, locations):
+        assert self._names(api_client, sample_store, "kind:!cafe") == ["Location C"]
+        assert self._names(api_client, sample_store, "kind:!cafe", "kind:!kiosk") == []
+        assert self._names(api_client, sample_store, "capacity:!25") == ["Location A", "Location C"]
+
+    def test_exclusion_combined_with_range(self, api_client, sample_store, locations):
+        assert self._names(api_client, sample_store, "kind:!kiosk", "capacity:>15") == ["Location B"]
+
+    def test_exclusion_matches_locations_without_attribute(self, api_client, sample_store, locations):
+        response = api_client.post(f"/api/v1/locations/{sample_store['id']}", json={"name": "Location D"})
+        assert response.status_code == 200
+        assert self._names(api_client, sample_store, "kind:!cafe") == ["Location C", "Location D"]
+
     def test_invalid_range_value_returns_400(self, api_client, sample_store):
         response = api_client.get(f"/api/v1/locations/{sample_store['id']}", params={"attrs": "capacity:>=true"})
         assert response.status_code == 400

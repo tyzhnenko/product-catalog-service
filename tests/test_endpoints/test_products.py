@@ -1202,6 +1202,29 @@ class TestListProductsByVariantFilters:
         assert response.status_code == 200
         assert response.json()["items"] == []
 
+    def test_filter_by_variants_attrs_exclusion(
+        self, api_client, sample_product_data, another_product_data, sample_store
+    ):
+        """variants_attrs with '!' returns products having a variant that does not match the excluded value."""
+        whole_bean_product = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data).json()
+        ground_product = api_client.post(f"/api/v1/products/{sample_store['id']}", json=another_product_data).json()
+        for product, grind in ((whole_bean_product, "whole_bean"), (ground_product, "ground")):
+            api_client.post(
+                f"/api/v1/variants/{sample_store['id']}/{product['id']}",
+                json={
+                    "title": grind,
+                    "options": [],
+                    "attributes": {"grind": {"type": "string", "name": "grind", "value": grind}},
+                },
+            )
+
+        response = api_client.get(
+            f"/api/v1/products/{sample_store['id']}", params={"variants_attrs": "grind:!whole_bean"}
+        )
+
+        assert response.status_code == 200
+        assert [item["id"] for item in response.json()["items"]] == [ground_product["id"]]
+
     def test_filter_by_variants_attrs(self, api_client, sample_product_data, another_product_data, sample_store):
         """variants_attrs returns products that have a matching variant attribute."""
         matching_product = api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data).json()
