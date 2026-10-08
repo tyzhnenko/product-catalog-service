@@ -173,7 +173,8 @@ def sync_detailed(
             sorts are not index-backed, and a key should hold a single value type.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
             values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<='
-            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
+            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'. Prefix the value with '!' to
+            exclude it (also matches variants lacking the attribute), e.g. 'color:!red'.
         price (None | str | Unset): Whitespace-separated price search tokens (shlex-quoted for
             values containing spaces). '<key>>=<value>' / '<key><=<value>' filter the top-level price
             map. 'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-
@@ -254,7 +255,8 @@ def sync(
             sorts are not index-backed, and a key should hold a single value type.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
             values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<='
-            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
+            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'. Prefix the value with '!' to
+            exclude it (also matches variants lacking the attribute), e.g. 'color:!red'.
         price (None | str | Unset): Whitespace-separated price search tokens (shlex-quoted for
             values containing spaces). '<key>>=<value>' / '<key><=<value>' filter the top-level price
             map. 'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-
@@ -330,7 +332,8 @@ async def asyncio_detailed(
             sorts are not index-backed, and a key should hold a single value type.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
             values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<='
-            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
+            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'. Prefix the value with '!' to
+            exclude it (also matches variants lacking the attribute), e.g. 'color:!red'.
         price (None | str | Unset): Whitespace-separated price search tokens (shlex-quoted for
             values containing spaces). '<key>>=<value>' / '<key><=<value>' filter the top-level price
             map. 'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-
@@ -409,7 +412,8 @@ async def asyncio(
             sorts are not index-backed, and a key should hold a single value type.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
             values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<='
-            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
+            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'. Prefix the value with '!' to
+            exclude it (also matches variants lacking the attribute), e.g. 'color:!red'.
         price (None | str | Unset): Whitespace-separated price search tokens (shlex-quoted for
             values containing spaces). '<key>>=<value>' / '<key><=<value>' filter the top-level price
             map. 'loc:<id>', 'loc:<id>:<key>', 'loc:<id>:<key>>=<value>' filter location_price (id-
