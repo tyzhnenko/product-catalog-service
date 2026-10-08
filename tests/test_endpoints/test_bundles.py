@@ -1537,6 +1537,36 @@ class TestListBundlesByAttributes:
         assert response.status_code == 200
         assert len(response.json()["items"]) == 2
 
+    def test_filter_by_exclusion(self, api_client, sample_bundle_data, another_bundle_data, sample_store):
+        """'!' excludes matching bundles; several exclusions on one key are combined."""
+        another_bundle_data["attributes"] = {"discount": {"type": "string", "name": "discount", "value": "10%"}}
+        api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=sample_bundle_data)
+        another = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=another_bundle_data).json()
+
+        response = api_client.get(f"/api/v1/bundles/{sample_store['id']}", params={"attrs": "discount:!20%"})
+        assert response.status_code == 200
+        assert [item["id"] for item in response.json()["items"]] == [another["id"]]
+
+        response = api_client.get(
+            f"/api/v1/bundles/{sample_store['id']}",
+            params=[("attrs", "discount:!20%"), ("attrs", "discount:!10%")],
+        )
+        assert response.status_code == 200
+        assert response.json()["items"] == []
+
+    def test_exclusion_matches_bundles_without_attribute(
+        self, api_client, sample_bundle_data, another_bundle_data, sample_store
+    ):
+        """Bundles lacking the attribute are not excluded."""
+        another_bundle_data["attributes"] = {}
+        api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=sample_bundle_data)
+        without_attr = api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=another_bundle_data).json()
+
+        response = api_client.get(f"/api/v1/bundles/{sample_store['id']}", params={"attrs": "discount:!20%"})
+
+        assert response.status_code == 200
+        assert [item["id"] for item in response.json()["items"]] == [without_attr["id"]]
+
     def test_empty_attrs_returns_all(self, api_client, sample_bundle_data, another_bundle_data, sample_store):
         """Empty attrs list applies no filter."""
         api_client.post(f"/api/v1/bundles/{sample_store['id']}", json=sample_bundle_data)

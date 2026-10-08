@@ -1213,6 +1213,35 @@ class TestListCategoriesByAttributes:
         assert response.status_code == 200
         assert len(response.json()["items"]) == 2
 
+    def test_filter_by_exclusion(self, api_client, sample_category_data, another_category_data, sample_store):
+        """'!' excludes matching categories; several exclusions on one key are combined."""
+        another_category_data["attributes"] = {"brand": {"type": "string", "name": "brand", "value": "Premium"}}
+        api_client.post(f"/api/v1/categories/{sample_store['id']}", json=sample_category_data)
+        another = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=another_category_data).json()
+
+        response = api_client.get(f"/api/v1/categories/{sample_store['id']}", params={"attrs": "brand:!Generic"})
+        assert response.status_code == 200
+        assert [item["id"] for item in response.json()["items"]] == [another["id"]]
+
+        response = api_client.get(
+            f"/api/v1/categories/{sample_store['id']}",
+            params=[("attrs", "brand:!Generic"), ("attrs", "brand:!Premium")],
+        )
+        assert response.status_code == 200
+        assert response.json()["items"] == []
+
+    def test_exclusion_matches_categories_without_attribute(
+        self, api_client, sample_category_data, another_category_data, sample_store
+    ):
+        """Categories lacking the attribute are not excluded."""
+        api_client.post(f"/api/v1/categories/{sample_store['id']}", json=sample_category_data)
+        without_attr = api_client.post(f"/api/v1/categories/{sample_store['id']}", json=another_category_data).json()
+
+        response = api_client.get(f"/api/v1/categories/{sample_store['id']}", params={"attrs": "brand:!Generic"})
+
+        assert response.status_code == 200
+        assert [item["id"] for item in response.json()["items"]] == [without_attr["id"]]
+
     def test_empty_attrs_returns_all(self, api_client, sample_category_data, another_category_data, sample_store):
         """Empty attrs list applies no filter."""
         api_client.post(f"/api/v1/categories/{sample_store['id']}", json=sample_category_data)
