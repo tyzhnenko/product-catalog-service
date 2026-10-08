@@ -34,7 +34,9 @@ def variant_filters(
             description=(
                 "Attribute filters in 'key:value' format. Repeat for multiple values. "
                 "Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<=' for a "
-                "numeric or ISO 8601 date range, e.g. 'weight:>=200'."
+                "numeric or ISO 8601 date range, e.g. 'weight:>=200'. "
+                "Prefix the value with '!' to exclude it (also matches variants lacking the attribute), "
+                "e.g. 'color:!red'."
             ),
         ),
     ],

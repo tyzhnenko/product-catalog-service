@@ -35,7 +35,9 @@ def product_filters(
             description=(
                 "Product attribute filters in 'key:value' format. Repeat for multiple values. "
                 "Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<=' for a "
-                "numeric or ISO 8601 date range, e.g. 'weight:>=200'."
+                "numeric or ISO 8601 date range, e.g. 'weight:>=200'. "
+                "Prefix the value with '!' to exclude it (also matches products lacking the attribute), "
+                "e.g. 'color:!red'."
             ),
         ),
     ],
@@ -46,7 +48,8 @@ def product_filters(
             description=(
                 "Variant attribute filters in 'key:value' format. Returns products that have at least one "
                 "variant matching all filters. Same key = OR, different keys = AND. Prefix the value with '>', '>=', "
-                "'<' or '<=' for a numeric or ISO 8601 date range, e.g. 'weight:>=200'."
+                "'<' or '<=' for a numeric or ISO 8601 date range, e.g. 'weight:>=200'. "
+                "Prefix the value with '!' to exclude it, e.g. 'color:!red'."
             ),
         ),
     ],

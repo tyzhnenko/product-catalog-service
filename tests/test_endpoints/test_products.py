@@ -1094,6 +1094,34 @@ class TestListProductsByAttributes:
         assert names("harvested:<2025-06-15T00:00:00Z") == ["Product a"]
         assert names("weight_grams:>=250", "harvested:<2026-01-01") == ["Product b"]
 
+    def test_filter_by_attribute_exclusion(self, api_client, sample_product_data, sample_store):
+        """'!' excludes values ($ne / $nin), merges with ranges, and keeps products lacking the attribute."""
+        url = f"/api/v1/products/{sample_store['id']}"
+        specs = [("a", 100, "light"), ("b", 250, "medium"), ("c", 400, "dark"), ("d", None, None)]
+        for slug, grams, roast in specs:
+            attributes = {}
+            if grams is not None:
+                attributes["weight_grams"] = {"type": "integer", "name": "weight_grams", "value": grams}
+                attributes["roast"] = {"type": "string", "name": "roast", "value": roast}
+            data = {
+                **sample_product_data,
+                "name": f"Product {slug}",
+                "seo": {**sample_product_data["seo"], "slug": f"product-{slug}"},
+                "attributes": attributes,
+            }
+            assert api_client.post(url, json=data).status_code == 200
+
+        def names(*attrs):
+            response = api_client.get(url, params=[("attrs", attr) for attr in attrs])
+            assert response.status_code == 200
+            return sorted(item["name"] for item in response.json()["items"])
+
+        assert names("roast:!light") == ["Product b", "Product c", "Product d"]
+        assert names("roast:!light", "roast:!dark") == ["Product b", "Product d"]
+        assert names("weight_grams:!250") == ["Product a", "Product c", "Product d"]
+        assert names("weight_grams:>=100", "weight_grams:!250") == ["Product a", "Product c"]
+        assert names("roast:!light", "weight_grams:<300") == ["Product b"]
+
     def test_filter_invalid_range_value_returns_400(self, api_client, sample_store):
         response = api_client.get(f"/api/v1/products/{sample_store['id']}", params={"attrs": "weight_grams:>=true"})
         assert response.status_code == 400

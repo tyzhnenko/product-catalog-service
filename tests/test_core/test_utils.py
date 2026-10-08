@@ -213,12 +213,43 @@ class TestBuildAttributeFilter:
                 ["released:2025-01-01T10:30"],
                 {"attributes.released.value": "2025-01-01T10:30"},
             ),
+            (
+                ["color:!red"],
+                {"attributes.color.value": {"$ne": "red"}},
+            ),
+            (
+                ["color:!red", "color:!blue"],
+                {"attributes.color.value": {"$nin": ["red", "blue"]}},
+            ),
+            (
+                ["flag:!true", "stock:!0", "weight:!1.5"],
+                {
+                    "attributes.flag.value": {"$ne": True},
+                    "attributes.stock.value": {"$ne": 0},
+                    "attributes.weight.value": {"$ne": 1.5},
+                },
+            ),
+            (
+                ["size:>=40", "size:!42"],
+                {"attributes.size.value": {"$gte": 40, "$ne": 42}},
+            ),
+            (
+                ["color:red", "color:!blue"],
+                {"attributes.color.value": {"$eq": "red", "$ne": "blue"}},
+            ),
+            (
+                ["color:red", "color:blue", "color:!green", "size:10"],
+                {
+                    "attributes.color.value": {"$in": ["red", "blue"], "$ne": "green"},
+                    "attributes.size.value": 10,
+                },
+            ),
         ],
     )
     def test_builds_expected_filter(self, attrs, expected):
         assert build_attribute_filter(attrs) == expected
 
-    @pytest.mark.parametrize("attrs", [["flag:>=true"], ["weight:>="], ["weight:<"]])
+    @pytest.mark.parametrize("attrs", [["flag:>=true"], ["weight:>="], ["weight:<"], ["color:!"]])
     def test_invalid_range_value_raises_400(self, attrs):
         with pytest.raises(HTTPException) as exc_info:
             build_attribute_filter(attrs)
