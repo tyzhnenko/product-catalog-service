@@ -228,11 +228,13 @@ def sync_detailed(
             should hold a single value type.
         attrs (list[str] | Unset): Product attribute filters in 'key:value' format. Repeat for
             multiple values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<'
-            or '<=' for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
+            or '<=' for a numeric or ISO 8601 date range, e.g. 'weight:>=200'. Prefix the value with
+            '!' to exclude it (also matches products lacking the attribute), e.g. 'color:!red'.
         variants_attrs (list[str] | Unset): Variant attribute filters in 'key:value' format.
             Returns products that have at least one variant matching all filters. Same key = OR,
             different keys = AND. Prefix the value with '>', '>=', '<' or '<=' for a numeric or ISO
-            8601 date range, e.g. 'weight:>=200'.
+            8601 date range, e.g. 'weight:>=200'. Prefix the value with '!' to exclude it, e.g.
+            'color:!red'.
         price (None | str | Unset): Whitespace-separated variant price search tokens (shlex-quoted
             for values containing spaces). Returns products with at least one matching variant.
             '<key>>=<value>' / '<key><=<value>' filter the top-level price map. 'loc:<id>',
@@ -325,11 +327,13 @@ def sync(
             should hold a single value type.
         attrs (list[str] | Unset): Product attribute filters in 'key:value' format. Repeat for
             multiple values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<'
-            or '<=' for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
+            or '<=' for a numeric or ISO 8601 date range, e.g. 'weight:>=200'. Prefix the value with
+            '!' to exclude it (also matches products lacking the attribute), e.g. 'color:!red'.
         variants_attrs (list[str] | Unset): Variant attribute filters in 'key:value' format.
             Returns products that have at least one variant matching all filters. Same key = OR,
             different keys = AND. Prefix the value with '>', '>=', '<' or '<=' for a numeric or ISO
-            8601 date range, e.g. 'weight:>=200'.
+            8601 date range, e.g. 'weight:>=200'. Prefix the value with '!' to exclude it, e.g.
+            'color:!red'.
         price (None | str | Unset): Whitespace-separated variant price search tokens (shlex-quoted
             for values containing spaces). Returns products with at least one matching variant.
             '<key>>=<value>' / '<key><=<value>' filter the top-level price map. 'loc:<id>',
@@ -416,11 +420,13 @@ async def asyncio_detailed(
             should hold a single value type.
         attrs (list[str] | Unset): Product attribute filters in 'key:value' format. Repeat for
             multiple values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<'
-            or '<=' for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
+            or '<=' for a numeric or ISO 8601 date range, e.g. 'weight:>=200'. Prefix the value with
+            '!' to exclude it (also matches products lacking the attribute), e.g. 'color:!red'.
         variants_attrs (list[str] | Unset): Variant attribute filters in 'key:value' format.
             Returns products that have at least one variant matching all filters. Same key = OR,
             different keys = AND. Prefix the value with '>', '>=', '<' or '<=' for a numeric or ISO
-            8601 date range, e.g. 'weight:>=200'.
+            8601 date range, e.g. 'weight:>=200'. Prefix the value with '!' to exclude it, e.g.
+            'color:!red'.
         price (None | str | Unset): Whitespace-separated variant price search tokens (shlex-quoted
             for values containing spaces). Returns products with at least one matching variant.
             '<key>>=<value>' / '<key><=<value>' filter the top-level price map. 'loc:<id>',
@@ -511,11 +517,13 @@ async def asyncio(
             should hold a single value type.
         attrs (list[str] | Unset): Product attribute filters in 'key:value' format. Repeat for
             multiple values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<'
-            or '<=' for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
+            or '<=' for a numeric or ISO 8601 date range, e.g. 'weight:>=200'. Prefix the value with
+            '!' to exclude it (also matches products lacking the attribute), e.g. 'color:!red'.
         variants_attrs (list[str] | Unset): Variant attribute filters in 'key:value' format.
             Returns products that have at least one variant matching all filters. Same key = OR,
             different keys = AND. Prefix the value with '>', '>=', '<' or '<=' for a numeric or ISO
-            8601 date range, e.g. 'weight:>=200'.
+            8601 date range, e.g. 'weight:>=200'. Prefix the value with '!' to exclude it, e.g.
+            'color:!red'.
         price (None | str | Unset): Whitespace-separated variant price search tokens (shlex-quoted
             for values containing spaces). Returns products with at least one matching variant.
             '<key>>=<value>' / '<key><=<value>' filter the top-level price map. 'loc:<id>',

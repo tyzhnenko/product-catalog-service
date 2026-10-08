@@ -149,7 +149,8 @@ def sync_detailed(
             should hold a single value type.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
             values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<='
-            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
+            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'. Prefix the value with '!' to
+            exclude it (also matches categories lacking the attribute), e.g. 'color:!red'.
         fields (None | str | Unset): Comma-separated response fields. Bare names include only
             those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
             both is not allowed. Dotted paths address nested fields (`seo.slug`,
@@ -211,7 +212,8 @@ def sync(
             should hold a single value type.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
             values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<='
-            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
+            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'. Prefix the value with '!' to
+            exclude it (also matches categories lacking the attribute), e.g. 'color:!red'.
         fields (None | str | Unset): Comma-separated response fields. Bare names include only
             those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
             both is not allowed. Dotted paths address nested fields (`seo.slug`,
@@ -268,7 +270,8 @@ async def asyncio_detailed(
             should hold a single value type.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
             values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<='
-            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
+            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'. Prefix the value with '!' to
+            exclude it (also matches categories lacking the attribute), e.g. 'color:!red'.
         fields (None | str | Unset): Comma-separated response fields. Bare names include only
             those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
             both is not allowed. Dotted paths address nested fields (`seo.slug`,
@@ -328,7 +331,8 @@ async def asyncio(
             should hold a single value type.
         attrs (list[str] | Unset): Attribute filters in 'key:value' format. Repeat for multiple
             values. Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<='
-            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'.
+            for a numeric or ISO 8601 date range, e.g. 'weight:>=200'. Prefix the value with '!' to
+            exclude it (also matches categories lacking the attribute), e.g. 'color:!red'.
         fields (None | str | Unset): Comma-separated response fields. Bare names include only
             those fields (`name,brand`); `-` prefixed names exclude them (`-seo,-attributes`). Mixing
             both is not allowed. Dotted paths address nested fields (`seo.slug`,
