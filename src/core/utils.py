@@ -222,14 +222,22 @@ def build_attribute_filter(attrs: list[str]) -> dict:
     Different keys → AND (implicit MongoDB dict merge).
     A value prefixed with '>=', '<=', '>' or '<' (e.g. 'weight:>=200') is a range condition on a number or an
     ISO 8601 date/datetime; range conditions on the same key merge with each other and with any equality values.
+    A value prefixed with '!' (e.g. 'color:!red') excludes that value: one → $ne, several on the same key → $nin.
+    Exclusions also match documents lacking the attribute, and merge with equality and range conditions.
     Entries without a colon are silently ignored.
     """
     grouped: dict[str, list] = {}
+    excluded: dict[str, list] = {}
     ranges: dict[str, dict] = {}
     for entry in attrs:
         if ":" not in entry:
             continue
         key, _, raw_value = entry.partition(":")
+        if raw_value.startswith("!"):
+            if len(raw_value) == 1:
+                raise HTTPException(status_code=400, detail=f"Invalid attribute filter '{entry}'")
+            excluded.setdefault(key, []).append(_parse_attr_value(raw_value[1:]))
+            continue
         op = next((op for op in _ATTR_RANGE_OPS if raw_value.startswith(op)), None)
         if op is None:
             grouped.setdefault(key, []).append(_parse_attr_value(raw_value))
@@ -239,6 +247,8 @@ def build_attribute_filter(attrs: list[str]) -> dict:
     result: dict = {}
     for key, values in grouped.items():
         result[f"attributes.{key}.value"] = values[0] if len(values) == 1 else {"$in": values}
+    for key, values in excluded.items():
+        ranges.setdefault(key, {}).update({"$ne": values[0]} if len(values) == 1 else {"$nin": values})
     for key, conditions in ranges.items():
         mongo_key = f"attributes.{key}.value"
         if mongo_key in result:

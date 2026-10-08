@@ -26,7 +26,9 @@ def location_filters(
             description=(
                 "Attribute filters in 'key:value' format. Repeat for multiple values. "
                 "Same key = OR, different keys = AND. Prefix the value with '>', '>=', '<' or '<=' for a "
-                "numeric or ISO 8601 date range, e.g. 'seats:>=20'."
+                "numeric or ISO 8601 date range, e.g. 'seats:>=20'. "
+                "Prefix the value with '!' to exclude it (also matches entries lacking the attribute), "
+                "e.g. 'type:!kiosk'."
             ),
         ),
     ],
