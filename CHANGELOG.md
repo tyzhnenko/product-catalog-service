@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.12.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.11.0...v0.12.0) (2026-10-10)
+
+
+### Features
+
+* support exclusion with ! prefix in attrs filters ([#76](https://github.com/tyzhnenko/product-catalog-service/issues/76)) ([025ce82](https://github.com/tyzhnenko/product-catalog-service/commit/025ce82d6e2daf279c4fda649f85da52502d7330))
+
+
+### Chores
+
+* **deps-dev:** bump openapi-python-client from 0.29.0 to 0.29.1 ([#80](https://github.com/tyzhnenko/product-catalog-service/issues/80)) ([aea993b](https://github.com/tyzhnenko/product-catalog-service/commit/aea993b77a05301b37d2dd78968d82b9367f1ee2))
+* **deps:** bump pymongo from 4.17.0 to 4.18.2 ([#79](https://github.com/tyzhnenko/product-catalog-service/issues/79)) ([2dbe37f](https://github.com/tyzhnenko/product-catalog-service/commit/2dbe37f578f3c674df1f0a513c67d255d13ab026))
+* regenerate python client for attrs exclusion and bump to 0.12.0 ([#78](https://github.com/tyzhnenko/product-catalog-service/issues/78)) ([a6e553b](https://github.com/tyzhnenko/product-catalog-service/commit/a6e553b72bce88431e4528e1c91f8abde46da625))
+
+
+### Performance
+
+* **client:** dispatch tagged unions by type in generated parser ([#82](https://github.com/tyzhnenko/product-catalog-service/issues/82)) ([4ee9740](https://github.com/tyzhnenko/product-catalog-service/commit/4ee9740fb3e5baeb0960516fae4e9dcdc905ef2a))
+
+
+### Tests
+
+* cover attrs exclusion on variants, bundles, locations and categories ([#81](https://github.com/tyzhnenko/product-catalog-service/issues/81)) ([d7a5b67](https://github.com/tyzhnenko/product-catalog-service/commit/d7a5b67c244bf68478cb9c1e85a26162c92c8bce))
+
 ## [0.11.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.10.0...v0.11.0) (2026-10-02)
 
 
