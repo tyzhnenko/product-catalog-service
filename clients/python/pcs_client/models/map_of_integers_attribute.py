@@ -51,14 +51,14 @@ class MapOfIntegersAttribute:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.map_of_integers_attribute_values import MapOfIntegersAttributeValues
+        from ..models.map_of_integers_attribute_values import MapOfIntegersAttributeValues  # noqa: PLC0415
 
         d = dict(src_dict)
         name = d.pop("name")
 
         values = MapOfIntegersAttributeValues.from_dict(d.pop("values"))
 
-        type_ = cast(Literal["map_of_integers"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['map_of_integers'] | Unset", d.pop("type", UNSET))
         if type_ != "map_of_integers" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'map_of_integers', got '{type_}'")
 

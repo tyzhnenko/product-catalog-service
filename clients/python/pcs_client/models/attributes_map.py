@@ -85,37 +85,37 @@ class AttributesMap:
     ] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.bool_attribute import BoolAttribute
-        from ..models.date_attribute import DateAttribute
-        from ..models.date_time_attribute import DateTimeAttribute
-        from ..models.decimal_attribute import DecimalAttribute
-        from ..models.decimal_range_attribute import DecimalRangeAttribute
-        from ..models.float_attribute import FloatAttribute
-        from ..models.float_range_attribute import FloatRangeAttribute
-        from ..models.integer_attribute import IntegerAttribute
-        from ..models.integer_range_attribute import IntegerRangeAttribute
-        from ..models.list_of_date_times_attribute import ListOfDateTimesAttribute
-        from ..models.list_of_dates_attribute import ListOfDatesAttribute
-        from ..models.list_of_decimals_attribute import ListOfDecimalsAttribute
-        from ..models.list_of_floats_attribute import ListOfFloatsAttribute
-        from ..models.list_of_integers_attribute import ListOfIntegersAttribute
-        from ..models.list_of_object_ids_attribute import ListOfObjectIdsAttribute
-        from ..models.list_of_strings_attribute import ListOfStringsAttribute
-        from ..models.list_of_ur_ls_attribute import ListOfURLsAttribute
-        from ..models.list_of_uui_ds_attribute import ListOfUUIDsAttribute
-        from ..models.map_of_dates_attribute import MapOfDatesAttribute
-        from ..models.map_of_decimals_attribute import MapOfDecimalsAttribute
-        from ..models.map_of_floats_attribute import MapOfFloatsAttribute
-        from ..models.map_of_integers_attribute import MapOfIntegersAttribute
-        from ..models.map_of_object_ids_attribute import MapOfObjectIdsAttribute
-        from ..models.map_of_strings_attribute import MapOfStringsAttribute
-        from ..models.map_of_ur_ls_attribute import MapOfURLsAttribute
-        from ..models.map_of_uui_ds_attribute import MapOfUUIDsAttribute
-        from ..models.object_id_attribute import ObjectIdAttribute
-        from ..models.string_attribute import StringAttribute
-        from ..models.text_attribute import TextAttribute
-        from ..models.url_attribute import URLAttribute
-        from ..models.uuid_attribute import UUIDAttribute
+        from ..models.bool_attribute import BoolAttribute  # noqa: PLC0415
+        from ..models.date_attribute import DateAttribute  # noqa: PLC0415
+        from ..models.date_time_attribute import DateTimeAttribute  # noqa: PLC0415
+        from ..models.decimal_attribute import DecimalAttribute  # noqa: PLC0415
+        from ..models.decimal_range_attribute import DecimalRangeAttribute  # noqa: PLC0415
+        from ..models.float_attribute import FloatAttribute  # noqa: PLC0415
+        from ..models.float_range_attribute import FloatRangeAttribute  # noqa: PLC0415
+        from ..models.integer_attribute import IntegerAttribute  # noqa: PLC0415
+        from ..models.integer_range_attribute import IntegerRangeAttribute  # noqa: PLC0415
+        from ..models.list_of_date_times_attribute import ListOfDateTimesAttribute  # noqa: PLC0415
+        from ..models.list_of_dates_attribute import ListOfDatesAttribute  # noqa: PLC0415
+        from ..models.list_of_decimals_attribute import ListOfDecimalsAttribute  # noqa: PLC0415
+        from ..models.list_of_floats_attribute import ListOfFloatsAttribute  # noqa: PLC0415
+        from ..models.list_of_integers_attribute import ListOfIntegersAttribute  # noqa: PLC0415
+        from ..models.list_of_object_ids_attribute import ListOfObjectIdsAttribute  # noqa: PLC0415
+        from ..models.list_of_strings_attribute import ListOfStringsAttribute  # noqa: PLC0415
+        from ..models.list_of_ur_ls_attribute import ListOfURLsAttribute  # noqa: PLC0415
+        from ..models.list_of_uui_ds_attribute import ListOfUUIDsAttribute  # noqa: PLC0415
+        from ..models.map_of_dates_attribute import MapOfDatesAttribute  # noqa: PLC0415
+        from ..models.map_of_decimals_attribute import MapOfDecimalsAttribute  # noqa: PLC0415
+        from ..models.map_of_floats_attribute import MapOfFloatsAttribute  # noqa: PLC0415
+        from ..models.map_of_integers_attribute import MapOfIntegersAttribute  # noqa: PLC0415
+        from ..models.map_of_object_ids_attribute import MapOfObjectIdsAttribute  # noqa: PLC0415
+        from ..models.map_of_strings_attribute import MapOfStringsAttribute  # noqa: PLC0415
+        from ..models.map_of_ur_ls_attribute import MapOfURLsAttribute  # noqa: PLC0415
+        from ..models.map_of_uui_ds_attribute import MapOfUUIDsAttribute  # noqa: PLC0415
+        from ..models.object_id_attribute import ObjectIdAttribute  # noqa: PLC0415
+        from ..models.string_attribute import StringAttribute  # noqa: PLC0415
+        from ..models.text_attribute import TextAttribute  # noqa: PLC0415
+        from ..models.url_attribute import URLAttribute  # noqa: PLC0415
+        from ..models.uuid_attribute import UUIDAttribute  # noqa: PLC0415
 
         field_dict: dict[str, Any] = {}
         for prop_name, prop in self.additional_properties.items():
@@ -188,38 +188,38 @@ class AttributesMap:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.bool_attribute import BoolAttribute
-        from ..models.date_attribute import DateAttribute
-        from ..models.date_time_attribute import DateTimeAttribute
-        from ..models.decimal_attribute import DecimalAttribute
-        from ..models.decimal_range_attribute import DecimalRangeAttribute
-        from ..models.float_attribute import FloatAttribute
-        from ..models.float_range_attribute import FloatRangeAttribute
-        from ..models.integer_attribute import IntegerAttribute
-        from ..models.integer_range_attribute import IntegerRangeAttribute
-        from ..models.list_of_date_times_attribute import ListOfDateTimesAttribute
-        from ..models.list_of_dates_attribute import ListOfDatesAttribute
-        from ..models.list_of_decimals_attribute import ListOfDecimalsAttribute
-        from ..models.list_of_floats_attribute import ListOfFloatsAttribute
-        from ..models.list_of_integers_attribute import ListOfIntegersAttribute
-        from ..models.list_of_object_ids_attribute import ListOfObjectIdsAttribute
-        from ..models.list_of_strings_attribute import ListOfStringsAttribute
-        from ..models.list_of_ur_ls_attribute import ListOfURLsAttribute
-        from ..models.list_of_uui_ds_attribute import ListOfUUIDsAttribute
-        from ..models.map_of_date_times_attribute import MapOfDateTimesAttribute
-        from ..models.map_of_dates_attribute import MapOfDatesAttribute
-        from ..models.map_of_decimals_attribute import MapOfDecimalsAttribute
-        from ..models.map_of_floats_attribute import MapOfFloatsAttribute
-        from ..models.map_of_integers_attribute import MapOfIntegersAttribute
-        from ..models.map_of_object_ids_attribute import MapOfObjectIdsAttribute
-        from ..models.map_of_strings_attribute import MapOfStringsAttribute
-        from ..models.map_of_ur_ls_attribute import MapOfURLsAttribute
-        from ..models.map_of_uui_ds_attribute import MapOfUUIDsAttribute
-        from ..models.object_id_attribute import ObjectIdAttribute
-        from ..models.string_attribute import StringAttribute
-        from ..models.text_attribute import TextAttribute
-        from ..models.url_attribute import URLAttribute
-        from ..models.uuid_attribute import UUIDAttribute
+        from ..models.bool_attribute import BoolAttribute  # noqa: PLC0415
+        from ..models.date_attribute import DateAttribute  # noqa: PLC0415
+        from ..models.date_time_attribute import DateTimeAttribute  # noqa: PLC0415
+        from ..models.decimal_attribute import DecimalAttribute  # noqa: PLC0415
+        from ..models.decimal_range_attribute import DecimalRangeAttribute  # noqa: PLC0415
+        from ..models.float_attribute import FloatAttribute  # noqa: PLC0415
+        from ..models.float_range_attribute import FloatRangeAttribute  # noqa: PLC0415
+        from ..models.integer_attribute import IntegerAttribute  # noqa: PLC0415
+        from ..models.integer_range_attribute import IntegerRangeAttribute  # noqa: PLC0415
+        from ..models.list_of_date_times_attribute import ListOfDateTimesAttribute  # noqa: PLC0415
+        from ..models.list_of_dates_attribute import ListOfDatesAttribute  # noqa: PLC0415
+        from ..models.list_of_decimals_attribute import ListOfDecimalsAttribute  # noqa: PLC0415
+        from ..models.list_of_floats_attribute import ListOfFloatsAttribute  # noqa: PLC0415
+        from ..models.list_of_integers_attribute import ListOfIntegersAttribute  # noqa: PLC0415
+        from ..models.list_of_object_ids_attribute import ListOfObjectIdsAttribute  # noqa: PLC0415
+        from ..models.list_of_strings_attribute import ListOfStringsAttribute  # noqa: PLC0415
+        from ..models.list_of_ur_ls_attribute import ListOfURLsAttribute  # noqa: PLC0415
+        from ..models.list_of_uui_ds_attribute import ListOfUUIDsAttribute  # noqa: PLC0415
+        from ..models.map_of_date_times_attribute import MapOfDateTimesAttribute  # noqa: PLC0415
+        from ..models.map_of_dates_attribute import MapOfDatesAttribute  # noqa: PLC0415
+        from ..models.map_of_decimals_attribute import MapOfDecimalsAttribute  # noqa: PLC0415
+        from ..models.map_of_floats_attribute import MapOfFloatsAttribute  # noqa: PLC0415
+        from ..models.map_of_integers_attribute import MapOfIntegersAttribute  # noqa: PLC0415
+        from ..models.map_of_object_ids_attribute import MapOfObjectIdsAttribute  # noqa: PLC0415
+        from ..models.map_of_strings_attribute import MapOfStringsAttribute  # noqa: PLC0415
+        from ..models.map_of_ur_ls_attribute import MapOfURLsAttribute  # noqa: PLC0415
+        from ..models.map_of_uui_ds_attribute import MapOfUUIDsAttribute  # noqa: PLC0415
+        from ..models.object_id_attribute import ObjectIdAttribute  # noqa: PLC0415
+        from ..models.string_attribute import StringAttribute  # noqa: PLC0415
+        from ..models.text_attribute import TextAttribute  # noqa: PLC0415
+        from ..models.url_attribute import URLAttribute  # noqa: PLC0415
+        from ..models.uuid_attribute import UUIDAttribute  # noqa: PLC0415
 
         d = dict(src_dict)
         attributes_map = cls()
@@ -263,6 +263,136 @@ class AttributesMap:
                 | URLAttribute
                 | UUIDAttribute
             ):
+                if isinstance(data, dict):
+                    tag = data.get("type")
+                    if tag == "string":
+                        componentsschemas_attribute_type_0 = StringAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_0
+                    if tag == "text":
+                        componentsschemas_attribute_type_1 = TextAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_1
+                    if tag == "integer":
+                        componentsschemas_attribute_type_2 = IntegerAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_2
+                    if tag == "bool":
+                        componentsschemas_attribute_type_3 = BoolAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_3
+                    if tag == "float":
+                        componentsschemas_attribute_type_4 = FloatAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_4
+                    if tag == "date":
+                        componentsschemas_attribute_type_5 = DateAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_5
+                    if tag == "datetime":
+                        componentsschemas_attribute_type_6 = DateTimeAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_6
+                    if tag == "uuid":
+                        componentsschemas_attribute_type_7 = UUIDAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_7
+                    if tag == "object_id":
+                        componentsschemas_attribute_type_8 = ObjectIdAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_8
+                    if tag == "decimal":
+                        componentsschemas_attribute_type_9 = DecimalAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_9
+                    if tag == "url":
+                        componentsschemas_attribute_type_10 = URLAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_10
+                    if tag == "float_range":
+                        componentsschemas_attribute_type_11 = FloatRangeAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_11
+                    if tag == "integer_range":
+                        componentsschemas_attribute_type_12 = IntegerRangeAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_12
+                    if tag == "decimal_range":
+                        componentsschemas_attribute_type_13 = DecimalRangeAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_13
+                    if tag == "list_of_strings":
+                        componentsschemas_attribute_type_14 = ListOfStringsAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_14
+                    if tag == "list_of_integers":
+                        componentsschemas_attribute_type_15 = ListOfIntegersAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_15
+                    if tag == "list_of_floats":
+                        componentsschemas_attribute_type_16 = ListOfFloatsAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_16
+                    if tag == "list_of_decimals":
+                        componentsschemas_attribute_type_17 = ListOfDecimalsAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_17
+                    if tag == "list_of_uuids":
+                        componentsschemas_attribute_type_18 = ListOfUUIDsAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_18
+                    if tag == "list_of_object_ids":
+                        componentsschemas_attribute_type_19 = ListOfObjectIdsAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_19
+                    if tag == "list_of_urls":
+                        componentsschemas_attribute_type_20 = ListOfURLsAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_20
+                    if tag == "list_of_dates":
+                        componentsschemas_attribute_type_21 = ListOfDatesAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_21
+                    if tag == "list_of_datetimes":
+                        componentsschemas_attribute_type_22 = ListOfDateTimesAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_22
+                    if tag == "map_of_strings":
+                        componentsschemas_attribute_type_23 = MapOfStringsAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_23
+                    if tag == "map_of_integers":
+                        componentsschemas_attribute_type_24 = MapOfIntegersAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_24
+                    if tag == "map_of_floats":
+                        componentsschemas_attribute_type_25 = MapOfFloatsAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_25
+                    if tag == "map_of_decimals":
+                        componentsschemas_attribute_type_26 = MapOfDecimalsAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_26
+                    if tag == "map_of_uuids":
+                        componentsschemas_attribute_type_27 = MapOfUUIDsAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_27
+                    if tag == "map_of_object_ids":
+                        componentsschemas_attribute_type_28 = MapOfObjectIdsAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_28
+                    if tag == "map_of_urls":
+                        componentsschemas_attribute_type_29 = MapOfURLsAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_29
+                    if tag == "map_of_dates":
+                        componentsschemas_attribute_type_30 = MapOfDatesAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_30
+                    if tag == "map_of_datetimes":
+                        componentsschemas_attribute_type_31 = MapOfDateTimesAttribute.from_dict(data)
+
+                        return componentsschemas_attribute_type_31
                 try:
                     if not isinstance(data, dict):
                         raise TypeError()

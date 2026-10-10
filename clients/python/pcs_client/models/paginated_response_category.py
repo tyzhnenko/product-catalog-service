@@ -68,7 +68,7 @@ class PaginatedResponseCategory:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.category import Category
+        from ..models.category import Category  # noqa: PLC0415
 
         d = dict(src_dict)
         items = []

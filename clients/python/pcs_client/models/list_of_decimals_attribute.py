@@ -65,7 +65,7 @@ class ListOfDecimalsAttribute:
 
             values.append(values_item)
 
-        type_ = cast(Literal["list_of_decimals"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['list_of_decimals'] | Unset", d.pop("type", UNSET))
         if type_ != "list_of_decimals" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'list_of_decimals', got '{type_}'")
 

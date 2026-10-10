@@ -53,7 +53,7 @@ class UUIDAttribute:
 
         value = UUID(d.pop("value"))
 
-        type_ = cast(Literal["uuid"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['uuid'] | Unset", d.pop("type", UNSET))
         if type_ != "uuid" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'uuid', got '{type_}'")
 

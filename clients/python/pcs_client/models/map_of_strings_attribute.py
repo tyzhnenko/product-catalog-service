@@ -51,14 +51,14 @@ class MapOfStringsAttribute:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.map_of_strings_attribute_values import MapOfStringsAttributeValues
+        from ..models.map_of_strings_attribute_values import MapOfStringsAttributeValues  # noqa: PLC0415
 
         d = dict(src_dict)
         name = d.pop("name")
 
         values = MapOfStringsAttributeValues.from_dict(d.pop("values"))
 
-        type_ = cast(Literal["map_of_strings"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['map_of_strings'] | Unset", d.pop("type", UNSET))
         if type_ != "map_of_strings" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'map_of_strings', got '{type_}'")
 

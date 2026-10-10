@@ -68,7 +68,7 @@ class PaginatedResponsePartialProduct:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.partial_product import PartialProduct
+        from ..models.partial_product import PartialProduct  # noqa: PLC0415
 
         d = dict(src_dict)
         items = []

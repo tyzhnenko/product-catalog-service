@@ -29,6 +29,6 @@ fetch-openapi:
 
 generate-client: fetch-openapi
     echo "Generating client code from OpenAPI specification..."
-    uv run openapi-python-client generate --meta uv --overwrite --path openapi.json --config openapi-python-client-config.yaml --output-path clients/python
+    uv run openapi-python-client generate --meta uv --overwrite --path openapi.json --config openapi-python-client-config.yaml --custom-template-path openapi-templates --output-path clients/python
 
 default: run

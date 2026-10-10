@@ -68,7 +68,7 @@ class PaginatedResponseBundle:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.bundle import Bundle
+        from ..models.bundle import Bundle  # noqa: PLC0415
 
         d = dict(src_dict)
         items = []

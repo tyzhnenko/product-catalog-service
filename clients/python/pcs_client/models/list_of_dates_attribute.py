@@ -61,7 +61,7 @@ class ListOfDatesAttribute:
 
             values.append(values_item)
 
-        type_ = cast(Literal["list_of_dates"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['list_of_dates'] | Unset", d.pop("type", UNSET))
         if type_ != "list_of_dates" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'list_of_dates', got '{type_}'")
 

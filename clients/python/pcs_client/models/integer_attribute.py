@@ -52,7 +52,7 @@ class IntegerAttribute:
 
         value = d.pop("value")
 
-        type_ = cast(Literal["integer"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['integer'] | Unset", d.pop("type", UNSET))
         if type_ != "integer" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'integer', got '{type_}'")
 

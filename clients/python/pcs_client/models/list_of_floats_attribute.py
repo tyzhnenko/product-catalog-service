@@ -52,7 +52,7 @@ class ListOfFloatsAttribute:
 
         values = cast(list[float], d.pop("values"))
 
-        type_ = cast(Literal["list_of_floats"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['list_of_floats'] | Unset", d.pop("type", UNSET))
         if type_ != "list_of_floats" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'list_of_floats', got '{type_}'")
 

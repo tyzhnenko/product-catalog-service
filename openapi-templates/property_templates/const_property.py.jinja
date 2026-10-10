@@ -1,0 +1,14 @@
+{#
+  Stock openapi-python-client 0.29.1 const template, except the `cast` target is a string.
+  `cast` ignores its type at runtime, but the stock `cast(Literal["x"] | Unset, ...)` still builds a
+  typing union object on every call; the string form keeps the same static typing for free.
+#}
+{% macro construct(property, source) %}
+{{ property.python_name }} = cast("{{ property.get_type_string() | in_double_quote_literal }}", {{ source }})
+if {{ property.python_name }} != {{ property.value.python_code | as_unembedded_code }}{% if not property.required %}and not isinstance({{ property.python_name }}, Unset){% endif %}:
+    raise ValueError(f"{{ property.name | in_f_string_literal }} must match const {{ property.value.python_code | in_f_string_literal }}, got '{{'{' + property.python_name + '}' }}'")
+{%- endmacro %}
+
+{% macro multipart(property, source, name) %}
+files.append(({{ name }}, (None, {{ source }}, "text/plain")))
+{% endmacro %}

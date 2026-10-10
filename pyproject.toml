@@ -31,7 +31,8 @@ dev = [
     "pytest-cov>=7.0.0",
     "pytest-env>=1.2.0",
     "pytest-mongo>=3.2.1",
-    "openapi-python-client>=0.28.0",
+    # Pinned: openapi-templates/ holds copies of 0.29.1's union/const templates; re-diff them before upgrading.
+    "openapi-python-client==0.29.1",
 ]
 
 [build-system]

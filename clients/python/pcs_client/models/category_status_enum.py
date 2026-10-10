@@ -1,7 +1,7 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class CategoryStatusEnum(str, Enum):
+class CategoryStatusEnum(StrEnum):
     ACTIVE = "active"
     INACTIVE = "inactive"
 

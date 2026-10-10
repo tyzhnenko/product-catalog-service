@@ -52,7 +52,7 @@ class ObjectIdAttribute:
 
         value = d.pop("value")
 
-        type_ = cast(Literal["object_id"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['object_id'] | Unset", d.pop("type", UNSET))
         if type_ != "object_id" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'object_id', got '{type_}'")
 

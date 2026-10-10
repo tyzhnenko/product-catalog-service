@@ -32,7 +32,7 @@ class Store:
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.seo import SEO
+        from ..models.seo import SEO  # noqa: PLC0415
 
         id = self.id
 
@@ -64,7 +64,7 @@ class Store:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.seo import SEO
+        from ..models.seo import SEO  # noqa: PLC0415
 
         d = dict(src_dict)
         id = d.pop("id")

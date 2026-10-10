@@ -53,7 +53,7 @@ class DateTimeAttribute:
 
         value = datetime.datetime.fromisoformat(d.pop("value"))
 
-        type_ = cast(Literal["datetime"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['datetime'] | Unset", d.pop("type", UNSET))
         if type_ != "datetime" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'datetime', got '{type_}'")
 

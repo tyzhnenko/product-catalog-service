@@ -51,14 +51,14 @@ class MapOfUUIDsAttribute:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.map_of_uui_ds_attribute_values import MapOfUUIDsAttributeValues
+        from ..models.map_of_uui_ds_attribute_values import MapOfUUIDsAttributeValues  # noqa: PLC0415
 
         d = dict(src_dict)
         name = d.pop("name")
 
         values = MapOfUUIDsAttributeValues.from_dict(d.pop("values"))
 
-        type_ = cast(Literal["map_of_uuids"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['map_of_uuids'] | Unset", d.pop("type", UNSET))
         if type_ != "map_of_uuids" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'map_of_uuids', got '{type_}'")
 

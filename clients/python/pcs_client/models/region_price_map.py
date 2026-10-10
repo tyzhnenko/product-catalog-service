@@ -29,7 +29,7 @@ class RegionPriceMap:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.price_map import PriceMap
+        from ..models.price_map import PriceMap  # noqa: PLC0415
 
         d = dict(src_dict)
         region_price_map = cls()

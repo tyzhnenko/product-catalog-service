@@ -59,7 +59,7 @@ class IntegerRangeAttribute:
 
         max_value = d.pop("max_value")
 
-        type_ = cast(Literal["integer_range"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['integer_range'] | Unset", d.pop("type", UNSET))
         if type_ != "integer_range" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'integer_range', got '{type_}'")
 
