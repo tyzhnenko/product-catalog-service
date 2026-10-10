@@ -51,14 +51,14 @@ class MapOfDatesAttribute:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.map_of_dates_attribute_values import MapOfDatesAttributeValues
+        from ..models.map_of_dates_attribute_values import MapOfDatesAttributeValues  # noqa: PLC0415
 
         d = dict(src_dict)
         name = d.pop("name")
 
         values = MapOfDatesAttributeValues.from_dict(d.pop("values"))
 
-        type_ = cast(Literal["map_of_dates"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['map_of_dates'] | Unset", d.pop("type", UNSET))
         if type_ != "map_of_dates" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'map_of_dates', got '{type_}'")
 

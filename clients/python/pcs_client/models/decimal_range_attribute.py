@@ -67,7 +67,7 @@ class DecimalRangeAttribute:
 
         max_value = _parse_max_value(d.pop("max_value"))
 
-        type_ = cast(Literal["decimal_range"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['decimal_range'] | Unset", d.pop("type", UNSET))
         if type_ != "decimal_range" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'decimal_range', got '{type_}'")
 

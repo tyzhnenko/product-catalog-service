@@ -52,7 +52,7 @@ class URLAttribute:
 
         value = d.pop("value")
 
-        type_ = cast(Literal["url"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['url'] | Unset", d.pop("type", UNSET))
         if type_ != "url" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'url', got '{type_}'")
 

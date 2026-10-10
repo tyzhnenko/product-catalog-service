@@ -52,7 +52,7 @@ class ListOfIntegersAttribute:
 
         values = cast(list[int], d.pop("values"))
 
-        type_ = cast(Literal["list_of_integers"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['list_of_integers'] | Unset", d.pop("type", UNSET))
         if type_ != "list_of_integers" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'list_of_integers', got '{type_}'")
 

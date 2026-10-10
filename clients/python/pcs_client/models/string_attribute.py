@@ -52,7 +52,7 @@ class StringAttribute:
 
         value = d.pop("value")
 
-        type_ = cast(Literal["string"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['string'] | Unset", d.pop("type", UNSET))
         if type_ != "string" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'string', got '{type_}'")
 

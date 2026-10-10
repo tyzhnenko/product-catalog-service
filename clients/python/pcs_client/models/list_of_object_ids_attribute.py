@@ -52,7 +52,7 @@ class ListOfObjectIdsAttribute:
 
         values = cast(list[str], d.pop("values"))
 
-        type_ = cast(Literal["list_of_object_ids"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['list_of_object_ids'] | Unset", d.pop("type", UNSET))
         if type_ != "list_of_object_ids" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'list_of_object_ids', got '{type_}'")
 

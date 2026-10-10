@@ -51,14 +51,14 @@ class MapOfFloatsAttribute:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.map_of_floats_attribute_values import MapOfFloatsAttributeValues
+        from ..models.map_of_floats_attribute_values import MapOfFloatsAttributeValues  # noqa: PLC0415
 
         d = dict(src_dict)
         name = d.pop("name")
 
         values = MapOfFloatsAttributeValues.from_dict(d.pop("values"))
 
-        type_ = cast(Literal["map_of_floats"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['map_of_floats'] | Unset", d.pop("type", UNSET))
         if type_ != "map_of_floats" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'map_of_floats', got '{type_}'")
 

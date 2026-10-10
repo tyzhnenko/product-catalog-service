@@ -56,7 +56,7 @@ class DecimalAttribute:
 
         value = _parse_value(d.pop("value"))
 
-        type_ = cast(Literal["decimal"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['decimal'] | Unset", d.pop("type", UNSET))
         if type_ != "decimal" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'decimal', got '{type_}'")
 

@@ -52,7 +52,7 @@ class FloatAttribute:
 
         value = d.pop("value")
 
-        type_ = cast(Literal["float"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['float'] | Unset", d.pop("type", UNSET))
         if type_ != "float" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'float', got '{type_}'")
 

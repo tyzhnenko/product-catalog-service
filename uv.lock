@@ -668,7 +668,7 @@ dev = [
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "ipython", specifier = ">=9.8.0" },
     { name = "mypy", specifier = ">=1.19.1" },
-    { name = "openapi-python-client", specifier = ">=0.28.0" },
+    { name = "openapi-python-client", specifier = "==0.29.1" },
     { name = "prek", specifier = ">=0.3.2" },
     { name = "pytest", specifier = ">=9.0.3" },
     { name = "pytest-asyncio", specifier = ">=0.25.2" },

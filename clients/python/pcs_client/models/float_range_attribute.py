@@ -59,7 +59,7 @@ class FloatRangeAttribute:
 
         max_value = d.pop("max_value")
 
-        type_ = cast(Literal["float_range"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['float_range'] | Unset", d.pop("type", UNSET))
         if type_ != "float_range" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'float_range', got '{type_}'")
 

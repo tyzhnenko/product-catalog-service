@@ -68,7 +68,7 @@ class PaginatedResponsePartialStore:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.partial_store import PartialStore
+        from ..models.partial_store import PartialStore  # noqa: PLC0415
 
         d = dict(src_dict)
         items = []

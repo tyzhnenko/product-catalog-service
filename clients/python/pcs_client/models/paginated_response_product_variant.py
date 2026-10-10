@@ -68,7 +68,7 @@ class PaginatedResponseProductVariant:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.product_variant import ProductVariant
+        from ..models.product_variant import ProductVariant  # noqa: PLC0415
 
         d = dict(src_dict)
         items = []

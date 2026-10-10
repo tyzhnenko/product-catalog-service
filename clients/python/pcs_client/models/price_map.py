@@ -24,8 +24,8 @@ class PriceMap:
     )
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.decimal_price import DecimalPrice
-        from ..models.decimal_range_price import DecimalRangePrice
+        from ..models.decimal_price import DecimalPrice  # noqa: PLC0415
+        from ..models.decimal_range_price import DecimalRangePrice  # noqa: PLC0415
 
         field_dict: dict[str, Any] = {}
         for prop_name, prop in self.additional_properties.items():
@@ -40,9 +40,9 @@ class PriceMap:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
-        from ..models.decimal_price import DecimalPrice
-        from ..models.decimal_quantity_price import DecimalQuantityPrice
-        from ..models.decimal_range_price import DecimalRangePrice
+        from ..models.decimal_price import DecimalPrice  # noqa: PLC0415
+        from ..models.decimal_quantity_price import DecimalQuantityPrice  # noqa: PLC0415
+        from ..models.decimal_range_price import DecimalRangePrice  # noqa: PLC0415
 
         d = dict(src_dict)
         price_map = cls()
@@ -51,6 +51,20 @@ class PriceMap:
         for prop_name, prop_dict in d.items():
 
             def _parse_additional_property(data: object) -> DecimalPrice | DecimalQuantityPrice | DecimalRangePrice:
+                if isinstance(data, dict):
+                    tag = data.get("type")
+                    if tag == "decimal":
+                        componentsschemas_price_type_0 = DecimalPrice.from_dict(data)
+
+                        return componentsschemas_price_type_0
+                    if tag == "decimal_range":
+                        componentsschemas_price_type_1 = DecimalRangePrice.from_dict(data)
+
+                        return componentsschemas_price_type_1
+                    if tag == "decimal_quantity":
+                        componentsschemas_price_type_2 = DecimalQuantityPrice.from_dict(data)
+
+                        return componentsschemas_price_type_2
                 try:
                     if not isinstance(data, dict):
                         raise TypeError()

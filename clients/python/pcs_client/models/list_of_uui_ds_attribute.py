@@ -61,7 +61,7 @@ class ListOfUUIDsAttribute:
 
             values.append(values_item)
 
-        type_ = cast(Literal["list_of_uuids"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['list_of_uuids'] | Unset", d.pop("type", UNSET))
         if type_ != "list_of_uuids" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'list_of_uuids', got '{type_}'")
 

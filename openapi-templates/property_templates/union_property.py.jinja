@@ -1,0 +1,139 @@
+{#
+  Stock openapi-python-client 0.29.1 union template, plus a `type` fast path in `construct`.
+
+  Stock behavior tries every union member in order and catches the exception from each mismatch,
+  so a member late in the list pays for every earlier failure. When *every* member is a model with a
+  constant `type` property (a tagged union, e.g. PCS `Attribute`), dispatch on `data["type"]` first
+  and fall through to the stock try-chain only if the tag is missing or unknown.
+#}
+{% macro construct(property, source) %}
+{% set tagged = namespace(ok=property.inner_properties | length > 1, entries=[]) %}
+{% for inner_property in property.inner_properties %}
+    {# Read the raw schema: a union member's resolved properties aren't filled in yet at this point. #}
+    {% set found = namespace(value=none) %}
+    {% set member_props = inner_property.data.properties if inner_property.data is defined and inner_property.data.properties else none %}
+    {% if member_props and "type" in member_props and member_props["type"].const is defined and member_props["type"].const is not none %}
+        {% set found.value = member_props["type"].const | tojson %}
+    {% endif %}
+    {% if found.value is none %}
+        {% set tagged.ok = false %}
+    {% else %}
+        {% set tagged.entries = tagged.entries + [(found.value, inner_property)] %}
+    {% endif %}
+{% endfor %}
+{# Dispatch only when every tag is unique: with a shared tag, the stock chain could still fall back to
+   a later member after the first one rejects the data, and a direct dispatch would not. #}
+{% if tagged.ok and (tagged.entries | map(attribute=0) | unique | list | length) != (tagged.entries | length) %}
+    {% set tagged.ok = false %}
+{% endif %}
+def _parse_{{ property.python_name }}(data: object) -> {{ property.get_type_string() | as_unembedded_code }}:
+    {% if PythonCode("None") in property.get_type_strings_in_union(json=True) %}
+    if data is None:
+        return data
+    {% endif %}
+    {% if PythonCode("Unset") in property.get_type_strings_in_union(json=True) %}
+    if isinstance(data, Unset):
+        return data
+    {% endif %}
+    {% if tagged.ok %}
+    if isinstance(data, dict):
+        tag = data.get("type")
+        {% for tag_value, inner_property in tagged.entries %}
+        {% import "property_templates/" + inner_property.template as inner_template %}
+        if tag == {{ tag_value }}:
+            {{ inner_template.construct(inner_property, "data") | indent(12) }}
+            return {{ inner_property.python_name }}
+        {% endfor %}
+    {% endif %}
+    {% set ns = namespace(contains_unmodified_properties = false) %}
+    {% for inner_property in property.inner_properties %}
+    {% import "property_templates/" + inner_property.template as inner_template %}
+        {% if not inner_template.construct %}
+            {% set ns.contains_unmodified_properties = true %}
+            {% continue %}
+        {% endif %}
+    {% if inner_template.check_type_for_construct and (not loop.last or ns.contains_unmodified_properties) %}
+    try:
+        if not {{ inner_template.check_type_for_construct(inner_property, "data") }}:
+            raise TypeError()
+        {{ inner_template.construct(inner_property, "data") | indent(8) }}
+        return {{ inner_property.python_name }}
+    except (TypeError, ValueError, AttributeError, KeyError):
+        pass
+    {% else  %}{# Don't do try/except for the last one nor any properties with no type checking #}
+    {% if inner_template.check_type_for_construct %}
+    if not {{ inner_template.check_type_for_construct(inner_property, "data") }}:
+        raise TypeError()
+    {% endif %}
+    {{ inner_template.construct(inner_property, "data") | indent(4) }}
+    return {{ inner_property.python_name }}
+    {% endif %}
+    {% endfor %}
+    {% if ns.contains_unmodified_properties %}
+    return cast({{ property.get_type_string() | as_unembedded_code }}, data)
+    {% endif %}
+
+{{ property.python_name }} = _parse_{{ property.python_name }}({{ source }})
+{% endmacro %}
+
+{% macro transform(property, source, destination, declare_type=True, skip_unset=False) %}
+{% set ns = namespace(contains_properties_without_transform = false, contains_modified_properties = not property.required, has_if = false) %}
+{% if declare_type %}{{ destination }}: {{ property.get_type_string(json=True) | as_unembedded_code }}{% endif %}
+
+{% if not property.required and not skip_unset %}
+if isinstance({{ source }}, Unset):
+    {{ destination }} = UNSET
+    {% set ns.has_if = true %}
+{% endif %}
+{% for inner_property in property.inner_properties %}
+    {% import "property_templates/" + inner_property.template as inner_template %}
+    {% if not inner_template.transform %}
+        {% set ns.contains_properties_without_transform = true %}
+        {% continue %}
+    {% else %}
+        {% set ns.contains_modified_properties = true %}
+    {% endif %}
+    {% if not ns.has_if %}
+if isinstance({{ source }}, {{ inner_property.get_instance_type_string() | as_unembedded_code }}):
+        {% set ns.has_if = true %}
+    {% elif not loop.last or ns.contains_properties_without_transform %}
+elif isinstance({{ source }}, {{ inner_property.get_instance_type_string() | as_unembedded_code }}):
+    {% else %}
+else:
+    {% endif %}
+    {{ inner_template.transform(inner_property, source, destination, declare_type=False) | indent(4) }}
+{% endfor %}
+{% if ns.contains_properties_without_transform and ns.contains_modified_properties %}
+else:
+    {{ destination }} = {{ source }}
+{%- elif ns.contains_properties_without_transform %}
+{{ destination }} = {{ source }}
+{%- endif %}
+{% endmacro %}
+
+
+{% macro instance_check(inner_property, source) %}
+{% if inner_property.get_instance_type_string() == PythonCode("None") %}
+if {{ source }} is None:
+{% else %}
+if isinstance({{ source }}, {{ inner_property.get_instance_type_string() | as_unembedded_code }}):
+{% endif %}
+{% endmacro %}
+
+{% macro multipart(property, source, destination) %}
+{% set ns = namespace(has_if = false) %}
+{% for inner_property in property.inner_properties %}
+{% if not ns.has_if %}
+{{ instance_check(inner_property, source) }}
+{% set ns.has_if = true %}
+{% elif not loop.last %}
+
+el{{ instance_check(inner_property, source) }}
+{% else %}
+
+else:
+{% endif %}
+{% import "property_templates/" + inner_property.template as inner_template %}
+    {{ inner_template.multipart(inner_property, source, destination) | indent(4) | trim }}
+{%- endfor -%}
+{% endmacro %}

@@ -52,7 +52,7 @@ class BoolAttribute:
 
         value = d.pop("value")
 
-        type_ = cast(Literal["bool"] | Unset, d.pop("type", UNSET))
+        type_ = cast("Literal['bool'] | Unset", d.pop("type", UNSET))
         if type_ != "bool" and not isinstance(type_, Unset):
             raise ValueError(f"type must match const 'bool', got '{type_}'")
 
