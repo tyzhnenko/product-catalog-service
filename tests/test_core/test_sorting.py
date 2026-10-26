@@ -3,10 +3,11 @@ import base64
 from datetime import datetime
 from decimal import Decimal
 from types import SimpleNamespace
+from uuid import uuid4
 
 import pytest
 from beanie import PydanticObjectId
-from bson import Code, Decimal128, MaxKey, MinKey, ObjectId, Regex, json_util
+from bson import Binary, Code, Decimal128, MaxKey, MinKey, ObjectId, Regex, json_util
 from fastapi import HTTPException
 
 from src.core.sorting import (
@@ -139,6 +140,20 @@ class TestSortCursor:
             decode_sort_cursor(_craft_cursor(spec, [value], PydanticObjectId()), spec)
         assert exc.value.status_code == 400
         assert exc.value.detail == "Invalid cursor"
+
+    @pytest.mark.parametrize("subtype", [0, 1, 2, 3, 5, 128])
+    def test_binary_other_than_uuid_subtype_raises_400(self, subtype):
+        spec = SortSpec((SortKey("name"),))
+        with pytest.raises(HTTPException) as exc:
+            decode_sort_cursor(_craft_cursor(spec, [Binary(b"0123456789abcdef", subtype)], PydanticObjectId()), spec)
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "Invalid cursor"
+
+    def test_uuid_subtype_binary_is_accepted(self):
+        spec = SortSpec((SortKey("name"),))
+        value = Binary.from_uuid(uuid4())
+        values, _ = decode_sort_cursor(_craft_cursor(spec, [value], PydanticObjectId()), spec)
+        assert values == [value]
 
     @pytest.mark.parametrize("payload", [["not", "a", "dict"], "string", 5, None])
     def test_payload_not_a_dict_raises_400(self, payload):
