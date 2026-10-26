@@ -206,6 +206,17 @@ class TestSortByAttribute:
         nxt = api_client.get(url, params={"sort": "-attr:weight", "limit": 2, "after": desc["end_cursor"]}).json()
         assert [i["name"] for i in nxt["items"]] == ["d", "c"]
 
+    def test_list_attribute_key_sorts_as_missing(self, api_client, store):
+        for name in ["a", "b", "c"]:
+            attrs = {"tags": {"type": "list_of_strings", "name": "tags", "values": [name, "z"]}}
+            payload = {"name": name, "tags": ["t"], "attributes": attrs}
+            assert api_client.post(f"/api/v1/products/{store['id']}", json=payload).status_code == 200
+        url = f"/api/v1/products/{store['id']}"
+        first = api_client.get(url, params={"sort": "attr:tags", "limit": 2})
+        assert _titles(first) == ["a", "b"]
+        nxt = api_client.get(url, params={"sort": "attr:tags", "limit": 2, "after": first.json()["end_cursor"]})
+        assert _titles(nxt) == ["c"]
+
     def test_price_not_available_on_products(self, api_client, store):
         assert api_client.get(f"/api/v1/products/{store['id']}", params={"sort": "price:retail"}).status_code == 422
 

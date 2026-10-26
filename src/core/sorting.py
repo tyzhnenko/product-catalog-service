@@ -8,12 +8,17 @@ from typing import Any
 from uuid import UUID
 
 from beanie import PydanticObjectId
-from bson import Binary, Decimal128, json_util
+from bson import Binary, Decimal128, ObjectId, json_util
 from fastapi import HTTPException
 
 MAX_SORT_KEYS = 3
 
 _LEGACY_CURSOR = re.compile(r"^[0-9a-f]{24}$")
+
+# Cursor values go straight into Mongo conditions, so anything that could act as an operator (dicts, regexes,
+# code, ...) must never be accepted from a client-supplied cursor. Matched by exact type: `bson.Code` is a `str`
+# subclass and would slip through an `isinstance` check.
+_CURSOR_SCALARS = frozenset({type(None), bool, int, float, str, datetime, Decimal128, ObjectId, UUID})
 
 # Dynamic sort keys address a value inside a store-defined map: `<kind>:<segment>[:<segment>]`. Each maps to the
 # document's top-level map field and how many `:`-separated segments follow the kind. The sorted value is the
@@ -217,7 +222,7 @@ def decode_sort_cursor(cursor: str, spec: SortSpec) -> tuple[list[Any], Pydantic
     """Return `(sort values, _id)` from a cursor issued for the same `spec`.
 
     Raises:
-        HTTPException: 400 if the cursor is malformed or was issued for a different `sort`.
+        HTTPException: 400 if the cursor is malformed, holds a non-scalar value or was issued for a different `sort`.
 
     """
     try:
@@ -226,7 +231,11 @@ def decode_sort_cursor(cursor: str, spec: SortSpec) -> tuple[list[Any], Pydantic
             signature, values, cursor_id = "", [], PydanticObjectId(decoded)
         else:
             payload = json_util.loads(decoded)
-            signature, values, cursor_id = payload["s"], list(payload["v"]), PydanticObjectId(payload["id"])
+            if not isinstance(payload, dict) or not isinstance(payload["v"], list):
+                raise ValueError("cursor payload must be an object with a list of values")
+            if not all(type(v) in _CURSOR_SCALARS for v in payload["v"]):
+                raise ValueError("cursor values must be scalars")
+            signature, values, cursor_id = payload["s"], payload["v"], PydanticObjectId(payload["id"])
     except Exception as ex:
         raise HTTPException(status_code=400, detail="Invalid cursor") from ex
 
