@@ -1,11 +1,12 @@
 # ruff: noqa: S101, D100, D101, D102, D103
+import base64
 from datetime import datetime
 from decimal import Decimal
 from types import SimpleNamespace
 
 import pytest
 from beanie import PydanticObjectId
-from bson import Decimal128
+from bson import Code, Decimal128, MaxKey, MinKey, ObjectId, Regex, json_util
 from fastapi import HTTPException
 
 from src.core.sorting import (
@@ -110,6 +111,64 @@ class TestSortCursor:
         with pytest.raises(HTTPException) as exc:
             decode_sort_cursor("!!!not-valid-base64!!!", DEFAULT_SORT)
         assert exc.value.status_code == 400
+
+    def test_scalar_values_round_trip(self):
+        spec = SortSpec((SortKey("name"),))
+        oid = PydanticObjectId()
+        for value in ("x", 5, 1.5, True, None, Decimal128(Decimal("1.25")), datetime(2026, 1, 2), ObjectId()):
+            values, cursor_id = decode_sort_cursor(_craft_cursor(spec, [value], oid), spec)
+            assert values == [value]
+            assert cursor_id == oid
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            {"$ne": None},
+            {"$regex": "(a+)+$"},
+            Regex("(a+)+$"),
+            ["a", "b"],
+            {"a": 1},
+            Code("function() {}"),
+            MinKey(),
+            MaxKey(),
+        ],
+    )
+    def test_non_scalar_value_raises_400(self, value):
+        spec = SortSpec((SortKey("name"),))
+        with pytest.raises(HTTPException) as exc:
+            decode_sort_cursor(_craft_cursor(spec, [value], PydanticObjectId()), spec)
+        assert exc.value.status_code == 400
+        assert exc.value.detail == "Invalid cursor"
+
+    @pytest.mark.parametrize("payload", [["not", "a", "dict"], "string", 5, None])
+    def test_payload_not_a_dict_raises_400(self, payload):
+        spec = SortSpec((SortKey("name"),))
+        with pytest.raises(HTTPException) as exc:
+            decode_sort_cursor(_encode_raw(payload), spec)
+        assert exc.value.status_code == 400
+
+    @pytest.mark.parametrize("values", ["name", 5, None, {"0": "x"}])
+    def test_values_not_a_list_raises_400(self, values):
+        spec = SortSpec((SortKey("name"),))
+        raw = {"s": spec.signature, "v": values, "id": PydanticObjectId()}
+        with pytest.raises(HTTPException) as exc:
+            decode_sort_cursor(_encode_raw(raw), spec)
+        assert exc.value.status_code == 400
+
+    def test_list_value_issued_by_encode_is_rejected_on_decode(self):
+        spec = parse_sort("attr:tags", ALLOWED, ("attr",))
+        doc = SimpleNamespace(id=PydanticObjectId(), attributes={"tags": SimpleNamespace(value=["a", "b"])})
+        with pytest.raises(HTTPException) as exc:
+            decode_sort_cursor(encode_sort_cursor(spec, doc), spec)
+        assert exc.value.status_code == 400
+
+
+def _encode_raw(payload) -> str:
+    return base64.urlsafe_b64encode(json_util.dumps(payload).encode()).decode()
+
+
+def _craft_cursor(spec: SortSpec, values: list, cursor_id: PydanticObjectId) -> str:
+    return _encode_raw({"s": spec.signature, "v": values, "id": cursor_id})
 
 
 class TestDynamicSortKeys:
