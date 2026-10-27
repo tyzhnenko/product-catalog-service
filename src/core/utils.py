@@ -14,7 +14,14 @@ from bson.errors import InvalidId
 from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
-from src.core.sorting import DEFAULT_SORT, SortSpec, decode_sort_cursor, encode_sort_cursor, keyset_filter
+from src.core.sorting import (
+    DEFAULT_SORT,
+    SortSpec,
+    decode_sort_cursor,
+    encode_sort_cursor,
+    keyset_filter,
+    valid_segment,
+)
 from src.core.types import PaginatedResponse
 
 DocT = TypeVar("DocT", bound=Document)
@@ -215,6 +222,14 @@ def _parse_range_value(raw: str, entry: str) -> int | float | datetime | str:
     return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
 
 
+def _split_attr_entry(entry: str) -> tuple[str, str]:
+    """Split a 'key:value' attribute filter entry, rejecting (400) a key that is unsafe in a Mongo path."""
+    key, _, raw_value = entry.partition(":")
+    if not valid_segment(key):
+        raise HTTPException(status_code=400, detail=f"Invalid attribute filter '{entry}'")
+    return key, raw_value
+
+
 def build_attribute_filter(attrs: list[str]) -> dict:
     """Build a MongoDB filter dict from a list of 'key:value' attribute filter strings.
 
@@ -224,7 +239,7 @@ def build_attribute_filter(attrs: list[str]) -> dict:
     ISO 8601 date/datetime; range conditions on the same key merge with each other and with any equality values.
     A value prefixed with '!' (e.g. 'color:!red') excludes that value: one → $ne, several on the same key → $nin.
     Exclusions also match documents lacking the attribute, and merge with equality and range conditions.
-    Entries without a colon are silently ignored.
+    Entries without a colon are silently ignored. Keys can't be empty or contain '.', '$' or NUL (400).
     """
     grouped: dict[str, list] = {}
     excluded: dict[str, list] = {}
@@ -232,7 +247,7 @@ def build_attribute_filter(attrs: list[str]) -> dict:
     for entry in attrs:
         if ":" not in entry:
             continue
-        key, _, raw_value = entry.partition(":")
+        key, raw_value = _split_attr_entry(entry)
         if raw_value.startswith("!"):
             if len(raw_value) == 1:
                 raise HTTPException(status_code=400, detail=f"Invalid attribute filter '{entry}'")
@@ -363,7 +378,8 @@ def build_price_search_filter(tokens: list[str]) -> dict:
     - 'region:<code>[:<key>[<op><value>]]': same as 'loc:', scoped to region_price.
 
     A bare key with no operator is a no-op. >= and <= tokens targeting the same path merge
-    into one $gte/$lte condition.
+    into one $gte/$lte condition. Keys and ids can't be empty or contain '.', '$' or NUL (400); only an empty
+    'loc:'/'region:' id is a no-op.
     """
     existence: dict[str, dict] = {}
     conditions: dict[str, dict] = {}
@@ -375,10 +391,14 @@ def build_price_search_filter(tokens: list[str]) -> dict:
             scope_id, _, remainder = rest.partition(":")
             if not scope_id:
                 continue
+            if not valid_segment(scope_id):
+                raise HTTPException(status_code=400, detail=f"Invalid price filter '{token}'")
             if not remainder:
                 existence[f"{prefix}.{scope_id}"] = {"$exists": True, "$ne": {}}
                 continue
             key, op, value = _split_price_op(remainder)
+            if not valid_segment(key):
+                raise HTTPException(status_code=400, detail=f"Invalid price filter '{token}'")
             if op is None:
                 existence[f"{prefix}.{scope_id}.{key}"] = {"$exists": True}
                 continue
@@ -387,6 +407,8 @@ def build_price_search_filter(tokens: list[str]) -> dict:
             key, op, value = _split_price_op(token)
             if op is None:
                 continue
+            if not valid_segment(key):
+                raise HTTPException(status_code=400, detail=f"Invalid price filter '{token}'")
             path = f"price.{key}.value"
 
         conditions.setdefault(path, {})["$gte" if op == ">=" else "$lte"] = value

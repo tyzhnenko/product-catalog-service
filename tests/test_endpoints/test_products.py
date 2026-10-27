@@ -1126,6 +1126,12 @@ class TestListProductsByAttributes:
         response = api_client.get(f"/api/v1/products/{sample_store['id']}", params={"attrs": "weight_grams:>=true"})
         assert response.status_code == 400
 
+    @pytest.mark.parametrize("param", ["attrs", "variants_attrs"])
+    @pytest.mark.parametrize("entry", [":x", "a.b:x", "$x:1", "$x:!1"])
+    def test_filter_invalid_attr_key_returns_400(self, api_client, sample_store, param, entry):
+        response = api_client.get(f"/api/v1/products/{sample_store['id']}", params={param: entry})
+        assert response.status_code == 400
+
     def test_filter_malformed_attrs_ignored(self, api_client, sample_product_data, sample_store):
         """Attrs entries without a colon are silently ignored (no filter applied)."""
         api_client.post(f"/api/v1/products/{sample_store['id']}", json=sample_product_data)

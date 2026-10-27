@@ -141,12 +141,13 @@ def _parse_dynamic(field: str, descending: bool, dynamic: tuple[str, ...]) -> So
         return None
     root, count = DYNAMIC_KINDS[kind]
     segments = rest.split(":", count - 1)
-    if len(segments) != count or not all(_valid_segment(segment) for segment in segments):
+    if len(segments) != count or not all(valid_segment(segment) for segment in segments):
         raise _invalid(f"Malformed sort field: {field!r}. Expected {describe_sort((), (kind,))}")
     return SortKey(field, descending, path=".".join([root, *segments, "value"]), nullable=True)
 
 
-def _valid_segment(segment: str) -> bool:
+def valid_segment(segment: str) -> bool:
+    """Whether `segment` is safe as one part of a Mongo field path: non-empty, no '.', '$' or NUL."""
     return bool(segment) and not any(char in segment for char in ".$\x00")
 
 
