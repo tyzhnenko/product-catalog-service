@@ -69,7 +69,7 @@ class CategoriesService:
         if not store:
             return None
 
-        query_filter = {"store_id": store.id, "deleted_at": None, **(filters or {})}
+        query_filter = {**(filters or {}), "store_id": store.id, "deleted_at": None}
         if fields:
             return await paginate(
                 CategoryModel.find(query_filter).project(

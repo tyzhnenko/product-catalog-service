@@ -147,10 +147,10 @@ class ProductsService:
             logger.warning(f"Store not found: {store_id}")
             return None
 
-        query_filter = {"store_id": store.id, "deleted_at": None, **(filters or {})}
+        query_filter = {**(filters or {}), "store_id": store.id, "deleted_at": None}
 
         if variant_filters:
-            variant_query = {"store_id": store.id, "deleted_at": None, **variant_filters}
+            variant_query = {**variant_filters, "store_id": store.id, "deleted_at": None}
             variants = await VariantModel.find(variant_query).project(_VariantProductIdProjection).to_list()
             product_ids = list({variant.product_id for variant in variants})
             query_filter["_id"] = {"$in": product_ids}
