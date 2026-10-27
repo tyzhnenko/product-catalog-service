@@ -23,6 +23,8 @@ db:
   password: <PASSWORD>
   port: 27017
   database: ledger
+  # auth_source: admin
+  # tls: true
 
 pagination:
   default_limit: 20
