@@ -210,10 +210,10 @@ class VariantsService:
             return None
 
         query_filter = {
+            **(filters or {}),
             "product_id": product.id,
             "store_id": product.store_id,
             "deleted_at": None,
-            **(filters or {}),
         }
         if fields:
             return await paginate(
