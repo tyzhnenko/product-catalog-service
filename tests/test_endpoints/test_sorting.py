@@ -192,6 +192,22 @@ class TestSortByPrice:
         assert api_client.get(url, params={"sort": "region:US"}).status_code == 422
 
 
+# Every scalar attribute type except bool (see test_bool_attribute_paginates_with_ties), five values each in ascending
+# order. Cursors carry these values, so each type has to survive encode -> decode -> Mongo comparison.
+SORTABLE_ATTRIBUTE_VALUES = {
+    "string": ["a", "b", "c", "d", "e"],
+    "text": ["a", "b", "c", "d", "e"],
+    "integer": [-5, 0, 7, 100, 2000],
+    "float": [-1.5, 0.25, 2.5, 10.75, 1000.5],
+    "decimal": ["-1.5", "0.25", "2.5", "10.75", "1000.5"],
+    "date": ["2024-01-01", "2024-06-15", "2025-01-01", "2025-12-31", "2026-03-04"],
+    "datetime": [f"2025-0{m}-01T10:00:00Z" for m in range(1, 6)],
+    "uuid": [f"00000000-0000-4000-8000-00000000000{c}" for c in "12345"],
+    "object_id": [f"6abedce6bcfd2edaecdf5d0{c}" for c in "12345"],
+    "url": [f"https://example.com/{c}" for c in "abcde"],
+}
+
+
 class TestSortByAttribute:
     def test_product_integer_attribute(self, api_client, store):
         for name, weight in [("a", 250), ("b", 1000), ("c", None), ("d", 50)]:
@@ -216,6 +232,62 @@ class TestSortByAttribute:
         assert _titles(first) == ["a", "b"]
         nxt = api_client.get(url, params={"sort": "attr:tags", "limit": 2, "after": first.json()["end_cursor"]})
         assert _titles(nxt) == ["c"]
+
+    @pytest.mark.parametrize("attr_type", list(SORTABLE_ATTRIBUTE_VALUES))
+    @pytest.mark.parametrize("direction", ["", "-"])
+    @pytest.mark.parametrize("fields", [None, "name"])
+    def test_scalar_attribute_types_paginate_both_ways(self, api_client, store, attr_type, direction, fields):
+        values = SORTABLE_ATTRIBUTE_VALUES[attr_type]
+        # created out of order so the expected order comes from the values, not from insertion
+        for i, value in enumerate(values[1::2] + values[::2]):
+            attrs = {"k": {"type": attr_type, "name": "k", "value": value}}
+            payload = {"name": f"p{i}", "tags": ["t"], "attributes": attrs}
+            response = api_client.post(f"/api/v1/products/{store['id']}", json=payload)
+            assert response.status_code == 200, response.text
+        # one product without the key sorts as missing (lowest)
+        payload = {"name": "none", "tags": ["t"], "attributes": {}}
+        assert api_client.post(f"/api/v1/products/{store['id']}", json=payload).status_code == 200
+
+        url = f"/api/v1/products/{store['id']}"
+        sort = f"{direction}attr:k"
+        full = [i["id"] for i in api_client.get(url, params={"sort": sort}).json()["items"]]
+        assert len(full) == len(set(full)) == len(values) + 1
+
+        params = {"sort": sort, "limit": 2, **({"fields": fields} if fields else {})}
+        forward = [i["id"] for page in _walk(api_client, url, params) for i in page]
+        assert forward == full
+
+        body = api_client.get(url, params=params).json()
+        while body["has_next"]:
+            body = api_client.get(url, params={**params, "after": body["end_cursor"]}).json()
+        backward = [i["id"] for i in body["items"]]
+        while body["has_prev"]:
+            body = api_client.get(url, params={**params, "before": body["start_cursor"]}).json()
+            backward = [i["id"] for i in body["items"]] + backward
+        assert backward == full
+
+    @pytest.mark.parametrize("attr_type", list(SORTABLE_ATTRIBUTE_VALUES))
+    def test_scalar_attribute_types_order_by_value(self, api_client, store, attr_type):
+        values = SORTABLE_ATTRIBUTE_VALUES[attr_type]
+        for i in (3, 0, 4, 2, 1):
+            attrs = {"k": {"type": attr_type, "name": "k", "value": values[i]}}
+            payload = {"name": str(i), "tags": ["t"], "attributes": attrs}
+            assert api_client.post(f"/api/v1/products/{store['id']}", json=payload).status_code == 200
+        url = f"/api/v1/products/{store['id']}"
+        assert _titles(api_client.get(url, params={"sort": "attr:k"})) == list("01234")
+        assert _titles(api_client.get(url, params={"sort": "-attr:k"})) == list("43210")
+
+    @pytest.mark.parametrize("sort", ["attr:k", "-attr:k"])
+    def test_bool_attribute_paginates_with_ties(self, api_client, store, sort):
+        for i, value in enumerate([True, False, True, False, True]):
+            attrs = {"k": {"type": "bool", "name": "k", "value": value}}
+            payload = {"name": f"p{i}", "tags": ["t"], "attributes": attrs}
+            assert api_client.post(f"/api/v1/products/{store['id']}", json=payload).status_code == 200
+        url = f"/api/v1/products/{store['id']}"
+        full = [i["id"] for i in api_client.get(url, params={"sort": sort}).json()["items"]]
+        forward = [i["id"] for page in _walk(api_client, url, {"sort": sort, "limit": 2}) for i in page]
+        assert forward == full
+        assert len(set(forward)) == 5
 
     def test_price_not_available_on_products(self, api_client, store):
         assert api_client.get(f"/api/v1/products/{store['id']}", params={"sort": "price:retail"}).status_code == 422

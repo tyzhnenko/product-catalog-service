@@ -3,9 +3,12 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from types import SimpleNamespace
+from uuid import uuid4
 
 from beanie import PydanticObjectId
-from bson import Decimal128
+from bson import Binary, Decimal128
+from bson.binary import UUID_SUBTYPE
+from pydantic import HttpUrl, TypeAdapter
 
 from src.core.sorting import (
     DEFAULT_SORT,
@@ -35,6 +38,16 @@ class TestExtractSortValue:
     def test_datetime_is_left_alone(self):
         moment = datetime(2026, 1, 2, 3, 4, 5)
         assert extract_sort_value(SimpleNamespace(d=moment), "d") == moment
+
+    def test_uuid_becomes_standard_binary(self):
+        value = uuid4()
+        result = extract_sort_value(SimpleNamespace(v=value), "v")
+        assert result == Binary.from_uuid(value)
+        assert result.subtype == UUID_SUBTYPE
+
+    def test_url_becomes_its_string_form(self):
+        url = TypeAdapter(HttpUrl).validate_python("https://example.com/a?b=1")
+        assert extract_sort_value(SimpleNamespace(v=url), "v") == "https://example.com/a?b=1"
 
     def test_walks_attributes_and_dicts(self):
         doc = SimpleNamespace(attributes={"w": SimpleNamespace(value=3)})
@@ -84,3 +97,21 @@ class TestCursorWithDates:
         values, oid = decode_sort_cursor(encode_sort_cursor(spec, doc), spec)
         assert values == [datetime(2026, 1, 2)]
         assert oid == doc.id
+
+
+class TestCursorWithUuidAndUrl:
+    def test_uuid_value_round_trips_as_standard_binary(self):
+        spec = SortSpec((SortKey("u"),))
+        value = uuid4()
+        doc = SimpleNamespace(id=PydanticObjectId(), u=value)
+        values, oid = decode_sort_cursor(encode_sort_cursor(spec, doc), spec)
+        assert values == [Binary.from_uuid(value)]
+        assert values[0].subtype == UUID_SUBTYPE
+        assert oid == doc.id
+
+    def test_url_value_round_trips_as_string(self):
+        spec = SortSpec((SortKey("u"),))
+        url = TypeAdapter(HttpUrl).validate_python("https://example.com/a")
+        doc = SimpleNamespace(id=PydanticObjectId(), u=url)
+        values, _ = decode_sort_cursor(encode_sort_cursor(spec, doc), spec)
+        assert values == ["https://example.com/a"]

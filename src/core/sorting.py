@@ -9,7 +9,9 @@ from uuid import UUID
 
 from beanie import PydanticObjectId
 from bson import Binary, Decimal128, ObjectId, json_util
+from bson.binary import UUID_SUBTYPE
 from fastapi import HTTPException
+from pydantic import AnyUrl
 
 MAX_SORT_KEYS = 3
 
@@ -18,7 +20,7 @@ _LEGACY_CURSOR = re.compile(r"^[0-9a-f]{24}$")
 # Cursor values go straight into Mongo conditions, so anything that could act as an operator (dicts, regexes,
 # code, ...) must never be accepted from a client-supplied cursor. Matched by exact type: `bson.Code` is a `str`
 # subclass and would slip through an `isinstance` check.
-_CURSOR_SCALARS = frozenset({type(None), bool, int, float, str, datetime, Decimal128, ObjectId, UUID})
+_CURSOR_SCALARS = frozenset({type(None), bool, int, float, str, datetime, Decimal128, ObjectId, Binary})
 
 # Dynamic sort keys address a value inside a store-defined map: `<kind>:<segment>[:<segment>]`. Each maps to the
 # document's top-level map field and how many `:`-separated segments follow the kind. The sorted value is the
@@ -203,7 +205,18 @@ def _to_bson(value: Any) -> Any:
         return Decimal128(value)
     if isinstance(value, date) and not isinstance(value, datetime):
         return datetime.combine(value, time.min)
+    if isinstance(value, UUID):
+        return Binary.from_uuid(value)
+    if isinstance(value, AnyUrl):
+        return str(value)
     return value
+
+
+def _is_cursor_scalar(value: Any) -> bool:
+    # Binary is allowed only as a UUID (subtype 4, what Beanie stores); other subtypes are rejected.
+    if type(value) not in _CURSOR_SCALARS:
+        return False
+    return value.subtype == UUID_SUBTYPE if type(value) is Binary else True
 
 
 def encode_sort_cursor(spec: SortSpec, doc: Any) -> str:
@@ -233,7 +246,7 @@ def decode_sort_cursor(cursor: str, spec: SortSpec) -> tuple[list[Any], Pydantic
             payload = json_util.loads(decoded)
             if not isinstance(payload, dict) or not isinstance(payload["v"], list):
                 raise ValueError("cursor payload must be an object with a list of values")
-            if not all(type(v) in _CURSOR_SCALARS for v in payload["v"]):
+            if not all(_is_cursor_scalar(v) for v in payload["v"]):
                 raise ValueError("cursor values must be scalars")
             signature, values, cursor_id = payload["s"], payload["v"], PydanticObjectId(payload["id"])
     except Exception as ex:
@@ -241,9 +254,7 @@ def decode_sort_cursor(cursor: str, spec: SortSpec) -> tuple[list[Any], Pydantic
 
     if signature != spec.signature or len(values) != len(spec.keys):
         raise HTTPException(status_code=400, detail="Cursor does not match the requested sort")
-    # json_util revives binary subtype 4 as a UUID, which the driver can't encode without a configured
-    # representation; send it back as the binary Beanie stored.
-    return [Binary.from_uuid(v) if isinstance(v, UUID) else v for v in values], cursor_id
+    return values, cursor_id
 
 
 def _invalid(detail: str) -> HTTPException:
