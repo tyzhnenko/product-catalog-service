@@ -255,6 +255,16 @@ class TestBuildAttributeFilter:
             build_attribute_filter(attrs)
         assert exc_info.value.status_code == 400
 
+    @pytest.mark.parametrize(
+        "entry",
+        [":x", "a.b.c:x", "$x:1", "a\x00b:1", "a.b:>=1", "a.b:<1", "$x:!1", ".:x"],
+    )
+    def test_invalid_key_raises_400(self, entry):
+        with pytest.raises(HTTPException) as exc_info:
+            build_attribute_filter([entry])
+        assert exc_info.value.status_code == 400
+        assert exc_info.value.detail == f"Invalid attribute filter '{entry}'"
+
 
 class TestBuildPriceSearchFilter:
     @pytest.mark.parametrize(
@@ -323,6 +333,29 @@ class TestBuildPriceSearchFilter:
         with pytest.raises(HTTPException) as exc_info:
             build_price_search_filter(tokens)
         assert exc_info.value.status_code == 400
+
+    @pytest.mark.parametrize(
+        "token",
+        [
+            "$x>=1",
+            "a.b<=1",
+            ">=1",
+            "loc:a.b",
+            "loc:$x",
+            "loc:a.b:retail>=1",
+            "loc:abc:$k>=1",
+            "loc:abc:a.b",
+            "loc:abc:>=1",
+            "loc:abc:a\x00b",
+            "region:U.S:retail>=1",
+            "region:abc:$k",
+        ],
+    )
+    def test_invalid_key_raises_400(self, token):
+        with pytest.raises(HTTPException) as exc_info:
+            build_price_search_filter([token])
+        assert exc_info.value.status_code == 400
+        assert exc_info.value.detail == f"Invalid price filter '{token}'"
 
 
 class TestParseRef:
