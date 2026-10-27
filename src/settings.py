@@ -28,6 +28,8 @@ class Database(BaseSettings):
     database: str = "product_catalog"
     user: str | None = None
     password: str | None = None
+    auth_source: str | None = None
+    tls: bool = False
 
 
 class Pagination(BaseSettings):
