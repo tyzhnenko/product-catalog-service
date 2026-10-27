@@ -18,6 +18,7 @@ from src.core.utils import (
     parse_ref,
     raise_for_duplicate_key,
     split_path,
+    split_price,
 )
 
 
@@ -356,6 +357,27 @@ class TestBuildPriceSearchFilter:
             build_price_search_filter([token])
         assert exc_info.value.status_code == 400
         assert exc_info.value.detail == f"Invalid price filter '{token}'"
+
+
+class TestSplitPrice:
+    """Tests for the split_price function."""
+
+    @pytest.mark.parametrize("price", [None, ""])
+    def test_empty_returns_empty_list(self, price):
+        assert split_price(price) == []
+
+    def test_quoted_value_with_space_is_one_token(self):
+        assert split_price('loc:abc:"my key">=5') == ["loc:abc:my key>=5"]
+
+    def test_multiple_tokens(self):
+        assert split_price("USD>=1 USD<=5") == ["USD>=1", "USD<=5"]
+
+    @pytest.mark.parametrize("price", ['loc:abc"', "loc:abc'", "loc:abc\\"])
+    def test_malformed_quoting_raises_400(self, price):
+        with pytest.raises(HTTPException) as exc_info:
+            split_price(price)
+        assert exc_info.value.status_code == 400
+        assert exc_info.value.detail == f"Invalid price filter '{price}'"
 
 
 class TestParseRef:

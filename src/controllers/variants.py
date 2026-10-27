@@ -1,4 +1,3 @@
-import shlex
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Query, Response, Security, status
@@ -8,7 +7,7 @@ from src.core.auth import ro_access, rw_access
 from src.core.fields import FieldsParams, sparse_response
 from src.core.pagination import PaginationParams, pagination_with_sort
 from src.core.types import PaginatedResponse
-from src.core.utils import build_attribute_filter, build_availability_filter, build_price_search_filter
+from src.core.utils import build_attribute_filter, build_availability_filter, build_price_search_filter, split_price
 from src.domain.types.products import ProductRef
 from src.domain.types.stores import StoreRef
 from src.domain.types.variants import (
@@ -69,7 +68,7 @@ def variant_filters(
 ) -> dict | None:
     filters = {
         **build_attribute_filter(attrs),
-        **build_price_search_filter(shlex.split(price) if price else []),
+        **build_price_search_filter(split_price(price)),
         **build_availability_filter(availability),
     }
     return filters or None

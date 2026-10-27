@@ -1,4 +1,3 @@
-import shlex
 from dataclasses import dataclass
 from typing import Annotated
 
@@ -9,7 +8,7 @@ from src.core.auth import ro_access, rw_access
 from src.core.fields import FieldsParams, sparse_response
 from src.core.pagination import PaginationParams, pagination_with_sort
 from src.core.types import PaginatedResponse
-from src.core.utils import build_attribute_filter, build_availability_filter, build_price_search_filter
+from src.core.utils import build_attribute_filter, build_availability_filter, build_price_search_filter, split_price
 from src.domain.products import ProductsService
 from src.domain.types.products import NewProduct, PartialProduct, Product, ProductRef, UpdateProduct
 from src.domain.types.stores import StoreRef
@@ -84,7 +83,7 @@ def product_filters(
 ) -> ProductFilters:
     variant_filters = {
         **build_attribute_filter(variants_attrs),
-        **build_price_search_filter(shlex.split(price) if price else []),
+        **build_price_search_filter(split_price(price)),
         **build_availability_filter(variants_availability),
     }
     return ProductFilters(

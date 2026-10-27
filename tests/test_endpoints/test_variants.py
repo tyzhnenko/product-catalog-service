@@ -565,6 +565,15 @@ class TestListVariants:
 
         assert response.status_code == 400
 
+    def test_list_variants_unbalanced_price_quote_returns_400(self, api_client, sample_store, sample_product):
+        response = api_client.get(
+            f"/api/v1/variants/{sample_store['id']}/{sample_product['id']}",
+            params={"price": 'loc:abc"'},
+        )
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Invalid price filter 'loc:abc\"'"
+
     @pytest.mark.parametrize("token", ["$x>=1", "a.b<=1", "loc:a.b", "loc:abc:$k>=1", "region:U.S:retail>=1"])
     def test_list_variants_invalid_price_key_returns_400(self, api_client, sample_store, sample_product, token):
         response = api_client.get(
