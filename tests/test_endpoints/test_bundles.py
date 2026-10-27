@@ -1046,6 +1046,15 @@ class TestBundleLocationPrice:
 
         assert response.status_code == 400
 
+    def test_list_bundles_unbalanced_price_quote_returns_400(self, api_client, sample_store):
+        response = api_client.get(
+            f"/api/v1/bundles/{sample_store['id']}",
+            params={"price": 'loc:abc"'},
+        )
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Invalid price filter 'loc:abc\"'"
+
 
 class TestBundleImages:
     """Tests for bundle images field."""
@@ -1602,6 +1611,18 @@ class TestListBundlesByPrice:
         response = api_client.get(
             f"/api/v1/bundles/{sample_store['id']}",
             params={"price": "USD>=50.00"},
+        )
+
+        assert response.status_code == 200
+        items = response.json()["items"]
+        assert len(items) == 1
+        assert items[0]["id"] == bundle_with_high_price["id"]
+
+    def test_filter_by_price_quoted_token(self, api_client, sample_store, bundle_with_price, bundle_with_high_price):
+        """A quoted price token is unquoted before filtering."""
+        response = api_client.get(
+            f"/api/v1/bundles/{sample_store['id']}",
+            params={"price": '"USD>=50.00"'},
         )
 
         assert response.status_code == 200

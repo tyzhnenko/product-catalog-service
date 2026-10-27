@@ -2,6 +2,7 @@ import asyncio
 import base64
 import os
 import re
+import shlex
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from itertools import accumulate
@@ -365,6 +366,16 @@ def _split_price_op(token: str) -> tuple[str, str | None, Decimal | None]:
             except InvalidOperation as ex:
                 raise HTTPException(status_code=400, detail=f"Invalid price value in '{token}'") from ex
     return token, None, None
+
+
+def split_price(price: str | None) -> list[str]:
+    """Split the raw `price` query param into tokens, rejecting unbalanced quotes with a 400."""
+    if not price:
+        return []
+    try:
+        return shlex.split(price)
+    except ValueError as ex:
+        raise HTTPException(status_code=400, detail=f"Invalid price filter '{price}'") from ex
 
 
 def build_price_search_filter(tokens: list[str]) -> dict:

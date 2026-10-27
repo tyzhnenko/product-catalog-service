@@ -1208,6 +1208,16 @@ class TestListProductsByVariantFilters:
         assert response.status_code == 200
         assert response.json()["items"] == []
 
+    def test_filter_by_price_unbalanced_quote_returns_400(self, api_client, sample_store):
+        """An unbalanced quote in 'price' is a client error, not a 500."""
+        response = api_client.get(
+            f"/api/v1/products/{sample_store['id']}",
+            params={"price": 'loc:abc"'},
+        )
+
+        assert response.status_code == 400
+        assert response.json()["detail"] == "Invalid price filter 'loc:abc\"'"
+
     def test_filter_by_variants_attrs_exclusion(
         self, api_client, sample_product_data, another_product_data, sample_store
     ):
