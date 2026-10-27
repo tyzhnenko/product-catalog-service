@@ -1,4 +1,5 @@
 import os
+from functools import lru_cache
 
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict, YamlConfigSettingsSource
 
@@ -75,3 +76,8 @@ class Settings(BaseSettings):
 
 def load_settings() -> Settings:
     return Settings()
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return load_settings()
