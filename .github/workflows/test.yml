@@ -18,6 +18,7 @@ jobs:
           - 27017:27017
         env:
           MONGO_INITDB_DATABASE: test
+          GLIBC_TUNABLES: glibc.pthread.rseq=1
         options: >-
           --health-cmd "mongosh --eval 'db.adminCommand({ping: 1})'"
           --health-interval 10s
