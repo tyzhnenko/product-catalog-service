@@ -167,6 +167,7 @@ fabric.properties
 .ruff_cache/
 
 # Local settings file
+/settings.yaml
 settings.local.yaml
 
 openapi.json

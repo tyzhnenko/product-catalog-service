@@ -1,0 +1,5 @@
+# Local secrets: never send to the Docker build context
+.env
+**/.env
+settings.yaml
+settings.local.yaml
