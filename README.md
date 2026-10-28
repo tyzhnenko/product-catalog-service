@@ -58,12 +58,15 @@ By using this project or its source code, for any purpose and in any shape or fo
    git clone https://github.com/tyzhnenko/product-catalog-service.git
    cd product-catalog-service
    ```
-3. Edit `docker/docker-compose.yaml` to set your desired API keys and other configurations.
+3. Copy `docker/.env.example` to `docker/.env` and set real values (database credentials, API keys, Mongo Express login).
 4. Start the services:
    ```bash
    docker compose -p catalog -f docker/docker-compose.yaml up --build
    ```
-5. Access the API at `http://localhost:8000` and Mongo Express at `http://localhost:8081`.
+5. Access the API at `http://localhost:8000` and Mongo Express at `http://localhost:8081` (Mongo Express is only reachable from localhost).
+
+> **Note:** if a catalog stack was started before, its Mongo volume still has the old users. Recreate it with
+> `docker compose -p catalog -f docker/docker-compose.yaml down -v` (**this deletes its data**), or create the app user by hand.
 
 
 ## Contributing
