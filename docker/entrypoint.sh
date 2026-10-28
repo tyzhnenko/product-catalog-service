@@ -41,6 +41,18 @@ if [ ${#missing_vars[@]} -ne 0 ]; then
     exit 1
 fi
 
+for var in APP_AUTH__RW_X_API_KEY APP_AUTH__RO_X_API_KEY; do
+    if [[ "${!var}" == set_your_* ]]; then
+        echo -e "${RED}Error: $var is still a set_your_* placeholder. Set a real key in docker/.env.${NC}"
+        exit 1
+    fi
+done
+
+if [ "$APP_AUTH__RW_X_API_KEY" = "$APP_AUTH__RO_X_API_KEY" ]; then
+    echo -e "${RED}Error: APP_AUTH__RW_X_API_KEY and APP_AUTH__RO_X_API_KEY must be different.${NC}"
+    exit 1
+fi
+
 echo -e "${GREEN}All required environment variables are set!${NC}"
 echo "Starting application..."
 

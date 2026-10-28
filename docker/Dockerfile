@@ -39,6 +39,10 @@ COPY docker/settings.yaml ./
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# Run as an unprivileged user
+RUN useradd --system --uid 10001 --no-create-home app
+USER app
+
 # Expose the application port
 EXPOSE 8000
 

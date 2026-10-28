@@ -4,7 +4,7 @@ info:
   description: Service to manage product catalog and inventory
 
 app:
-  debug: true
+  debug: false
   cors_origins:
     - "http://localhost:8000"
     - "http://127.0.0.1:8000"

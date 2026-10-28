@@ -3,3 +3,19 @@
 **/.env
 settings.yaml
 settings.local.yaml
+
+# Local tooling and caches: not needed to build the image
+.git
+.venv
+.mypy_cache
+.ruff_cache
+.pytest_cache
+.coverage
+.claude/
+.github/
+.vscode/
+clients/
+openapi-templates/
+tests/
+__pycache__/
+htmlcov/
