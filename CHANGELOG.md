@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.12.1](https://github.com/tyzhnenko/product-catalog-service/compare/v0.12.0...v0.12.1) (2026-10-28)
+
+
+### Bug Fixes
+
+* apply store scope after user filters in list queries ([#93](https://github.com/tyzhnenko/product-catalog-service/issues/93)) ([ea7a794](https://github.com/tyzhnenko/product-catalog-service/commit/ea7a794b505130100617f1af176187c9df864037))
+* compare API keys in constant time and cache settings ([ef6c90a](https://github.com/tyzhnenko/product-catalog-service/commit/ef6c90a9a741e9f7b17d9975bc138dc9fd260fed))
+* disable CORS credentials ([#95](https://github.com/tyzhnenko/product-catalog-service/issues/95)) ([5f592db](https://github.com/tyzhnenko/product-catalog-service/commit/5f592db38d058cfe6933adbba15e148efe8064f3))
+* encode UUID and URL attribute values in sort cursors ([#86](https://github.com/tyzhnenko/product-catalog-service/issues/86)) ([04f8f2d](https://github.com/tyzhnenko/product-catalog-service/commit/04f8f2d150a61d272d40b66f797b4d016eb6bdeb))
+* escape Mongo credentials and add authSource and tls settings ([#94](https://github.com/tyzhnenko/product-catalog-service/issues/94)) ([20281ce](https://github.com/tyzhnenko/product-catalog-service/commit/20281ce8443b27dbd01d8b6c3fc5e9e690a0b293))
+* harden docker compose stack ([#97](https://github.com/tyzhnenko/product-catalog-service/issues/97)) ([3ed233d](https://github.com/tyzhnenko/product-catalog-service/commit/3ed233d22a9a454984ced58aeca81e6b64603d0a))
+* reject non-scalar values in sort cursors ([#85](https://github.com/tyzhnenko/product-catalog-service/issues/85)) ([8409c85](https://github.com/tyzhnenko/product-catalog-service/commit/8409c85954fbcd3ecceabae2f617752de2bbd52e))
+* return 400 for unbalanced quotes in price filter ([3259d76](https://github.com/tyzhnenko/product-catalog-service/commit/3259d76416a588a018099a701f7bafcdd40c149a))
+* validate attribute and price filter keys ([#87](https://github.com/tyzhnenko/product-catalog-service/issues/87)) ([9ef3f00](https://github.com/tyzhnenko/product-catalog-service/commit/9ef3f005c771545eec56c92558373c041c510748))
+
+
+### Chores
+
+* **deps:** bump certifi ([#83](https://github.com/tyzhnenko/product-catalog-service/issues/83)) ([6716ad5](https://github.com/tyzhnenko/product-catalog-service/commit/6716ad5df817d5bfd3fc1f4ab51784f625892434))
+* **deps:** bump dnspython from 2.8.0 to 2.9.0 ([#89](https://github.com/tyzhnenko/product-catalog-service/issues/89)) ([2b2434f](https://github.com/tyzhnenko/product-catalog-service/commit/2b2434f4ca5c23ca60eb32d4f171ca0b4aa0c714))
+* **deps:** bump pymongo from 4.18.2 to 4.18.3 ([#90](https://github.com/tyzhnenko/product-catalog-service/issues/90)) ([7304066](https://github.com/tyzhnenko/product-catalog-service/commit/730406688b10f59d352e7c76aafb806a28c42c8b))
+* ignore local settings file in git and docker builds ([#96](https://github.com/tyzhnenko/product-catalog-service/issues/96)) ([fd837d6](https://github.com/tyzhnenko/product-catalog-service/commit/fd837d69b76e624c574ab5c6388d8cdaed27f491))
+
+
+### Continuous Integration
+
+* add GLIBC_TUNABLES to mongo service ([ef8527a](https://github.com/tyzhnenko/product-catalog-service/commit/ef8527adfa0848427291c29621ec125d83e32329))
+* bump mongo service to 8.3 ([db75cdd](https://github.com/tyzhnenko/product-catalog-service/commit/db75cddc8a81a053b473acd3de3048fede283e41))
+* set ubuntu-24.04 runner and back mongo service to 8.0 ([#91](https://github.com/tyzhnenko/product-catalog-service/issues/91)) ([4330057](https://github.com/tyzhnenko/product-catalog-service/commit/4330057aca77271929e6ea914d1c8f37e0d0d015))
+
 ## [0.12.0](https://github.com/tyzhnenko/product-catalog-service/compare/v0.11.0...v0.12.0) (2026-10-10)
 
 
