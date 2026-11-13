@@ -42,7 +42,7 @@ type ProductDescription = Annotated[
     Field(
         ...,
         min_length=1,
-        max_length=10240,
+        max_length=15360,
         description="Description of the product",
     ),
 ]
